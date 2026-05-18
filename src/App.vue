@@ -1,11 +1,30 @@
-<script setup></script>
+<script setup>
+import { onMounted, watch } from 'vue'
+import { useThemeStore } from '@/stores/useThemeStore'
+
+const themeStore = useThemeStore()
+
+const applyTheme = () => {
+  const theme = themeStore.currentTheme
+
+  Object.entries(theme.colors).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--color-${key}`, value)
+  })
+}
+
+onMounted(() => {
+  applyTheme()
+})
+
+watch(
+  () => themeStore.currentTheme,
+  () => {
+    applyTheme()
+  },
+  { deep: true },
+)
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <RouterView />
 </template>
-
-<style scoped></style>

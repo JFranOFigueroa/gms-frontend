@@ -13,14 +13,23 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
+    "@fullcalendar/vue3": "^6.1.20",
+    "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
+    "swiper": "^12.1.4",
     "vue": "^3.5.32",
+    "vue-draggable-plus": "^0.6.1",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vitejs/plugin-vue-jsx": "^5.1.5",
+    "autoprefixer": "^10.5.0",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-oxlint": "~1.60.0",
@@ -28,7 +37,9 @@
     "globals": "^17.5.0",
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.60.0",
+    "postcss": "^8.5.14",
     "prettier": "3.8.3",
+    "tailwindcss": "^3.4.19",
     "vite": "^8.0.8",
     "vite-plugin-vue-devtools": "^8.1.1"
   },
