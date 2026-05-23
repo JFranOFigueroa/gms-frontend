@@ -8,3 +8,23 @@
 
   --color-accent: #22c55e;
 }
+select,
+textarea,
+input {
+  color: white;
+}
+select {
+  background-color: rgb(24 24 27);
+}
+.fc {
+  color: white;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: rgb(39 39 42);
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: rgb(39 39 42);
+}

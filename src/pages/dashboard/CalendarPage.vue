@@ -1,4 +1,6 @@
 <script setup>
+import { ref, computed } from 'vue'
+
 import FullCalendar from '@fullcalendar/vue3'
 
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -7,91 +9,76 @@ import interactionPlugin from '@fullcalendar/interaction'
 
 import timeGridPlugin from '@fullcalendar/timegrid'
 
-import { useBookingEngine } from '@/composables/useBookingEngine'
+import CreateClassModal from '@/components/calendar/CreateClassModal.vue'
 
-import { useBookingStore } from '@/stores/useBookingStore'
+import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
-import { ref } from 'vue'
+const scheduleStore = useClassScheduleStore()
 
-const bookingStore = useBookingStore()
+const createModalOpen = ref(false)
 
-const { validateBooking } = useBookingEngine()
+const selectedDate = ref(null)
 
-const events = ref([
-  {
-    title: 'Full Body',
+const openCreateModal = (date) => {
+  selectedDate.value = date
 
-    start: '2026-05-18T06:00:00',
+  createModalOpen.value = true
+}
 
-    end: '2026-05-18T07:00:00',
-  },
+const events = computed(() => {
+  return scheduleStore.classes.map((gymClass) => ({
+    id: gymClass.id,
 
-  {
-    title: 'Calistenia',
+    title: gymClass.name,
 
-    start: '2026-05-18T08:00:00',
+    start: `${gymClass.date}T${gymClass.startTime}`,
 
-    end: '2026-05-18T09:00:00',
-  },
-])
+    end: `${gymClass.date}T${gymClass.endTime}`,
 
-const calendarOptions = {
+    backgroundColor: gymClass.color,
+
+    borderColor: gymClass.color,
+  }))
+})
+
+const calendarOptions = computed(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
 
   initialView: 'dayGridMonth',
 
   height: 'auto',
 
-  events,
-
   selectable: true,
 
   editable: true,
 
+  events: events.value,
+
   dateClick(info) {
-    const newBooking = {
-      id: Date.now(),
-
-      title: 'Nueva Clase',
-
-      start: info.dateStr,
-
-      end: info.dateStr,
-
-      special: false,
-    }
-
-    const result = validateBooking({
-      existingBookings: bookingStore.bookings,
-
-      newBooking,
-
-      settings: bookingStore.settings,
-    })
-
-    if (!result.valid) {
-      alert(result.reason)
-
-      return
-    }
-
-    bookingStore.addBooking(newBooking)
-
-    events.value.push(newBooking)
+    openCreateModal(info.dateStr)
   },
-}
+}))
 </script>
 
 <template>
   <div class="space-y-6">
+    <!-- HEADER -->
     <div>
       <h1 class="text-4xl font-black">Calendario</h1>
 
       <p class="text-zinc-500 mt-2">Gestión de clases y eventos</p>
     </div>
 
+    <!-- CALENDAR -->
     <div class="rounded-3xl border border-zinc-800 bg-[var(--color-surface)] p-6">
       <FullCalendar :options="calendarOptions" />
     </div>
+
+    <!-- MODAL -->
+    <CreateClassModal
+      :open="createModalOpen"
+      :selectedDate="selectedDate"
+      @close="createModalOpen = false"
+    />
   </div>
 </template>

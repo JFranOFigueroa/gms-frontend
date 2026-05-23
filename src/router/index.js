@@ -68,6 +68,11 @@ const routes = [
         name: 'media',
         component: () => import('@/pages/dashboard/MediaLibraryPage.vue'),
       },
+      {
+        path: 'class-templates',
+
+        component: () => import('@/pages/dashboard/ClassTemplatesPage.vue'),
+      },
     ],
   },
 ]

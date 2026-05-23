@@ -5,23 +5,25 @@ export const sidebarNavigation = {
 
       path: '/dashboard',
     },
+    {
+      label: 'Calendario',
 
+      path: '/dashboard/calendar',
+    },
+    {
+      label: 'Plantillas',
+
+      path: '/dashboard/class-templates',
+    },
     {
       label: 'Landing Builder',
 
       path: '/dashboard/landing-builder',
     },
-
     {
       label: 'Multimedia',
 
       path: '/dashboard/media',
-    },
-
-    {
-      label: 'Calendario',
-
-      path: '/dashboard/calendar',
     },
   ],
 
@@ -36,6 +38,11 @@ export const sidebarNavigation = {
       label: 'Calendario',
 
       path: '/dashboard/calendar',
+    },
+    {
+      label: 'Plantillas',
+
+      path: '/dashboard/class-templates',
     },
   ],
 
