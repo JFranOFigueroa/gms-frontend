@@ -32,7 +32,7 @@ watch(
       <div>
         <h2 class="text-2xl font-black">Configuración del gimnasio</h2>
 
-        <p class="text-zinc-500 mt-2">Personaliza la identidad visual</p>
+        <p class="text-[var(--color-text-secondary)] mt-2">Personaliza la identidad visual</p>
       </div>
 
       <!-- Gym Name -->

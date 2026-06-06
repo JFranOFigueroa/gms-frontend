@@ -30,19 +30,21 @@ const isSelected = (id) => {
       class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
     >
       <div
-        class="w-full max-w-6xl bg-[var(--color-surface)] border border-zinc-800 rounded-3xl p-6"
+        class="w-full max-w-6xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6"
       >
         <!-- HEADER -->
         <div class="flex items-center justify-between mb-6">
           <div>
             <h2 class="text-3xl font-black">Seleccionar Imágenes</h2>
 
-            <p class="text-zinc-500 mt-1">Elige imágenes para el Hero Carousel</p>
+            <p class="text-[var(--color-text-secondary)] mt-1">
+              Elige imágenes para el Hero Carousel
+            </p>
           </div>
 
           <button
             @click="emit('close')"
-            class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 text-xl"
+            class="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-xl"
           >
             ✕
           </button>
@@ -57,7 +59,7 @@ const isSelected = (id) => {
             :class="
               isSelected(asset.id)
                 ? 'border-white scale-[0.98]'
-                : 'border-zinc-800 hover:border-zinc-500'
+                : 'border-[var(--color-border)] hover:border-zinc-500'
             "
             @click="emit('select', asset.id)"
           >

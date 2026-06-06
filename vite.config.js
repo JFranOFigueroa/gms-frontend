@@ -10,7 +10,11 @@ export default defineConfig({
   plugins: [vue(), vueJsx(), vueDevTools()],
   base: '/gms/',
   server: {
-    allowedHosts: ['trycloudflare.com', '*.trycloudflare.com', 'major-editing-shorter-strip.trycloudflare.com'],
+    allowedHosts: [
+      'trycloudflare.com',
+      '*.trycloudflare.com',
+      'shakira-graham-shanghai-complement.trycloudflare.com',
+    ],
   },
   resolve: {
     alias: {

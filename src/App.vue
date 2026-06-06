@@ -17,11 +17,10 @@ onMounted(() => {
 })
 
 watch(
-  () => themeStore.currentTheme,
+  () => themeStore.selectedPreset,
   () => {
     applyTheme()
   },
-  { deep: true },
 )
 </script>
 

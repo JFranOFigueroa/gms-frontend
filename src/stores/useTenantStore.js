@@ -14,6 +14,8 @@ export const useTenantStore = defineStore(
       },
     }),
 
+    persist: true,
+
     actions: {
       updateGym(payload) {
         this.gym = {

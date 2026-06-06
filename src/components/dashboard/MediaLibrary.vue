@@ -13,7 +13,7 @@ const mediaStore = useMediaStore()
       <div>
         <h1 class="text-4xl font-black">Media Library</h1>
 
-        <p class="text-zinc-500 mt-2">Gestiona imágenes y recursos visuales</p>
+        <p class="text-[var(--color-text-secondary)] mt-2">Gestiona imágenes y recursos visuales</p>
       </div>
     </div>
 

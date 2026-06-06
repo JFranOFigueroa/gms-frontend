@@ -62,7 +62,7 @@ const activeImage = ref(null)
             v-for="slide in slides"
             :key="slide.id"
             type="button"
-            class="rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900 hover:scale-[1.02] transition-all"
+            class="rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] hover:scale-[1.02] transition-all"
             @click="activeImage = slide"
           >
             <img :src="slide.url" class="w-full aspect-[4/3] object-cover" />
@@ -79,7 +79,7 @@ const activeImage = ref(null)
       <!-- CLOSE -->
       <button
         type="button"
-        class="absolute top-6 right-6 w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-2xl"
+        class="absolute top-6 right-6 w-14 h-14 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-2xl"
         @click="activeImage = null"
       >
         ✕

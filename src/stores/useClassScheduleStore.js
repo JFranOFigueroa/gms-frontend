@@ -8,6 +8,8 @@ export const useClassScheduleStore = defineStore(
       classes: [],
     }),
 
+    persist: true,
+
     actions: {
       addClass(payload) {
         this.classes.push({

@@ -1,30 +1,32 @@
 :root {
-  --color-background: #09090b;
-  --color-surface: #18181b;
-  --color-border: #27272a;
 
-  --color-primary: #ffffff;
-  --color-secondary: #a1a1aa;
+  --color-primary:
+    #22c55e;
 
-  --color-accent: #22c55e;
-}
-select,
-textarea,
-input {
-  color: white;
-}
-select {
-  background-color: rgb(24 24 27);
-}
-.fc {
-  color: white;
-}
+  --color-background:
+    #09090b;
 
-.fc-theme-standard td,
-.fc-theme-standard th {
-  border-color: rgb(39 39 42);
+  --color-surface:
+    #18181b;
+
+  --color-surface-hover:
+    #27272a;
+
+  --color-border:
+    #27272a;
+
+  --color-text:
+    #ffffff;
+
+  --color-text-secondary:
+    #a1a1aa;
 }
 
-.fc-theme-standard .fc-scrollgrid {
-  border-color: rgb(39 39 42);
+body {
+
+  background:
+    var(--color-background);
+
+  color:
+    var(--color-text);
 }

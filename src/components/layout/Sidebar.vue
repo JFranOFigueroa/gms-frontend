@@ -31,9 +31,11 @@ const logout = () => {
 </script>
 
 <template>
-  <aside class="w-72 border-r border-zinc-800 bg-[var(--color-surface)] h-screen">
+  <aside
+    class="hidden lg:flex fixed left-0 top-0 w-72 h-screen flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
+  >
     <!-- HEADER -->
-    <div class="p-6 border-b border-zinc-800">
+    <div class="p-6 border-b border-[var(--color-border)]">
       <RouterLink
         to="/"
         class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full"
@@ -41,7 +43,7 @@ const logout = () => {
         {{ tenantStore.gym.shortName }}
       </RouterLink>
 
-      <p class="text-zinc-500 mt-2 text-sm leading-relaxed break-words">
+      <p class="text-[var(--color-text-secondary)] mt-2 text-sm leading-relaxed break-words">
         {{ tenantStore.gym.name }}
       </p>
     </div>
@@ -52,13 +54,13 @@ const logout = () => {
         v-for="item in navigation"
         :key="item.path"
         :to="item.path"
-        class="flex items-center px-4 py-3 rounded-2xl hover:bg-zinc-900 transition-all"
+        class="flex items-center px-4 py-3 rounded-2xl hover:bg-[var(--color-surface-hover)] transition-all"
       >
         {{ item.label }}
       </RouterLink>
     </nav>
 
-    <div class="p-4 border-t border-zinc-800 mt-auto">
+    <div class="p-4 border-t border-[var(--color-border)] mt-auto">
       <BaseButton class="w-full" variant="secondary" @click="logout"> Cerrar sesión </BaseButton>
     </div>
   </aside>

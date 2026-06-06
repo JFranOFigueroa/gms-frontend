@@ -5,7 +5,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="bg-[var(--color-surface)] border border-zinc-800 rounded-3xl overflow-hidden">
+  <div
+    class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl overflow-hidden"
+  >
     <!-- Image -->
     <div class="aspect-video">
       <img :src="asset.url" :alt="asset.name" class="w-full h-full object-cover" />
@@ -17,7 +19,7 @@ defineProps({
         {{ asset.name }}
       </h3>
 
-      <p class="text-zinc-500 text-sm mt-1">
+      <p class="text-[var(--color-text-secondary)] text-sm mt-1">
         {{ asset.type }}
       </p>
     </div>

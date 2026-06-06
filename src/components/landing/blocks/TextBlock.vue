@@ -30,7 +30,10 @@ const alignMap = {
     :class="data.background ? 'bg-[var(--color-surface)]' : 'bg-[var(--color-background)]'"
   >
     <div class="mx-auto" :class="[widthMap[data.maxWidth], alignMap[data.align]]">
-      <p v-if="data.subtitle" class="text-zinc-500 uppercase tracking-[0.3em] mb-6">
+      <p
+        v-if="data.subtitle"
+        class="text-[var(--color-text-secondary)] uppercase tracking-[0.3em] mb-6"
+      >
         {{ data.subtitle }}
       </p>
 

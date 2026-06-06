@@ -49,10 +49,12 @@ const accessAsGuest = () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-6">
-    <div class="w-full max-w-md rounded-3xl border border-zinc-800 bg-[var(--color-surface)] p-8">
+    <div
+      class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8"
+    >
       <h1 class="text-4xl font-black mb-2">Clase muestra</h1>
 
-      <p class="text-zinc-500 mb-8">Registra tu acceso temporal</p>
+      <p class="text-[var(--color-text-secondary)] mb-8">Registra tu acceso temporal</p>
 
       <div class="space-y-6">
         <BaseInput v-model="name" placeholder="Nombre" />

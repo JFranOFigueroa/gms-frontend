@@ -46,6 +46,8 @@ export const useLandingStore = defineStore(
       ],
     }),
 
+    persist: true,
+
     getters: {
       sortedBlocks: (state) => {
         return state.blocks.filter((block) => block.enabled).sort((a, b) => a.order - b.order)

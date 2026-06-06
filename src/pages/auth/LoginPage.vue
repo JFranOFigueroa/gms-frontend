@@ -46,12 +46,14 @@ const login = () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-6">
-    <div class="w-full max-w-md rounded-3xl border border-zinc-800 bg-[var(--color-surface)] p-8">
+    <div
+      class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8"
+    >
       <h1 class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full">
         {{ tenantStore.gym.shortName }}
       </h1>
 
-      <p class="text-zinc-500 mb-8">Iniciar sesión</p>
+      <p class="text-[var(--color-text-secondary)] mb-8">Iniciar sesión</p>
 
       <div class="space-y-6">
         <BaseInput v-model="email" placeholder="Correo" />
@@ -63,7 +65,10 @@ const login = () => {
         <BaseButton class="w-full" @click="login"> Entrar </BaseButton>
 
         <div class="pt-4 text-center">
-          <RouterLink to="/guest-access" class="text-zinc-500 hover:text-white transition-all">
+          <RouterLink
+            to="/guest-access"
+            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-all"
+          >
             Ingresar como invitado
           </RouterLink>
         </div>

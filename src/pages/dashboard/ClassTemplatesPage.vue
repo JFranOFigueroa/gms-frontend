@@ -42,7 +42,7 @@ const addTemplate = () => {
     <div>
       <h1 class="text-4xl font-black">Plantillas de clases</h1>
 
-      <p class="text-zinc-500 mt-2">Gestiona los tipos de entrenamiento</p>
+      <p class="text-[var(--color-text-secondary)] mt-2">Gestiona los tipos de entrenamiento</p>
     </div>
 
     <!-- FORM -->
@@ -54,7 +54,7 @@ const addTemplate = () => {
           <input
             v-model="color"
             type="color"
-            class="h-14 rounded-2xl bg-zinc-900 border border-zinc-800"
+            class="h-14 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
           />
 
           <BaseInput v-model="duration" type="number" placeholder="Duración" />
@@ -83,7 +83,7 @@ const addTemplate = () => {
             </h2>
           </div>
 
-          <div class="text-zinc-500 space-y-1">
+          <div class="text-[var(--color-text-secondary)] space-y-1">
             <p>
               Duración:
               {{ template.duration }} min

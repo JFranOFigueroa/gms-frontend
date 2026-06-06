@@ -94,16 +94,16 @@ const title = computed({
               :class="block.enabled ? 'bg-green-500' : 'bg-red-500'"
             />
             <div
-              class="drag-handle cursor-grab active:cursor-grabbing w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+              class="drag-handle cursor-grab active:cursor-grabbing w-10 h-10 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center"
             >
-              <GripVertical class="w-5 h-5 text-zinc-500" />
+              <GripVertical class="w-5 h-5 text-[var(--color-text-secondary)]" />
             </div>
             <h3 class="text-2xl font-bold capitalize">
               {{ block.type }}
             </h3>
           </div>
 
-          <p class="text-zinc-500 mt-2">
+          <p class="text-[var(--color-text-secondary)] mt-2">
             Orden:
             {{ block.order }}
           </p>

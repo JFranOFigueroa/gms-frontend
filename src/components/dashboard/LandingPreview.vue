@@ -25,9 +25,11 @@ const previewWidth = computed(() => {
 </script>
 
 <template>
-  <div class="h-full rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden flex flex-col">
+  <div
+    class="h-full rounded-3xl border border-[var(--color-border)] bg-zinc-950 overflow-hidden flex flex-col"
+  >
     <!-- TOPBAR -->
-    <div class="h-14 border-b border-zinc-800 px-6 flex items-center justify-between">
+    <div class="h-14 border-b border-[var(--color-border)] px-6 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <div class="w-3 h-3 rounded-full bg-red-500" />
 
@@ -36,11 +38,11 @@ const previewWidth = computed(() => {
         <div class="w-3 h-3 rounded-full bg-green-500" />
       </div>
 
-      <div class="text-sm text-zinc-500">Preview</div>
+      <div class="text-sm text-[var(--color-text-secondary)]">Preview</div>
     </div>
 
     <!-- VIEWPORT -->
-    <div class="flex-1 overflow-auto bg-zinc-900 p-6 flex justify-center">
+    <div class="flex-1 overflow-auto bg-[var(--color-surface)] p-6 flex justify-center">
       <div
         class="transition-all duration-500 bg-black rounded-3xl overflow-hidden shadow-2xl min-h-full"
         :class="previewWidth"

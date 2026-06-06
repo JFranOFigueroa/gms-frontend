@@ -19,9 +19,11 @@ const emit = defineEmits(['close'])
         @click.self="emit('close')"
       >
         <div
-          class="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-[var(--color-surface)] p-8 shadow-2xl"
+          class="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl flex flex-col"
         >
-          <slot />
+          <div class="overflow-y-auto p-8">
+            <slot />
+          </div>
         </div>
       </div>
     </Transition>

@@ -13,11 +13,23 @@ import CreateClassModal from '@/components/calendar/CreateClassModal.vue'
 
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
+import DayScheduleModal from '@/components/calendar/DayScheduleModal.vue'
+
 const scheduleStore = useClassScheduleStore()
 
 const createModalOpen = ref(false)
 
 const selectedDate = ref(null)
+
+const dayScheduleOpen = ref(false)
+
+const selectedDay = ref(null)
+
+const openDaySchedule = (date) => {
+  selectedDay.value = date
+
+  dayScheduleOpen.value = true
+}
 
 const openCreateModal = (date) => {
   selectedDate.value = date
@@ -26,18 +38,34 @@ const openCreateModal = (date) => {
 }
 
 const events = computed(() => {
-  return scheduleStore.classes.map((gymClass) => ({
-    id: gymClass.id,
+  const grouped = {}
 
-    title: gymClass.name,
+  scheduleStore.classes.forEach((gymClass) => {
+    if (!grouped[gymClass.date]) {
+      grouped[gymClass.date] = {
+        normal: 0,
 
-    start: `${gymClass.date}T${gymClass.startTime}`,
+        special: 0,
+      }
+    }
 
-    end: `${gymClass.date}T${gymClass.endTime}`,
+    if (gymClass.special) {
+      grouped[gymClass.date].special++
+    } else {
+      grouped[gymClass.date].normal++
+    }
+  })
 
-    backgroundColor: gymClass.color,
+  return Object.entries(grouped).map(([date, summary]) => ({
+    title: `${summary.normal} clases`,
 
-    borderColor: gymClass.color,
+    start: date,
+
+    allDay: true,
+
+    extendedProps: {
+      summary,
+    },
   }))
 })
 
@@ -55,7 +83,11 @@ const calendarOptions = computed(() => ({
   events: events.value,
 
   dateClick(info) {
-    openCreateModal(info.dateStr)
+    openDaySchedule(info.dateStr)
+  },
+
+  eventClick(info) {
+    openDaySchedule(info.event.startStr)
   },
 }))
 </script>
@@ -66,19 +98,20 @@ const calendarOptions = computed(() => ({
     <div>
       <h1 class="text-4xl font-black">Calendario</h1>
 
-      <p class="text-zinc-500 mt-2">Gestión de clases y eventos</p>
+      <p class="text-[var(--color-text-secondary)] mt-2">Gestión de clases y eventos</p>
     </div>
 
     <!-- CALENDAR -->
-    <div class="rounded-3xl border border-zinc-800 bg-[var(--color-surface)] p-6">
+    <div class="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
       <FullCalendar :options="calendarOptions" />
     </div>
 
     <!-- MODAL -->
-    <CreateClassModal
-      :open="createModalOpen"
-      :selectedDate="selectedDate"
-      @close="createModalOpen = false"
+    <DayScheduleModal
+      :open="dayScheduleOpen"
+      :selectedDay="selectedDay"
+      @close="dayScheduleOpen = false"
+      @create="createModalOpen = true"
     />
   </div>
 </template>

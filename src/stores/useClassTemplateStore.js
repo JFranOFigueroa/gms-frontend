@@ -22,6 +22,8 @@ export const useClassTemplateStore = defineStore(
       ],
     }),
 
+    persist: true,
+
     actions: {
       addTemplate(template) {
         this.templates.push({

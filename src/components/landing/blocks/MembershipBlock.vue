@@ -13,7 +13,7 @@ defineProps({
           {{ data.title }}
         </h2>
 
-        <p class="text-zinc-500 mt-4">
+        <p class="text-[var(--color-text-secondary)] mt-4">
           {{ data.subtitle }}
         </p>
       </div>
@@ -26,8 +26,8 @@ defineProps({
           class="rounded-3xl border p-8 transition-all"
           :class="
             plan.featured
-              ? 'border-white bg-zinc-900 scale-105'
-              : 'border-zinc-800 bg-[var(--color-surface)]'
+              ? 'border-white bg-[var(--color-surface)] scale-105'
+              : 'border-[var(--color-border)] bg-[var(--color-surface)]'
           "
         >
           <div

@@ -1,30 +1,37 @@
 <script setup>
+import { themePresets } from '@/config/themePresets'
+
 import { useThemeStore } from '@/stores/useThemeStore'
 
-import BaseCard from '@/components/ui/BaseCard.vue'
+import ThemePreviewCard from './theme/ThemePreviewCard.vue'
 
 const themeStore = useThemeStore()
 
-const updateAccent = (event) => {
-  themeStore.currentTheme.colors.accent = event.target.value
+const selectPreset = (preset) => {
+  console.log('Preset seleccionado:', preset)
+
+  themeStore.applyPreset(preset)
 }
 </script>
 
 <template>
-  <BaseCard>
-    <h3 class="text-2xl font-bold mb-6">Theme Editor</h3>
+  <div class="space-y-6">
+    <div>
+      <h2 class="text-2xl font-black">Temas Recomendados</h2>
 
-    <div class="space-y-4">
-      <div>
-        <label class="block mb-2 text-zinc-400"> Accent Color </label>
-
-        <input
-          type="color"
-          :value="themeStore.currentTheme.colors.accent"
-          @input="updateAccent"
-          class="w-full h-14 rounded-xl overflow-hidden border border-zinc-800"
-        />
-      </div>
+      <p class="text-[var(--color-text-secondary)] mt-2">
+        Selecciona una identidad visual para tu gimnasio
+      </p>
     </div>
-  </BaseCard>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ThemePreviewCard
+        v-for="preset in themePresets"
+        :key="preset.id"
+        :preset="preset"
+        :selected="themeStore.selectedPreset === preset.id"
+        @select="selectPreset(preset)"
+      />
+    </div>
+  </div>
 </template>

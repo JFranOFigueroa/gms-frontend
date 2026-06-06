@@ -9,15 +9,17 @@ const sidebarOpen = ref(false)
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-background)] text-white flex">
-    <div class="hidden md:block">
-      <Sidebar />
-    </div>
+  <div class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
+    <Sidebar />
 
     <MobileSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
-    <div class="flex-1 flex flex-col">
-      <Topbar @toggle-sidebar="sidebarOpen = true" />
+    <div class="flex flex-col lg:ml-72">
+      <header
+        class="sticky top-0 z-40 bg-[var(--color-background)] border-b border-[var(--color-border)]"
+      >
+        <Topbar @toggle-sidebar="sidebarOpen = true" />
+      </header>
 
       <main class="flex-1 overflow-auto p-6">
         <RouterView />

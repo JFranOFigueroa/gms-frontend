@@ -53,7 +53,7 @@ const updateField = (field, value) => {
 
       <textarea
         rows="6"
-        class="w-full rounded-3xl bg-zinc-900 border border-zinc-800 px-5 py-4 outline-none focus:border-white transition-all"
+        class="w-full rounded-3xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-white transition-all"
         :value="block.data.text"
         @input="updateField('text', $event.target.value)"
       />

@@ -31,7 +31,9 @@ const landingStore = useLandingStore()
       <div>
         <h1 class="text-4xl font-black">Landing Builder</h1>
 
-        <p class="text-zinc-500 mt-2">Administra la estructura visual del sitio</p>
+        <p class="text-[var(--color-text-secondary)] mt-2">
+          Administra la estructura visual del sitio
+        </p>
       </div>
 
       <GymSettingsCard />
@@ -57,7 +59,7 @@ const landingStore = useLandingStore()
         <div>
           <h2 class="text-2xl font-black">Preview</h2>
 
-          <p class="text-zinc-500">Vista responsive</p>
+          <p class="text-[var(--color-text-secondary)]">Vista responsive</p>
         </div>
 
         <PreviewToolbar />

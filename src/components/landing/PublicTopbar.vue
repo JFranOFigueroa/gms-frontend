@@ -32,11 +32,11 @@ const tenantStore = useTenantStore()
         <!-- NOT AUTH -->
         <template v-if="!isAuthenticated">
           <RouterLink to="/guest-access">
-            <BaseButton variant="secondary"> Clase muestra </BaseButton>
+            <BaseButton size="sm"> Clase muestra </BaseButton>
           </RouterLink>
 
           <RouterLink to="/auth/login">
-            <BaseButton> Iniciar sesión </BaseButton>
+            <BaseButton size="sm" variant="secondary"> Iniciar sesión </BaseButton>
           </RouterLink>
         </template>
 

@@ -195,7 +195,7 @@ const toggleFeatured = (planId) => {
       <div
         v-for="plan in block.data.plans"
         :key="plan.id"
-        class="p-6 rounded-3xl border border-zinc-800 bg-zinc-900 space-y-4"
+        class="p-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-4"
       >
         <!-- TOP -->
         <div class="flex items-center justify-between">

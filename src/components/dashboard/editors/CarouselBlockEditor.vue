@@ -76,7 +76,7 @@ const toggleSlide = (imageId) => {
     />
 
     <!-- COUNT -->
-    <div class="text-zinc-500 text-sm">
+    <div class="text-[var(--color-text-secondary)] text-sm">
       {{ block.data.slides?.length || 0 }}
 
       imágenes seleccionadas

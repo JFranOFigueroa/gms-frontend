@@ -1,14 +1,22 @@
 import { defineStore } from 'pinia'
-import defaultTheme from '@/themes/defaultTheme'
+import { themePresets } from '@/config/themePresets'
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
-    currentTheme: defaultTheme,
+    selectedPreset: 'crossfit-dark',
   }),
 
+  persist: true,
+
+  getters: {
+    currentTheme(state) {
+      return themePresets.find((preset) => preset.id === state.selectedPreset) || themePresets[0]
+    },
+  },
+
   actions: {
-    setTheme(theme) {
-      this.currentTheme = theme
+    applyPreset(preset) {
+      this.selectedPreset = preset.id
     },
   },
 })
