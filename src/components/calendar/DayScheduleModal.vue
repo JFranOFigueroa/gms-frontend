@@ -185,7 +185,7 @@ const removeClass = (classId) => {
           </div>
 
           <!-- STATS -->
-          <div class="flex flex-wrap gap-4 text-sm text-zinc-400">
+          <div class="flex flex-wrap gap-4 text-sm text-[var(--color-text-secondary)]">
             <div>
               Capacidad:
               {{ gymClass.capacity }}

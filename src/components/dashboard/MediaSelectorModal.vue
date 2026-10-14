@@ -27,7 +27,7 @@ const isSelected = (id) => {
   <Transition name="fade">
     <div
       v-if="open"
-      class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+      class="fixed inset-0 z-50 bg-[var(--color-background)]/70 backdrop-blur-sm flex items-center justify-center p-6"
     >
       <div
         class="w-full max-w-6xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6"
@@ -58,8 +58,8 @@ const isSelected = (id) => {
             class="group relative rounded-3xl overflow-hidden border-2 transition-all duration-300"
             :class="
               isSelected(asset.id)
-                ? 'border-white scale-[0.98]'
-                : 'border-[var(--color-border)] hover:border-zinc-500'
+                ? 'border-[var(--color-primary)] scale-[0.98]'
+                : 'border-[var(--color-border)] hover:border-[var(--color-text-secondary)]'
             "
             @click="emit('select', asset.id)"
           >
@@ -72,13 +72,13 @@ const isSelected = (id) => {
             <!-- OVERLAY -->
             <div
               class="absolute inset-0 transition-all"
-              :class="isSelected(asset.id) ? 'bg-black/20' : 'bg-black/0 group-hover:bg-black/20'"
+              :class="isSelected(asset.id) ? 'bg-[var(--color-background)]/20' : 'bg-[var(--color-background)]/0 group-hover:bg-[var(--color-background)]/20'"
             />
 
             <!-- CHECK -->
             <div
               v-if="isSelected(asset.id)"
-              class="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white text-black flex items-center justify-center shadow-2xl"
+              class="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-[var(--color-text)] text-[var(--color-background)] flex items-center justify-center shadow-2xl"
             >
               <Check class="w-5 h-5" />
             </div>

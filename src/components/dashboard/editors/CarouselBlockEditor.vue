@@ -54,7 +54,7 @@ const toggleSlide = (imageId) => {
   <div class="space-y-6">
     <!-- TITLE -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Título </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Título </label>
 
       <BaseInput
         :model-value="block.data.title"

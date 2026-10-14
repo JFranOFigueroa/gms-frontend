@@ -1,18 +1,20 @@
 <script setup>
+import { ref } from 'vue'
+
 import { useLandingStore } from '@/stores/useLandingStore'
 
 import BlockList from '@/components/dashboard/BlockList.vue'
 import ThemeEditor from '@/components/dashboard/ThemeEditor.vue'
-import LandingPreview from '@/components/dashboard/LandingPreview.vue'
-import PreviewToolbar from '@/components/dashboard/PreviewToolbar.vue'
 import GymSettingsCard from '@/components/dashboard/GymSettingsCard.vue'
-
-import { ref } from 'vue'
-
+import ModuleSettingsCard from '@/components/dashboard/ModuleSettingsCard.vue'
 import AddBlockModal from '@/components/dashboard/AddBlockModal.vue'
+import PreviewModal from '@/components/dashboard/PreviewModal.vue'
+
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const addBlockModal = ref(false)
+
+const previewModal = ref(false)
 
 const handleAddBlock = (config) => {
   landingStore.addBlock(config)
@@ -24,10 +26,9 @@ const landingStore = useLandingStore()
 </script>
 
 <template>
-  <div class="flex flex-col xl:grid xl:grid-cols-5 gap-6 min-h-[calc(100vh-120px)]">
-    <!-- LEFT PANEL -->
-    <div class="xl:col-span-2 overflow-auto pr-2 space-y-6">
-      <!-- Header -->
+  <div class="space-y-0">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 class="text-4xl font-black">Landing Builder</h1>
 
@@ -36,36 +37,28 @@ const landingStore = useLandingStore()
         </p>
       </div>
 
+      <BaseButton @click="previewModal = true"> Vista previa </BaseButton>
+    </div>
+
+    <AddBlockModal
+      :open="addBlockModal"
+      @close="addBlockModal = false"
+      @select="handleAddBlock"
+    />
+
+    <PreviewModal :open="previewModal" @close="previewModal = false" />
+
+    <div class="max-w-5xl space-y-6">
       <GymSettingsCard />
 
-      <!-- Theme -->
+      <ModuleSettingsCard />
+
       <ThemeEditor />
 
       <BaseButton @click="addBlockModal = true"> Agregar Bloque </BaseButton>
 
-      <AddBlockModal
-        :open="addBlockModal"
-        @close="addBlockModal = false"
-        @select="handleAddBlock"
-      />
-
       <!-- Blocks -->
       <BlockList :blocks="landingStore.blocks" />
-    </div>
-
-    <!-- PREVIEW -->
-    <div class="xl:col-span-3 min-h-[700px]">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-2xl font-black">Preview</h2>
-
-          <p class="text-[var(--color-text-secondary)]">Vista responsive</p>
-        </div>
-
-        <PreviewToolbar />
-      </div>
-
-      <LandingPreview />
     </div>
   </div>
 </template>

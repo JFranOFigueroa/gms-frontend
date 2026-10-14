@@ -15,7 +15,7 @@ const emit = defineEmits(['close'])
     <Transition name="fade">
       <div
         v-if="open"
-        class="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-6"
+        class="fixed inset-0 z-[999] flex items-center justify-center bg-[var(--color-background)]/70 backdrop-blur-sm p-6"
         @click.self="emit('close')"
       >
         <div

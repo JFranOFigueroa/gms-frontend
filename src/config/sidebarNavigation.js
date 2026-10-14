@@ -2,27 +2,43 @@ export const sidebarNavigation = {
   admin: [
     {
       label: 'Dashboard',
-
       path: '/dashboard',
     },
     {
+      label: 'POS',
+      path: '/dashboard/pos',
+      module: 'pos',
+    },
+    {
       label: 'Calendario',
-
       path: '/dashboard/calendar',
+      module: 'calendar',
     },
     {
       label: 'Plantillas',
-
       path: '/dashboard/class-templates',
+      module: 'calendar',
+    },
+    {
+      label: 'Rutinas',
+      path: '/dashboard/routines',
+      module: 'routines',
+    },
+    {
+      label: 'Usuarios',
+      path: '/dashboard/users',
+    },
+    {
+      label: 'Check-in',
+      path: '/dashboard/checkin-audit',
+      module: 'checkin',
     },
     {
       label: 'Landing Builder',
-
       path: '/dashboard/landing-builder',
     },
     {
       label: 'Multimedia',
-
       path: '/dashboard/media',
     },
   ],
@@ -30,41 +46,63 @@ export const sidebarNavigation = {
   trainer: [
     {
       label: 'Dashboard',
-
       path: '/dashboard',
     },
-
+    {
+      label: 'POS',
+      path: '/dashboard/pos',
+      module: 'pos',
+    },
     {
       label: 'Calendario',
-
       path: '/dashboard/calendar',
+      module: 'calendar',
     },
     {
       label: 'Plantillas',
-
       path: '/dashboard/class-templates',
+      module: 'calendar',
+    },
+    {
+      label: 'Rutinas',
+      path: '/dashboard/routines',
+      module: 'routines',
+    },
+    {
+      label: 'Check-in',
+      path: '/dashboard/checkin-audit',
+      module: 'checkin',
     },
   ],
 
   member: [
     {
-      label: 'Calendario',
-
-      path: '/dashboard/calendar',
+      label: 'Check-in',
+      path: '/dashboard/checkin',
+      module: 'checkin',
     },
-
     {
       label: 'Mi Rutina',
-
       path: '/dashboard/routine',
+      module: 'routines',
+    },
+    {
+      label: 'Calendario',
+      path: '/dashboard/calendar',
+      module: 'calendar',
     },
   ],
 
   guest: [
     {
+      label: 'Check-in',
+      path: '/dashboard/checkin',
+      module: 'checkin',
+    },
+    {
       label: 'Calendario',
-
       path: '/dashboard/calendar',
+      module: 'calendar',
     },
   ],
 }

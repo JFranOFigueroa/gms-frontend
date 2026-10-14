@@ -26,7 +26,7 @@ const previewWidth = computed(() => {
 
 <template>
   <div
-    class="h-full rounded-3xl border border-[var(--color-border)] bg-zinc-950 overflow-hidden flex flex-col"
+    class="h-full rounded-3xl border border-[var(--color-border)] bg-[var(--color-background)] overflow-hidden flex flex-col"
   >
     <!-- TOPBAR -->
     <div class="h-14 border-b border-[var(--color-border)] px-6 flex items-center justify-between">
@@ -44,7 +44,7 @@ const previewWidth = computed(() => {
     <!-- VIEWPORT -->
     <div class="flex-1 overflow-auto bg-[var(--color-surface)] p-6 flex justify-center">
       <div
-        class="transition-all duration-500 bg-black rounded-3xl overflow-hidden shadow-2xl min-h-full"
+        class="transition-all duration-500 bg-[var(--color-background)] rounded-3xl overflow-hidden shadow-2xl min-h-full"
         :class="previewWidth"
       >
         <BlockRenderer :blocks="landingStore.sortedBlocks" />

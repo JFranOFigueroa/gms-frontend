@@ -1,5 +1,15 @@
 <script setup>
+import { computed } from 'vue'
+
 import BaseCard from '@/components/ui/BaseCard.vue'
+
+import { useModuleStore } from '@/stores/useModuleStore'
+import { useCheckinStore } from '@/stores/useCheckinStore'
+
+const moduleStore = useModuleStore()
+const checkinStore = useCheckinStore()
+
+const showCheckin = computed(() => moduleStore.isModuleEnabled('checkin'))
 </script>
 
 <template>
@@ -25,6 +35,25 @@ import BaseCard from '@/components/ui/BaseCard.vue'
       </BaseCard>
     </div>
 
+    <!-- Check-in -->
+    <div v-if="showCheckin" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <BaseCard>
+        <p class="text-[var(--color-text-secondary)]">Check-ins hoy</p>
+
+        <h3 class="text-5xl font-black mt-4">
+          {{ checkinStore.stats.today }}
+        </h3>
+      </BaseCard>
+
+      <BaseCard>
+        <p class="text-[var(--color-text-secondary)]">Check-ins totales</p>
+
+        <h3 class="text-5xl font-black mt-4">
+          {{ checkinStore.stats.total }}
+        </h3>
+      </BaseCard>
+    </div>
+
     <!-- Main -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
       <!-- Calendar Preview -->
@@ -46,11 +75,11 @@ import BaseCard from '@/components/ui/BaseCard.vue'
           <h3 class="text-2xl font-bold mb-6">Actividad reciente</h3>
 
           <div class="space-y-4">
-            <div class="p-4 rounded-2xl var(--color-surface)">Nuevo miembro registrado</div>
+            <div class="p-4 rounded-2xl bg-[var(--color-surface)]">Nuevo miembro registrado</div>
 
-            <div class="p-4 rounded-2xl var(--color-surface)">Clase Full Body completada</div>
+            <div class="p-4 rounded-2xl bg-[var(--color-surface)]">Clase Full Body completada</div>
 
-            <div class="p-4 rounded-2xl var(--color-surface)">Membresía renovada</div>
+            <div class="p-4 rounded-2xl bg-[var(--color-surface)]">Membresía renovada</div>
           </div>
         </BaseCard>
       </div>

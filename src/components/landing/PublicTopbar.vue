@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -9,11 +10,15 @@ import { computed } from 'vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 
+import CheckInModal from '@/components/public/CheckInModal.vue'
+
 const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const tenantStore = useTenantStore()
+
+const checkInOpen = ref(false)
 </script>
 
 <template>
@@ -29,6 +34,10 @@ const tenantStore = useTenantStore()
 
       <!-- ACTIONS -->
       <div class="flex items-center gap-4">
+        <BaseButton size="sm" variant="secondary" @click="checkInOpen = true">
+          Check-in
+        </BaseButton>
+
         <!-- NOT AUTH -->
         <template v-if="!isAuthenticated">
           <RouterLink to="/guest-access">
@@ -49,4 +58,6 @@ const tenantStore = useTenantStore()
       </div>
     </div>
   </header>
+
+  <CheckInModal :open="checkInOpen" @close="checkInOpen = false" />
 </template>

@@ -26,13 +26,13 @@ defineProps({
           class="rounded-3xl border p-8 transition-all"
           :class="
             plan.featured
-              ? 'border-white bg-[var(--color-surface)] scale-105'
+              ? 'border-[var(--color-primary)] bg-[var(--color-surface)] scale-105'
               : 'border-[var(--color-border)] bg-[var(--color-surface)]'
           "
         >
           <div
             v-if="plan.featured"
-            class="inline-block px-4 py-1 rounded-full bg-white text-black text-sm font-bold mb-6"
+            class="inline-block px-4 py-1 rounded-full bg-[var(--color-text)] text-[var(--color-background)] text-sm font-bold mb-6"
           >
             Más Popular
           </div>
@@ -46,7 +46,7 @@ defineProps({
           </p>
 
           <ul class="mt-8 space-y-4">
-            <li v-for="benefit in plan.benefits" :key="benefit" class="text-zinc-300">
+            <li v-for="benefit in plan.benefits" :key="benefit" class="text-[var(--color-text-secondary)]">
               ✓ {{ benefit }}
             </li>
           </ul>

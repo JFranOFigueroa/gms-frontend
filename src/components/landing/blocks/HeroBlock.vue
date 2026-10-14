@@ -9,12 +9,14 @@ import 'swiper/css'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useMediaStore } from '@/stores/useMediaStore'
+import { useTenantStore } from '@/stores/useTenantStore'
 
 const props = defineProps({
   data: Object,
 })
 
 const mediaStore = useMediaStore()
+const tenantStore = useTenantStore()
 
 const slides = computed(() => {
   return props.data.slides
@@ -23,6 +25,8 @@ const slides = computed(() => {
     })
     .filter(Boolean)
 })
+
+const gymName = computed(() => tenantStore.gym?.name || 'GMS FITNESS')
 </script>
 
 <template>
@@ -43,7 +47,7 @@ const slides = computed(() => {
             <img :src="slide.url" class="absolute inset-0 w-full h-full object-cover" />
 
             <!-- Overlay -->
-            <div class="absolute inset-0 bg-black/70" />
+            <div class="absolute inset-0 bg-[var(--color-background)]/70" />
           </div>
         </SwiperSlide>
       </Swiper>
@@ -52,15 +56,15 @@ const slides = computed(() => {
     <!-- CONTENT -->
     <div class="relative z-10 h-full flex items-center justify-center px-6">
       <div class="max-w-4xl text-center">
-        <p class="text-zinc-300 mb-4">
-          {{ data.badge }}
+        <p class="text-[var(--color-text-secondary)] mb-4 break-words">
+          {{ gymName }}
         </p>
 
         <h1 class="text-5xl md:text-7xl font-black leading-tight">
           {{ data.title }}
         </h1>
 
-        <p class="text-zinc-300 text-lg mt-8">
+        <p class="text-[var(--color-text-secondary)] text-lg mt-8">
           {{ data.subtitle }}
         </p>
 

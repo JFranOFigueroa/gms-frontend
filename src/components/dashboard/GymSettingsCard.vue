@@ -37,14 +37,14 @@ watch(
 
       <!-- Gym Name -->
       <div>
-        <label class="block mb-2 text-zinc-400"> Nombre del gimnasio </label>
+        <label class="block mb-2 text-[var(--color-text-secondary)]"> Nombre del gimnasio </label>
 
         <BaseInput v-model="gymName" />
       </div>
 
       <!-- Short Name -->
       <div>
-        <label class="block mb-2 text-zinc-400"> Nombre corto </label>
+        <label class="block mb-2 text-[var(--color-text-secondary)]"> Nombre corto </label>
 
         <BaseInput v-model="shortName" />
       </div>

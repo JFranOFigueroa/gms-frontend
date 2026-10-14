@@ -8,8 +8,10 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useModuleStore } from '@/stores/useModuleStore'
 
 const authStore = useAuthStore()
+const moduleStore = useModuleStore()
 
 const router = useRouter()
 
@@ -43,7 +45,11 @@ const accessAsGuest = () => {
     },
   })
 
-  router.push('/dashboard/calendar')
+  const redirectTo = moduleStore.isModuleEnabled('checkin')
+    ? '/dashboard/checkin'
+    : '/dashboard/calendar'
+
+  router.push(redirectTo)
 }
 </script>
 

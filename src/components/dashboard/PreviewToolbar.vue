@@ -42,7 +42,7 @@ const devices = [
       variant="secondary"
       @click="builderStore.setPreviewDevice(device.id)"
       :class="{
-        '!border-white': builderStore.previewDevice === device.id,
+        '!border-[var(--color-primary)]': builderStore.previewDevice === device.id,
       }"
     >
       <component :is="device.icon" class="w-5 h-5" />

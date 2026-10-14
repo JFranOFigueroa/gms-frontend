@@ -48,7 +48,7 @@ const emit = defineEmits(['select'])
         {{ preset.name }}
       </h3>
 
-      <p class="text-sm var(--color-text-secondary) mt-1">
+      <p class="text-sm text-[var(--color-text-secondary)] mt-1">
         {{ preset.description }}
       </p>
     </div>

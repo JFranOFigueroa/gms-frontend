@@ -13,9 +13,13 @@ import { RouterLink } from 'vue-router'
 
 import { useTenantStore } from '@/stores/useTenantStore'
 
+import { useModuleStore } from '@/stores/useModuleStore'
+
 const tenantStore = useTenantStore()
 
 const authStore = useAuthStore()
+
+const moduleStore = useModuleStore()
 
 const router = useRouter()
 
@@ -40,15 +44,18 @@ const login = () => {
     },
   })
 
-  router.push('/dashboard')
+  const redirectTo =
+    authStore.user?.role === 'member' && moduleStore.isModuleEnabled('checkin')
+      ? '/dashboard/checkin'
+      : '/dashboard'
+
+  router.push(redirectTo)
 }
 </script>
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-6">
-    <div
-      class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8"
-    >
+    <div class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
       <h1 class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full">
         {{ tenantStore.gym.shortName }}
       </h1>

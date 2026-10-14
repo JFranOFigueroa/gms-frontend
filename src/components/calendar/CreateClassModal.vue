@@ -121,7 +121,7 @@ const createClass = () => {
       </div>
 
       <div class="space-y-2">
-        <label class="text-zinc-400"> Categoría </label>
+        <label class="text-[var(--color-text-secondary)]"> Categoría </label>
 
         <select
           v-model="category"

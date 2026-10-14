@@ -69,7 +69,7 @@ const bookClass = () => {
       </div>
 
       <!-- INFO -->
-      <div class="space-y-2 text-zinc-400">
+      <div class="space-y-2 text-[var(--color-text-secondary)]">
         <p>
           Horario:
           {{ gymClass.startTime }}

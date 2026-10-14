@@ -74,7 +74,7 @@ const activeImage = ref(null)
   <Transition name="fade">
     <div
       v-if="activeImage"
-      class="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6"
+      class="fixed inset-0 z-[999] bg-[var(--color-background)]/90 backdrop-blur-sm flex items-center justify-center p-6"
     >
       <!-- CLOSE -->
       <button

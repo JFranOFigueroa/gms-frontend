@@ -169,14 +169,14 @@ const toggleFeatured = (planId) => {
   <div class="space-y-6">
     <!-- TITLE -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Título </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Título </label>
 
       <BaseInput v-model="title" />
     </div>
 
     <!-- SUBTITLE -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Subtítulo </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Subtítulo </label>
 
       <BaseInput v-model="subtitle" />
     </div>
@@ -214,7 +214,7 @@ const toggleFeatured = (planId) => {
 
         <!-- NAME -->
         <div>
-          <label class="block mb-2 text-zinc-400"> Nombre </label>
+          <label class="block mb-2 text-[var(--color-text-secondary)]"> Nombre </label>
 
           <BaseInput
             :model-value="plan.name"
@@ -224,7 +224,7 @@ const toggleFeatured = (planId) => {
 
         <!-- PRICE -->
         <div>
-          <label class="block mb-2 text-zinc-400"> Precio </label>
+          <label class="block mb-2 text-[var(--color-text-secondary)]"> Precio </label>
 
           <BaseInput
             :model-value="plan.price"
@@ -243,7 +243,7 @@ const toggleFeatured = (planId) => {
 
         <!-- BENEFITS -->
         <div>
-          <label class="block mb-2 text-zinc-400"> Beneficios </label>
+          <label class="block mb-2 text-[var(--color-text-secondary)]"> Beneficios </label>
 
           <div class="space-y-2">
             <div v-for="(benefit, benefitIndex) in plan.benefits" :key="benefitIndex">

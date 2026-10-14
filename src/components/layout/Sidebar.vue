@@ -7,6 +7,8 @@ import { sidebarNavigation } from '@/config/sidebarNavigation'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 
+import { useModuleStore } from '@/stores/useModuleStore'
+
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useRouter } from 'vue-router'
@@ -17,8 +19,12 @@ const tenantStore = useTenantStore()
 
 const authStore = useAuthStore()
 
+const moduleStore = useModuleStore()
+
 const navigation = computed(() => {
-  return sidebarNavigation[authStore.role] || []
+  return (sidebarNavigation[authStore.role] || []).filter((item) => {
+    return !item.module || moduleStore.isModuleEnabled(item.module)
+  })
 })
 
 const router = useRouter()

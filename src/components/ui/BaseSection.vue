@@ -13,7 +13,7 @@ defineProps({
           {{ title }}
         </h2>
 
-        <p v-if="subtitle" class="text-zinc-400 mt-4">
+        <p v-if="subtitle" class="text-[var(--color-text-secondary)] mt-4">
           {{ subtitle }}
         </p>
       </div>

@@ -1,5 +1,34 @@
 <script setup>
+import { computed } from 'vue'
+
+import { useAuthStore } from '@/stores/useAuthStore'
+
 defineEmits(['toggle-sidebar'])
+
+const authStore = useAuthStore()
+
+const userName = computed(() => authStore.user?.name || 'Usuario')
+
+const userRole = computed(() => {
+  switch (authStore.role) {
+    case 'admin':
+      return 'Administrador'
+
+    case 'trainer':
+      return 'Entrenador'
+
+    case 'member':
+      return 'Miembro'
+
+    case 'guest':
+      return 'Invitado'
+
+    default:
+      return 'Usuario'
+  }
+})
+
+const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 </script>
 
 <template>
@@ -38,15 +67,19 @@ defineEmits(['toggle-sidebar'])
         class="flex items-center gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-2"
       >
         <div
-          class="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center font-bold"
+          class="w-10 h-10 rounded-xl bg-[var(--color-text)] text-[var(--color-background)] flex items-center justify-center font-bold"
         >
-          A
+          {{ userInitial }}
         </div>
 
         <div class="hidden md:block">
-          <p class="font-semibold">Admin</p>
+          <p class="font-semibold">
+            {{ userName }}
+          </p>
 
-          <p class="text-xs text-[var(--color-text-secondary)]">Administrator</p>
+          <p class="text-xs text-[var(--color-text-secondary)]">
+            {{ userRole }}
+          </p>
         </div>
       </div>
     </div>

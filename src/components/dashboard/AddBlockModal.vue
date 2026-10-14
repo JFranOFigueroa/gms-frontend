@@ -12,7 +12,7 @@ const emit = defineEmits(['close', 'select'])
   <Transition name="fade">
     <div
       v-if="open"
-      class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+      class="fixed inset-0 z-50 bg-[var(--color-background)]/70 backdrop-blur-sm flex items-center justify-center p-6"
     >
       <div
         class="w-full max-w-5xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6"
@@ -38,7 +38,7 @@ const emit = defineEmits(['close', 'select'])
           <button
             v-for="block in blockRegistry"
             :key="block.type"
-            class="text-left p-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-white transition-all"
+            class="text-left p-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)] transition-all"
             @click="emit('select', block)"
           >
             <div class="text-5xl mb-4">

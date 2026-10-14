@@ -41,7 +41,7 @@ const alignMap = {
         {{ data.title }}
       </h2>
 
-      <p class="text-zinc-300 text-lg mt-8 leading-relaxed">
+      <p class="text-[var(--color-text-secondary)] text-lg mt-8 leading-relaxed">
         {{ data.text }}
       </p>
     </div>

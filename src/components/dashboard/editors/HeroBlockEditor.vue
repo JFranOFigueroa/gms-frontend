@@ -76,13 +76,13 @@ const addSlide = (imageId) => {
 <template>
   <div class="space-y-4">
     <div>
-      <label class="block mb-2 text-zinc-400"> Título </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Título </label>
 
       <BaseInput v-model="title" />
     </div>
 
     <div>
-      <label class="block mb-2 text-zinc-400"> Subtítulo </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Subtítulo </label>
 
       <BaseInput v-model="subtitle" />
     </div>

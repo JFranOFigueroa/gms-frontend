@@ -29,7 +29,7 @@ const updateField = (field, value) => {
   <div class="space-y-6">
     <!-- TITLE -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Título </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Título </label>
 
       <BaseInput
         :model-value="block.data.title"
@@ -39,7 +39,7 @@ const updateField = (field, value) => {
 
     <!-- SUBTITLE -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Subtítulo </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Subtítulo </label>
 
       <BaseInput
         :model-value="block.data.subtitle"
@@ -49,11 +49,11 @@ const updateField = (field, value) => {
 
     <!-- CONTENT -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Contenido </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Contenido </label>
 
       <textarea
         rows="6"
-        class="w-full rounded-3xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-white transition-all"
+        class="w-full rounded-3xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-[var(--color-primary)] transition-all"
         :value="block.data.text"
         @input="updateField('text', $event.target.value)"
       />
@@ -61,7 +61,7 @@ const updateField = (field, value) => {
 
     <!-- ALIGN -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Alineación </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Alineación </label>
 
       <div class="flex gap-3">
         <BaseButton variant="secondary" @click="updateField('align', 'left')"> Left </BaseButton>
@@ -76,7 +76,7 @@ const updateField = (field, value) => {
 
     <!-- WIDTH -->
     <div>
-      <label class="block mb-2 text-zinc-400"> Anchura </label>
+      <label class="block mb-2 text-[var(--color-text-secondary)]"> Anchura </label>
 
       <div class="flex flex-wrap gap-3">
         <BaseButton variant="secondary" @click="updateField('maxWidth', 'sm')"> SM </BaseButton>

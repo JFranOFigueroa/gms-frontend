@@ -4,15 +4,19 @@ import { RouterLink } from 'vue-router'
 import { computed } from 'vue'
 import { sidebarNavigation } from '@/config/sidebarNavigation'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useModuleStore } from '@/stores/useModuleStore'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const tenantStore = useTenantStore()
 const authStore = useAuthStore()
+const moduleStore = useModuleStore()
 const router = useRouter()
 
 const navigation = computed(() => {
-  return sidebarNavigation[authStore.role] || []
+  return (sidebarNavigation[authStore.role] || []).filter((item) => {
+    return !item.module || moduleStore.isModuleEnabled(item.module)
+  })
 })
 
 const emit = defineEmits(['close'])
@@ -32,7 +36,7 @@ defineProps({
 
 <template>
   <Transition name="fade">
-    <div v-if="open" class="fixed inset-0 z-50 bg-black/60 lg:hidden" @click="$emit('close')">
+    <div v-if="open" class="fixed inset-0 z-50 bg-[var(--color-background)]/60 lg:hidden" @click="$emit('close')">
       <aside
         class="w-72 h-full bg-[var(--color-surface)] border-r border-[var(--color-border)] p-6"
         @click.stop
