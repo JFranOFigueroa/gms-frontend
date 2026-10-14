@@ -1,11 +1,22 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+import { RouterLink, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useCheckinStore } from '@/stores/useCheckinStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
+import { usePosStore } from '@/stores/usePosStore'
 
 defineEmits(['toggle-sidebar'])
 
 const authStore = useAuthStore()
+const checkinStore = useCheckinStore()
+const notificationStore = useNotificationStore()
+const posStore = usePosStore()
+const router = useRouter()
+
+const notificationOpen = ref(false)
 
 const userName = computed(() => authStore.user?.name || 'Usuario')
 
@@ -13,22 +24,88 @@ const userRole = computed(() => {
   switch (authStore.role) {
     case 'admin':
       return 'Administrador'
-
     case 'trainer':
       return 'Entrenador'
-
     case 'member':
       return 'Miembro'
-
     case 'guest':
       return 'Invitado'
-
     default:
       return 'Usuario'
   }
 })
 
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
+
+const syncNotifications = () => {
+  checkinStore.checkins.slice(0, 10).forEach((checkin) => {
+    notificationStore.ensureNotification({
+      id: `checkin-${checkin.id}`,
+      type: 'check-in',
+      title: `${checkin.userName} hizo check-in`,
+      description: `${checkin.method} · ${checkin.role}`,
+      timestamp: checkin.timestamp,
+      target: '/dashboard/checkin-audit',
+    })
+  })
+
+  posStore.sales.slice(0, 10).forEach((sale) => {
+    notificationStore.ensureNotification({
+      id: `sale-${sale.id}`,
+      type: 'POS',
+      title: `Venta #${sale.id} registrada`,
+      description: `${sale.items.length} producto(s) · $${sale.total}`,
+      timestamp: sale.createdAt,
+      target: '/dashboard/pos',
+    })
+  })
+
+  const lowStockIds = new Set(posStore.lowStockProducts.map((product) => product.id))
+
+  posStore.lowStockProducts.forEach((product) => {
+    notificationStore.ensureNotification({
+      id: `stock-${product.id}`,
+      type: 'stock',
+      title: `Stock bajo: ${product.name}`,
+      description: `Quedan ${product.stock} unidades`,
+      timestamp: new Date().toISOString(),
+      target: '/dashboard/pos',
+    })
+  })
+
+  notificationStore.items
+    .filter((notification) => notification.id.startsWith('stock-'))
+    .forEach((notification) => {
+      const id = Number(notification.id.replace('stock-', ''))
+
+      if (!lowStockIds.has(id)) {
+        notificationStore.removeNotification(notification.id)
+      }
+    })
+}
+
+watch(
+  () => [checkinStore.checkins, posStore.sales, posStore.lowStockProducts],
+  syncNotifications,
+  { immediate: true, deep: true },
+)
+
+const toggleNotifications = () => {
+  notificationOpen.value = !notificationOpen.value
+
+  if (notificationOpen.value) {
+    notificationStore.markAllAsRead()
+  }
+}
+
+const openNotification = (notification) => {
+  notificationStore.markAsRead(notification.id)
+  notificationOpen.value = false
+
+  if (notification.target) {
+    router.push(notification.target)
+  }
+}
 </script>
 
 <template>
@@ -56,11 +133,70 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
     <!-- RIGHT -->
     <div class="flex items-center gap-4">
       <!-- Notifications -->
-      <button
-        class="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
-      >
-        🔔
-      </button>
+      <div class="relative">
+        <button
+          class="relative w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+          @click="toggleNotifications"
+        >
+          🔔
+
+          <span
+            v-if="notificationStore.unreadCount"
+            class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white"
+          >
+            {{ notificationStore.unreadCount }}
+          </span>
+        </button>
+
+        <div
+          v-if="notificationOpen"
+          class="fixed inset-0 z-40"
+          @click="notificationOpen = false"
+        />
+
+        <div
+          v-if="notificationOpen"
+          class="absolute right-0 top-14 z-50 w-80 max-h-96 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl"
+        >
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-bold">Notificaciones</h3>
+
+            <span class="text-sm text-[var(--color-text-secondary)]">
+              {{ notificationStore.items.length }}
+            </span>
+          </div>
+
+          <div v-if="!notificationStore.items.length" class="text-[var(--color-text-secondary)]">
+            No hay notificaciones
+          </div>
+
+          <button
+            v-for="notification in notificationStore.sortedItems"
+            :key="notification.id"
+            type="button"
+            class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)]/40 p-3 text-left transition hover:border-[var(--color-primary)]"
+            @click="openNotification(notification)"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <p class="font-semibold">
+                {{ notification.title }}
+              </p>
+
+              <span class="rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-xs text-[var(--color-primary)]">
+                {{ notification.type }}
+              </span>
+            </div>
+
+            <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
+              {{ notification.description }}
+            </p>
+
+            <p class="mt-1 text-xs text-[var(--color-text-secondary)]">
+              {{ new Date(notification.timestamp).toLocaleString() }}
+            </p>
+          </button>
+        </div>
+      </div>
 
       <!-- User -->
       <div

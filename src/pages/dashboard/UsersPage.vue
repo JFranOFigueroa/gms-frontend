@@ -21,6 +21,11 @@ const email = ref('')
 const phone = ref('')
 const role = ref('member')
 
+const startDate = ref('')
+const paymentModality = ref('monthly')
+
+const isMemberForm = computed(() => role.value === 'member')
+
 const roleLabels = {
   admin: 'Administrador',
   trainer: 'Entrenador',
@@ -49,6 +54,8 @@ const resetForm = () => {
   email.value = ''
   phone.value = ''
   role.value = 'member'
+  startDate.value = ''
+  paymentModality.value = 'monthly'
 }
 
 const openCreate = () => {
@@ -62,6 +69,8 @@ const openEdit = (user) => {
   email.value = user.email
   phone.value = user.phone || ''
   role.value = user.role
+  startDate.value = user.startDate || ''
+  paymentModality.value = user.paymentModality || 'monthly'
 
   modalOpen.value = true
 }
@@ -74,6 +83,8 @@ const saveUser = () => {
     email: email.value.trim(),
     phone: phone.value.trim(),
     role: role.value,
+    startDate: isMemberForm.value ? startDate.value : null,
+    paymentModality: isMemberForm.value ? paymentModality.value : null,
   }
 
   if (editingId.value) {
@@ -137,6 +148,10 @@ const deleteUser = (id) => {
             <p v-if="user.phone">{{ user.phone }}</p>
 
             <p>Estado: {{ user.active ? 'Activo' : 'Inactivo' }}</p>
+
+            <p v-if="user.role === 'member' && user.nextPaymentDate">
+              Próximo pago: {{ user.nextPaymentDate }} ({{ user.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})
+            </p>
           </div>
 
           <div v-if="user.role !== 'admin'" class="flex flex-wrap gap-3">
@@ -173,6 +188,15 @@ const deleteUser = (id) => {
           <option value="trainer">Entrenador</option>
           <option value="admin">Administrador</option>
         </select>
+
+        <div v-if="isMemberForm" class="grid gap-4">
+          <BaseInput v-model="startDate" type="date" placeholder="Fecha de ingreso" />
+
+          <select v-model="paymentModality" class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+            <option value="monthly">Mensualidad</option>
+            <option value="yearly">Anualidad</option>
+          </select>
+        </div>
 
         <BaseButton class="w-full" @click="saveUser">
           Guardar usuario

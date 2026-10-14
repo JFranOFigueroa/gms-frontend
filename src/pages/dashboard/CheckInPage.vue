@@ -7,11 +7,42 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
+import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
 const authStore = useAuthStore()
 const checkinStore = useCheckinStore()
+const scheduleStore = useClassScheduleStore()
 
 const manualToken = ref('')
+
+const todayISO = new Date().toISOString().split('T')[0]
+
+const gymCapacity = computed(() => {
+  const total = scheduleStore.classes
+    .filter((gymClass) => gymClass.date === todayISO)
+    .reduce((sum, gymClass) => sum + (Number(gymClass.capacity) || 0), 0)
+
+  return total > 0 ? total : 100
+})
+
+const occupancyPercent = computed(() => {
+  return Math.min(100, Math.round((checkinStore.todaysCheckins.length / gymCapacity.value) * 100))
+})
+
+const hourlyCounts = computed(() => {
+  const counts = Array.from({ length: 24 }, () => 0)
+
+  checkinStore.todaysCheckins.forEach((checkin) => {
+    const hour = new Date(checkin.timestamp).getHours()
+    counts[hour] += 1
+  })
+
+  return counts
+})
+
+const maxHourlyCount = computed(() => {
+  return Math.max(1, ...hourlyCounts.value)
+})
 const scannerStatus = ref('')
 const scannerRunning = ref(false)
 const videoRef = ref(null)
@@ -171,6 +202,63 @@ onBeforeUnmount(() => {
         </div>
       </BaseCard>
     </div>
+
+    <BaseCard>
+      <div class="space-y-5">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-2xl font-bold">Ocupación en vivo</h2>
+
+          <span class="text-sm text-[var(--color-text-secondary)]">
+            {{ checkinStore.todaysCheckins.length }} / {{ gymCapacity }} personas
+          </span>
+        </div>
+
+        <div class="space-y-2">
+          <div class="h-4 w-full overflow-hidden rounded-full bg-[var(--color-surface)]/60">
+            <div
+              class="h-full rounded-full bg-[var(--color-primary)] transition-all duration-500"
+              :style="{ width: `${occupancyPercent}%` }"
+            />
+          </div>
+
+          <p class="text-[var(--color-text-secondary)]">
+            {{ occupancyPercent }}% de ocupación actual
+          </p>
+        </div>
+      </div>
+    </BaseCard>
+
+    <BaseCard>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-2xl font-bold">Ocupación por hora</h2>
+
+          <p class="text-sm text-[var(--color-text-secondary)]">
+            Registros de hoy
+          </p>
+        </div>
+
+        <div class="flex h-48 items-end gap-1">
+          <div
+            v-for="(count, hour) in hourlyCounts"
+            :key="hour"
+            class="flex flex-1 flex-col items-center gap-1"
+          >
+            <div
+              class="w-full rounded-t-md bg-[var(--color-primary)]/70 transition-all duration-300"
+              :style="{
+                height: `${Math.max(4, (count / maxHourlyCount) * 100)}%`,
+              }"
+              :title="`${hour}:00 - ${count} check-ins`"
+            />
+
+            <span v-if="hour % 3 === 0" class="text-[10px] text-[var(--color-text-secondary)]">
+              {{ hour }}h
+            </span>
+          </div>
+        </div>
+      </div>
+    </BaseCard>
 
     <BaseCard>
       <div class="space-y-4">
