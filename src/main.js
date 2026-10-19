@@ -9,7 +9,6 @@ import router from './router'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useTenantStore } from '@/stores/useTenantStore'
-import { useThemeStore } from '@/stores/useThemeStore'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 

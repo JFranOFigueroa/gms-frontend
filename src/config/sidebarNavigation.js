@@ -29,6 +29,10 @@ export const sidebarNavigation = {
       path: '/dashboard/users',
     },
     {
+      label: 'Gimnasios',
+      path: '/dashboard/gyms',
+    },
+    {
       label: 'Check-in',
       path: '/dashboard/checkin-audit',
       module: 'checkin',

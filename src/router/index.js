@@ -142,6 +142,15 @@ const routes = [
           roles: ['admin'],
         },
       },
+      {
+        path: 'gyms',
+        name: 'gyms',
+        component: () => import('@/pages/dashboard/GymsPage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+        },
+      },
     ],
   },
 ]

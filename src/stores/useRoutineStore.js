@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import { useGymsStore } from '@/stores/useGymsStore'
+
 const createExercise = (name, sets, reps, rest, notes = '') => ({
   name,
   sets,
@@ -18,9 +20,10 @@ export const useRoutineStore = defineStore(
 
   {
     state: () => ({
-      routines: [
+      allRoutines: [
         {
           id: 1,
+          gymId: 1,
           name: 'Rutina 3 días',
           description: 'Rutina general de cuerpo completo para empezar a entrenar.',
           level: 'beginner',
@@ -48,6 +51,7 @@ export const useRoutineStore = defineStore(
         },
         {
           id: 2,
+          gymId: 1,
           name: 'Rutina 4 días (Avanzado)',
           description: 'Rutina dividida para mayor volumen y fuerza.',
           level: 'advanced',
@@ -81,16 +85,32 @@ export const useRoutineStore = defineStore(
       ],
     }),
 
-    persist: true,
+    persist: {
+      key: 'gms-routines-v2',
+    },
 
     getters: {
-      publishedRoutines: (state) => state.routines.filter((routine) => routine.published),
+      routines(state) {
+        const gymsStore = useGymsStore()
+        const activeGymId = gymsStore.activeGymId
+
+        return state.allRoutines.filter((routine) => {
+          return routine.gymId == null || routine.gymId === activeGymId
+        })
+      },
+
+      publishedRoutines() {
+        return this.routines.filter((routine) => routine.published)
+      },
     },
 
     actions: {
       addRoutine(payload) {
-        this.routines.push({
+        const gymsStore = useGymsStore()
+
+        this.allRoutines.push({
           id: Date.now(),
+          gymId: gymsStore.activeGymId,
           published: true,
           createdAt: new Date().toISOString().split('T')[0],
           createdBy: 'Admin',
@@ -99,18 +119,18 @@ export const useRoutineStore = defineStore(
       },
 
       updateRoutine(id, payload) {
-        const index = this.routines.findIndex((routine) => routine.id === id)
+        const index = this.allRoutines.findIndex((routine) => routine.id === id)
 
         if (index === -1) return
 
-        this.routines[index] = {
-          ...this.routines[index],
+        this.allRoutines[index] = {
+          ...this.allRoutines[index],
           ...payload,
         }
       },
 
       removeRoutine(id) {
-        this.routines = this.routines.filter((routine) => routine.id !== id)
+        this.allRoutines = this.allRoutines.filter((routine) => routine.id !== id)
       },
     },
   },

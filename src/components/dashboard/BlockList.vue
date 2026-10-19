@@ -19,9 +19,7 @@ const draggableBlocks = computed({
   },
 
   set(value) {
-    landingStore.blocks = value
-
-    landingStore.recalculateOrder()
+    landingStore.setBlocks(value)
   },
 })
 </script>

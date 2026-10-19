@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import { useGymsStore } from '@/stores/useGymsStore'
+
 const todayKey = (timestamp = Date.now()) => {
   return new Date(timestamp).toISOString().split('T')[0]
 }
@@ -11,28 +13,39 @@ export const useCheckinStore = defineStore(
     state: () => ({
       activeToken: null,
       tokenExpiresAt: null,
-      checkins: [],
+      allCheckins: [],
     }),
 
-    persist: true,
+    persist: {
+      key: 'gms-checkin-v2',
+    },
 
     getters: {
       tokenIsValid: (state) => {
         return !!state.activeToken && !!state.tokenExpiresAt && state.tokenExpiresAt > Date.now()
       },
 
-      todaysCheckins: (state) => {
-        const today = todayKey()
+      checkins(state) {
+        const gymsStore = useGymsStore()
+        const activeGymId = gymsStore.activeGymId
 
-        return state.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today)
+        return state.allCheckins.filter((checkin) => {
+          return checkin.gymId == null || checkin.gymId === activeGymId
+        })
       },
 
-      stats(state) {
+      todaysCheckins() {
+        const today = todayKey()
+
+        return this.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today)
+      },
+
+      stats() {
         const today = todayKey()
 
         return {
-          total: state.checkins.length,
-          today: state.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today).length,
+          total: this.checkins.length,
+          today: this.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today).length,
         }
       },
     },
@@ -82,8 +95,11 @@ export const useCheckinStore = defineStore(
           }
         }
 
+        const gymsStore = useGymsStore()
+
         const checkin = {
           id: Date.now(),
+          gymId: gymsStore.activeGymId,
           userId: normalizedUserId,
           userName: userName || 'Invitado',
           role: role || 'member',
@@ -92,7 +108,7 @@ export const useCheckinStore = defineStore(
           timestamp: new Date().toISOString(),
         }
 
-        this.checkins.unshift(checkin)
+        this.allCheckins.unshift(checkin)
 
         return {
           ok: true,

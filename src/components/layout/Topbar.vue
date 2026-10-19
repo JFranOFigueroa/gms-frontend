@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import { usePosStore } from '@/stores/usePosStore'
 
@@ -12,11 +13,42 @@ defineEmits(['toggle-sidebar'])
 
 const authStore = useAuthStore()
 const checkinStore = useCheckinStore()
+const gymsStore = useGymsStore()
 const notificationStore = useNotificationStore()
 const posStore = usePosStore()
 const router = useRouter()
 
 const notificationOpen = ref(false)
+
+const canSwitchGym = computed(() => ['admin', 'trainer'].includes(authStore.role))
+
+const availableGyms = computed(() => {
+  if (authStore.role === 'admin') return gymsStore.gyms
+
+  const allowedIds = authStore.user?.gymIds
+
+  if (!allowedIds?.length) return gymsStore.gyms
+
+  return gymsStore.gyms.filter((gym) => allowedIds.includes(gym.id))
+})
+
+const changeGym = (event) => {
+  gymsStore.setActiveGym(Number(event.target.value))
+
+  posStore.clearCart()
+}
+
+watch(
+  availableGyms,
+  (gyms) => {
+    if (!canSwitchGym.value || !gyms.length) return
+
+    if (!gyms.some((gym) => gym.id === gymsStore.activeGymId)) {
+      gymsStore.setActiveGym(gyms[0].id)
+    }
+  },
+  { immediate: true },
+)
 
 const userName = computed(() => authStore.user?.name || 'Usuario')
 
@@ -132,6 +164,19 @@ const openNotification = (notification) => {
 
     <!-- RIGHT -->
     <div class="flex items-center gap-4">
+      <!-- Gym selector -->
+      <div v-if="canSwitchGym" class="hidden sm:block">
+        <select
+          :value="gymsStore.activeGymId"
+          class="h-12 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-sm"
+          @change="changeGym"
+        >
+          <option v-for="gym in availableGyms" :key="gym.id" :value="gym.id">
+            {{ gym.name }}
+          </option>
+        </select>
+      </div>
+
       <!-- Notifications -->
       <div class="relative">
         <button

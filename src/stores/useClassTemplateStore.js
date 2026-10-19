@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
 
+import { useGymsStore } from '@/stores/useGymsStore'
+
 export const useClassTemplateStore = defineStore(
   'class-templates',
 
   {
     state: () => ({
-      templates: [
+      allTemplates: [
         {
           id: 1,
+
+          gymId: 1,
 
           name: 'Full Body',
 
@@ -22,19 +26,36 @@ export const useClassTemplateStore = defineStore(
       ],
     }),
 
-    persist: true,
+    persist: {
+      key: 'gms-class-templates-v2',
+    },
+
+    getters: {
+      templates(state) {
+        const gymsStore = useGymsStore()
+        const activeGymId = gymsStore.activeGymId
+
+        return state.allTemplates.filter((template) => {
+          return template.gymId == null || template.gymId === activeGymId
+        })
+      },
+    },
 
     actions: {
       addTemplate(template) {
-        this.templates.push({
+        const gymsStore = useGymsStore()
+
+        this.allTemplates.push({
           id: Date.now(),
+
+          gymId: gymsStore.activeGymId,
 
           ...template,
         })
       },
 
       removeTemplate(id) {
-        this.templates = this.templates.filter((t) => t.id !== id)
+        this.allTemplates = this.allTemplates.filter((t) => t.id !== id)
       },
     },
   },

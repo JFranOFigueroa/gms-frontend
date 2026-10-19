@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -7,8 +7,10 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useUserStore } from '@/stores/useUserStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 const userStore = useUserStore()
+const gymsStore = useGymsStore()
 
 const modalOpen = ref(false)
 const editingId = ref(null)
@@ -24,7 +26,40 @@ const role = ref('member')
 const startDate = ref('')
 const paymentModality = ref('monthly')
 
+const selectedGymIds = ref([])
+const defaultGymId = ref(null)
+
 const isMemberForm = computed(() => role.value === 'member')
+const isTrainerForm = computed(() => role.value === 'trainer')
+
+const selectedGyms = computed(() => {
+  return gymsStore.gyms.filter((gym) => selectedGymIds.value.includes(gym.id))
+})
+
+const gymName = (id) => gymsStore.getGymById(id)?.name || 'Gimnasio'
+
+const toggleGymAccess = (gymId) => {
+  if (selectedGymIds.value.includes(gymId)) {
+    selectedGymIds.value = selectedGymIds.value.filter((id) => id !== gymId)
+
+    if (defaultGymId.value === gymId) {
+      defaultGymId.value = selectedGymIds.value[0] ?? null
+    }
+  } else {
+    selectedGymIds.value = [...selectedGymIds.value, gymId]
+
+    if (!defaultGymId.value) {
+      defaultGymId.value = gymId
+    }
+  }
+}
+
+watch(role, (value) => {
+  if (value === 'trainer' && !selectedGymIds.value.length) {
+    selectedGymIds.value = [gymsStore.activeGymId]
+    defaultGymId.value = gymsStore.activeGymId
+  }
+})
 
 const roleLabels = {
   admin: 'Administrador',
@@ -56,6 +91,8 @@ const resetForm = () => {
   role.value = 'member'
   startDate.value = ''
   paymentModality.value = 'monthly'
+  selectedGymIds.value = []
+  defaultGymId.value = null
 }
 
 const openCreate = () => {
@@ -72,6 +109,18 @@ const openEdit = (user) => {
   startDate.value = user.startDate || ''
   paymentModality.value = user.paymentModality || 'monthly'
 
+  if (user.role === 'trainer') {
+    selectedGymIds.value = user.gymIds?.length
+      ? [...user.gymIds]
+      : user.gymId
+        ? [user.gymId]
+        : []
+    defaultGymId.value = user.defaultGymId || selectedGymIds.value[0] || null
+  } else {
+    selectedGymIds.value = []
+    defaultGymId.value = null
+  }
+
   modalOpen.value = true
 }
 
@@ -85,6 +134,15 @@ const saveUser = () => {
     role: role.value,
     startDate: isMemberForm.value ? startDate.value : null,
     paymentModality: isMemberForm.value ? paymentModality.value : null,
+  }
+
+  if (isTrainerForm.value) {
+    const gymIds = selectedGymIds.value.length
+      ? [...selectedGymIds.value]
+      : [gymsStore.activeGymId]
+
+    payload.gymIds = gymIds
+    payload.defaultGymId = gymIds.includes(defaultGymId.value) ? defaultGymId.value : gymIds[0]
   }
 
   if (editingId.value) {
@@ -152,6 +210,14 @@ const deleteUser = (id) => {
             <p v-if="user.role === 'member' && user.nextPaymentDate">
               Próximo pago: {{ user.nextPaymentDate }} ({{ user.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})
             </p>
+
+            <p v-if="user.role === 'trainer' && user.gymIds?.length">
+              Gimnasios: {{ user.gymIds.map(gymName).join(', ') }}
+            </p>
+
+            <p v-if="user.role === 'trainer' && user.defaultGymId">
+              Gimnasio por defecto: {{ gymName(user.defaultGymId) }}
+            </p>
           </div>
 
           <div v-if="user.role !== 'admin'" class="flex flex-wrap gap-3">
@@ -196,6 +262,44 @@ const deleteUser = (id) => {
             <option value="monthly">Mensualidad</option>
             <option value="yearly">Anualidad</option>
           </select>
+        </div>
+
+        <div v-if="isTrainerForm" class="grid gap-4">
+          <div>
+            <p class="mb-2 text-[var(--color-text-secondary)]">Gimnasios con acceso</p>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <button
+                v-for="gym in gymsStore.gyms"
+                :key="gym.id"
+                type="button"
+                class="rounded-2xl border p-3 text-left transition"
+                :class="
+                  selectedGymIds.includes(gym.id)
+                    ? 'border-[var(--color-primary)]'
+                    : 'border-[var(--color-border)]'
+                "
+                @click="toggleGymAccess(gym.id)"
+              >
+                <p class="font-semibold">{{ gym.name }}</p>
+
+                <p class="text-xs text-[var(--color-text-secondary)]">{{ gym.shortName }}</p>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p class="mb-2 text-[var(--color-text-secondary)]">Gimnasio por defecto</p>
+
+            <select
+              v-model="defaultGymId"
+              class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            >
+              <option v-for="gym in selectedGyms" :key="gym.id" :value="gym.id">
+                {{ gym.name }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <BaseButton class="w-full" @click="saveUser">

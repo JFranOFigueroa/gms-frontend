@@ -15,11 +15,19 @@ import { useTenantStore } from '@/stores/useTenantStore'
 
 import { useModuleStore } from '@/stores/useModuleStore'
 
+import { useGymsStore } from '@/stores/useGymsStore'
+
+import { useUserStore } from '@/stores/useUserStore'
+
 const tenantStore = useTenantStore()
 
 const authStore = useAuthStore()
 
 const moduleStore = useModuleStore()
+
+const gymsStore = useGymsStore()
+
+const userStore = useUserStore()
 
 const router = useRouter()
 
@@ -28,21 +36,33 @@ const email = ref('')
 const password = ref('')
 
 const login = () => {
+  const role = email.value.includes('admin')
+    ? 'admin'
+    : email.value.includes('trainer')
+      ? 'trainer'
+      : 'member'
+
+  const matched = userStore.findByEmail(email.value)
+
   authStore.login({
     token: 'fake-jwt-token',
 
     user: {
-      id: 1,
+      id: matched?.id ?? 1,
 
-      name: 'Demo User',
+      name: matched?.name ?? 'Demo User',
 
-      role: email.value.includes('admin')
-        ? 'admin'
-        : email.value.includes('trainer')
-          ? 'trainer'
-          : 'member',
+      role,
+
+      gymIds: role === 'trainer' ? matched?.gymIds ?? null : null,
+
+      defaultGymId: role === 'trainer' ? matched?.defaultGymId ?? null : null,
     },
   })
+
+  if (role === 'trainer' && matched?.defaultGymId) {
+    gymsStore.setActiveGym(matched.defaultGymId)
+  }
 
   const redirectTo =
     authStore.user?.role === 'member' && moduleStore.isModuleEnabled('checkin')

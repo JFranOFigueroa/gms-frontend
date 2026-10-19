@@ -166,6 +166,10 @@ const saleItems = computed(() => {
           <BaseButton variant="secondary"> Usuarios </BaseButton>
         </RouterLink>
 
+        <RouterLink v-if="isAdmin" to="/dashboard/gyms">
+          <BaseButton variant="secondary"> Gimnasios </BaseButton>
+        </RouterLink>
+
         <RouterLink to="/dashboard/pos">
           <BaseButton variant="secondary"> POS </BaseButton>
         </RouterLink>

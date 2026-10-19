@@ -6,12 +6,24 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 
 import { useTenantStore } from '@/stores/useTenantStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 const tenantStore = useTenantStore()
+const gymsStore = useGymsStore()
 
 const gymName = ref(tenantStore.gym.name)
 
 const shortName = ref(tenantStore.gym.shortName)
+
+watch(
+  () => gymsStore.activeGymId,
+
+  () => {
+    gymName.value = tenantStore.gym.name
+
+    shortName.value = tenantStore.gym.shortName
+  },
+)
 
 watch(
   [gymName, shortName],

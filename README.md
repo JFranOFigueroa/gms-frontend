@@ -11,11 +11,14 @@ GMS Frontend está pensado para cubrir dos enfoques de gimnasio dentro de una mi
 
 La propuesta principal es que la misma plataforma pueda cambiar su comportamiento mediante módulos activables y configurables, sin necesidad de forks del código. Un administrador puede activar o desactivar funcionalidades como calendario, rutinas, check-in, POS o gestión de usuarios desde el Landing Builder.
 
+Además, la plataforma es **multi-gimnasio**: un mismo administrador puede gestionar varios gimnasios y alternar entre ellos; la información operativa (clases, rutinas, POS, check-in, usuarios y landing) se muestra según el gimnasio activo seleccionado.
+
 ## Enfoque
 
 - **Frontend-first**: toda la aplicación corre actualmente en el navegador usando stores de Pinia y `localStorage`.
 - **Modular**: funcionalidades clave se registran mediante módulos configurables.
 - **Multi-rol**: la interfaz se adapta a `admin`, `trainer`, `member` y `guest`.
+- **Multi-gimnasio**: los recursos operativos se aíslan por gimnasio y el contexto se controla con un selector de gimnasio activo.
 - **Configurable**: el gimnasio puede personalizar identidad, tema visual, landing y módulos activos.
 - **Escalable a backend**: las pantallas y stores están organizadas por dominio para facilitar una futura integración con API y base de datos.
 
@@ -42,6 +45,7 @@ La propuesta principal es que la misma plataforma pueda cambiar su comportamient
 - **Check-in**: registro de llegada mediante QR efímero y auditoría.
 - **POS**: punto de venta, inventario y reportes.
 - **Usuarios**: administración de miembros, entrenadores y administradores.
+- **Gimnasios**: administración multi-gimnasio y selector de gimnasio activo (solo admin).
 - **Tema visual**: presets de color aplicados mediante variables CSS.
 - **Multimedia**: biblioteca local de recursos visuales.
 
@@ -82,9 +86,10 @@ El preset seleccionado se persiste en el store de tema y se aplica automáticame
 Actualmente es simulada:
 
 - `LoginPage.vue` determina el rol por el contenido del correo.
+- Además, resuelve el usuario real desde `useUserStore` por correo para tomar su identidad y, si es `trainer`, sus gimnasios con acceso y su gimnasio por defecto.
 - `GuestAccessPage.vue` permite acceso temporal por teléfono.
 - `useAuthStore` persiste usuario y token en `localStorage`.
-- El router protege rutas con `requiresAuth`.
+- El router protege rutas con `requiresAuth` y `roles`.
 
 Roles:
 
@@ -102,7 +107,10 @@ Roles:
 - `checkin`
 - `pos`
 
-El módulo `users` permanece siempre activo para administradores.
+Los módulos `users` y `gyms` permanecen siempre activos y no son configurables:
+
+- `users`: disponible solo para `admin`.
+- `gyms`: gestión multi-gimnasio, disponible solo para `admin`.
 
 El store de módulos define presets:
 
@@ -112,7 +120,7 @@ El store de módulos define presets:
 
 ### Navegación por rol
 
-`sidebarNavigation.js` define las rutas visibles según rol. Los items con campo `module` solo se muestran si el módulo está activo.
+`sidebarNavigation.js` define las rutas visibles según rol. Los items con campo `module` solo se muestran si el módulo está activo. El item `Gimnasios` se incluye únicamente para el rol `admin`.
 
 ### Calendario
 
@@ -158,6 +166,18 @@ El store de módulos define presets:
 - El rol `admin` no es editable, desactivable ni eliminable.
 - El registro de miembro incluye fecha de ingreso y modalidad de pago.
 - Se calcula automáticamente la próxima fecha de pago.
+- Al registrar un `trainer` se seleccionan los gimnasios a los que tiene acceso y su gimnasio por defecto.
+
+### Multi-gimnasio
+
+- El módulo `Gimnasios` está disponible solo para el rol `admin` y no es configurable (siempre activo).
+- El header muestra un selector de gimnasio activo únicamente para `admin` y `trainer`.
+- El `admin` puede seleccionar cualquier gimnasio; el `trainer` solo los que tenga asignados.
+- El gimnasio seleccionado define el contexto de los datos mostrados en los módulos específicos:
+  - Dashboard, Calendario, Plantillas, Rutinas, POS, Check-in y Landing Builder.
+- Los gimnasios se gestionan desde el módulo `Gimnasios` (crear, editar, eliminar y seleccionar).
+- No se permite eliminar el último gimnasio restante.
+- `useGymsStore` centraliza los gimnasios y el `activeGymId`; `useTenantStore` resuelve la identidad del gimnasio activo para sidebar, header, login y landing.
 
 ## Estructura
 
@@ -178,6 +198,34 @@ src/
 └── themes/
 ```
 
+### Stores principales
+
+| Store | Responsabilidad |
+|---|---|
+| `useAuthStore` | Sesión y rol del usuario |
+| `useGymsStore` | Gimnasios y gimnasio activo (`activeGymId`) |
+| `useTenantStore` | Identidad del gimnasio activo (delegada desde `useGymsStore`) |
+| `useModuleStore` | Módulos activos y presets |
+| `useThemeStore` | Tema visual |
+| `useUserStore` | Usuarios, roles y acceso a gimnasios de trainers |
+| `useClassTemplateStore` | Plantillas de clase por gimnasio |
+| `useClassScheduleStore` | Agenda de clases por gimnasio |
+| `useBookingStore` | Reservas |
+| `useRoutineStore` | Rutinas por gimnasio |
+| `useCheckinStore` | Check-ins y tokens QR por gimnasio |
+| `usePosStore` | Productos, ventas y carrito por gimnasio |
+| `useLandingStore` | Bloques de landing por gimnasio |
+| `useMediaStore` | Biblioteca de multimedia |
+| `useNotificationStore` | Notificaciones derivadas de check-ins y ventas |
+
+### Aislamiento por gimnasio
+
+Los stores con datos operativos guardan los registros con un campo `gymId` y exponen getters filtrados por el gimnasio activo. Al cambiar el gimnasio en el header, los dashboards y módulos se recalculan automáticamente sin recargar la página.
+
+### Notas de datos locales
+
+Con la llegada del modelo multi-gimnasio, los stores operativos usan claves de persistencia `*-v2`. La primera vez que se abre esta versión, los datos mock se reinician con el seed definido en cada store y el gimnasio activo vuelve al primer gimnasio.
+
 ## Instalación y desarrollo
 
 ```sh
@@ -194,13 +242,14 @@ Actualmente el proyecto es una SPA frontend funcional con:
 
 - persistencia local
 - autenticación simulada
+- **multi-gimnasio** con selector de gimnasio activo
 - módulos configurables
-- builder de landing
+- builder de landing por gimnasio
 - calendario propio
 - rutinas
 - check-in con QR
 - POS e inventario
-- usuarios
+- usuarios y acceso de trainers a gimnasios
 - dashboards por rol
 - temas dinámicos
 
@@ -208,6 +257,8 @@ Actualmente el proyecto es una SPA frontend funcional con:
 
 - Integración real con backend y base de datos.
 - Autenticación segura basada en servidor.
+- Validación de permisos por gimnasio en servidor.
+- Migración del estado actual en `localStorage` a persistencia centralizada.
 - Tests unitarios y de integración.
 - Manejo centralizado de errores y loading.
 - Sustitución de uploads locales por almacenamiento persistente.
@@ -219,6 +270,8 @@ El siguiente paso natural es convertir GMS en una plataforma multi-tenant conect
 - API REST para todos los módulos
 - base de datos relacional
 - autenticación real con roles
+- contexto de gimnasio activo validado en servidor
+- asignación de gimnasios a entrenadores y roles
 - persistencia centralizada
 - reportes productivos
 - soporte de pagos y suscripciones de gimnasios

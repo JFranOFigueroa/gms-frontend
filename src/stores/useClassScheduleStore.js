@@ -1,26 +1,43 @@
 import { defineStore } from 'pinia'
 
+import { useGymsStore } from '@/stores/useGymsStore'
+
 export const useClassScheduleStore = defineStore(
   'class-schedule',
 
   {
     state: () => ({
-      classes: [],
+      allClasses: [],
     }),
 
-    persist: true,
+    persist: {
+      key: 'gms-class-schedule-v2',
+    },
+
+    getters: {
+      classes(state) {
+        const gymsStore = useGymsStore()
+        const activeGymId = gymsStore.activeGymId
+
+        return state.allClasses.filter((gymClass) => {
+          return gymClass.gymId == null || gymClass.gymId === activeGymId
+        })
+      },
+    },
 
     actions: {
       addClass(payload) {
-        this.classes.push({
-          id: Date.now(),
+        const gymsStore = useGymsStore()
 
+        this.allClasses.push({
+          id: Date.now(),
+          gymId: gymsStore.activeGymId,
           ...payload,
         })
       },
 
       removeClass(id) {
-        this.classes = this.classes.filter((c) => c.id !== id)
+        this.allClasses = this.allClasses.filter((c) => c.id !== id)
       },
     },
   },

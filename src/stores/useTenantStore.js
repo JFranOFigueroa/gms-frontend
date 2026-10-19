@@ -1,47 +1,36 @@
 import { defineStore } from 'pinia'
 
-export const useTenantStore = defineStore(
-  'tenant',
+import { useGymsStore } from '@/stores/useGymsStore'
 
-  {
-    state: () => ({
-      gym: {
-        name: 'Gym Manager Software',
+const fallbackGym = {
+  name: 'Gym Manager Software',
+  shortName: 'GMS',
+  logo: null,
+}
 
-        shortName: 'GMS',
+/**
+ * El tenant representa el gimnasio activo seleccionado en el header.
+ * Ya no guarda su propia copia: delega en el store de gimnasios para que
+ * toda la identidad mostrada corresponda al gimnasio seleccionado.
+ */
+export const useTenantStore = defineStore('tenant', {
+  getters: {
+    gym() {
+      const gymsStore = useGymsStore()
 
-        logo: null,
-      },
-    }),
-
-    persist: true,
-
-    actions: {
-      updateGym(payload) {
-        this.gym = {
-          ...this.gym,
-
-          ...payload,
-        }
-
-        localStorage.setItem(
-          'gms-tenant',
-
-          JSON.stringify(this.gym),
-        )
-      },
-
-      restoreTenant() {
-        const stored = localStorage.getItem('gms-tenant')
-
-        if (!stored) return
-
-        try {
-          this.gym = JSON.parse(stored)
-        } catch {
-          localStorage.removeItem('gms-tenant')
-        }
-      },
+      return gymsStore.activeGym || fallbackGym
     },
   },
-)
+
+  actions: {
+    updateGym(payload) {
+      const gymsStore = useGymsStore()
+
+      gymsStore.updateGym(gymsStore.activeGymId, payload)
+    },
+
+    restoreTenant() {
+      // La identidad se resuelve dinámicamente desde el store de gimnasios.
+    },
+  },
+})

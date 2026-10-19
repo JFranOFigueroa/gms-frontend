@@ -9,7 +9,8 @@ GMS Frontend es una SPA construida con Vue 3 + Vite. Actualmente la persistencia
 ### Datos actuales en frontend
 
 - Sesión de usuario en `useAuthStore`.
-- Identidad del gimnasio en `useTenantStore`.
+- Gimnasios de la plataforma y gimnasio activo en `useGymsStore`.
+- Identidad del gimnasio activo en `useTenantStore` (delegada desde `useGymsStore`).
 - Tema visual en `useThemeStore`.
 - Módulos activos en `useModuleStore`.
 - Plantillas de clase en `useClassTemplateStore`.
@@ -25,6 +26,8 @@ GMS Frontend es una SPA construida con Vue 3 + Vite. Actualmente la persistencia
 ### Características que deben migrar a backend
 
 - Autenticación real y roles.
+- Gestión multi-gimnasio y asignación de staff a gimnasios.
+- Contexto de gimnasio activo por usuario.
 - Persistencia por gimnasio.
 - Historial de clases y reservas.
 - Rutinas compartidas.
@@ -54,10 +57,10 @@ Roles esperados:
 
 Permisos sugeridos:
 
-- Admin: gestión completa del gimnasio.
-- Trainer: gestión de clases, plantillas, rutinas, POS operativo y check-in.
-- Member: consulta, reserva y check-in.
-- Guest: acceso limitado y check-in temporal.
+- Admin: gestión completa de todos los gimnasios de la plataforma.
+- Trainer: gestión de clases, plantillas, rutinas, POS operativo y check-in, limitado a los gimnasios asignados.
+- Member: consulta, reserva y check-in dentro de su gimnasio.
+- Guest: acceso limitado y check-in temporal en el gimnasio correspondiente.
 
 ## 4. Módulos configurables
 
@@ -67,7 +70,11 @@ Cada gimnasio debe tener una configuración de módulos:
 - `routines`
 - `checkin`
 - `pos`
-- `users` (siempre activo para admin)
+
+Los módulos `users` y `gyms` no son configurables y permanecen siempre activos:
+
+- `users`: administración de usuarios (solo `admin`).
+- `gyms`: administración multi-gimnasio (solo `admin`).
 
 El backend debe validar si un módulo está activo antes de permitir operaciones asociadas y exponer esa configuración al frontend.
 
@@ -83,8 +90,11 @@ El backend debe validar si un módulo está activo antes de permitir operaciones
 
 ### Gimnasio / tenant
 
+- `GET /gyms`
+- `POST /gyms`
 - `GET /gyms/:gymId`
 - `PATCH /gyms/:gymId`
+- `DELETE /gyms/:gymId`
 - `GET /gyms/:gymId/modules`
 - `PATCH /gyms/:gymId/modules`
 - `GET /gyms/:gymId/theme`
@@ -98,6 +108,8 @@ El backend debe validar si un módulo está activo antes de permitir operaciones
 - `PATCH /users/:id`
 - `PATCH /users/:id/status`
 - `DELETE /users/:id`
+- `GET /users/:id/gyms`
+- `PUT /users/:id/gyms` (asignar gimnasios y gimnasio por defecto de un `trainer`)
 
 ### Plantillas de clase
 
@@ -185,6 +197,19 @@ Validaciones:
 - `GET /audit-logs`
 - `POST /audit-logs`
 
+### Contexto de gimnasio (multi-tenant)
+
+Todas las peticiones a recursos operativos deben viajar con el gimnasio activo:
+
+- Mediante header `X-Gym-Id` o parámetro de ruta, según la estrategia elegida.
+- El backend debe validar el acceso antes de responder:
+  - `admin`: acceso global a todos los gimnasios.
+  - `trainer`: solo gimnasios presentes en `user_gyms`.
+  - `member` / `guest`: solo su gimnasio (`users.gym_id`).
+- Las respuestas deben venir ya filtradas por `gym_id`.
+- `GET /auth/me` debe devolver los gimnasios accesibles y el `default_gym_id` para que el frontend construya el selector.
+- Si el gimnasio solicitado no está permitido, el backend debe responder `403`.
+
 ## 6. Propuesta de schema de base de datos
 
 A continuación se propone un esquema relacional orientado a PostgreSQL.
@@ -197,6 +222,9 @@ A continuación se propone un esquema relacional orientado a PostgreSQL.
 | name | varchar(120) | |
 | short_name | varchar(40) | |
 | logo_url | text | nullable |
+| address | text | nullable |
+| phone | varchar(40) | nullable |
+| active | boolean | |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
 
@@ -215,17 +243,30 @@ A continuación se propone un esquema relacional orientado a PostgreSQL.
 | Columna | Tipo | Notas |
 |---|---|---|
 | id | uuid | PK |
-| gym_id | uuid | FK → gyms.id |
+| gym_id | uuid | FK → gyms.id (gimnasio principal / miembros) |
 | name | varchar(120) | |
 | email | varchar(255) | unique por gimnasio |
 | phone | varchar(40) | nullable |
 | password_hash | text | |
 | role | varchar(20) | admin, trainer, member, guest |
 | active | boolean | |
+| default_gym_id | uuid | FK → gyms.id, nullable (entrenadores) |
 | start_date | date | nullable, para miembros |
 | payment_modality | varchar(20) | monthly o yearly |
 | next_payment_date | date | nullable |
 | created_at | timestamptz | |
+
+### `user_gyms`
+
+Tabla puente para el acceso de entrenadores a uno o varios gimnasios.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| user_id | uuid | FK → users.id |
+| gym_id | uuid | FK → gyms.id |
+| created_at | timestamptz | |
+
+Restricción: PK compuesta `(user_id, gym_id)`.
 
 ### `class_templates`
 
@@ -370,7 +411,7 @@ Regla: un usuario solo puede tener un check-in por día.
 | Columna | Tipo | Notas |
 |---|---|---|
 | id | uuid | PK |
-| gym_id | uuid | FK → gyms.id |
+| gym_id | uuid | FK → gyms.id, nullable (null = recurso compartido) |
 | name | varchar(120) | |
 | type | varchar(30) | image, video, etc. |
 | url | text | |
@@ -405,6 +446,9 @@ Regla: un usuario solo puede tener un check-in por día.
 ## 7. Consideraciones de integración
 
 - El frontend actual usa `localStorage`, por lo que la migración debe reemplazar progresivamente cada store.
+- La plataforma es multi-gimnasio: cada recurso operativo (clases, rutinas, POS, check-ins, usuarios, landing) pertenece a un `gym_id`.
+- El backend debe validar que un `trainer` solo opere sobre los gimnasios asignados en `user_gyms`; el `admin` tiene acceso global.
+- El gimnasio activo del frontend debe reflejarse en el contexto de cada request (por ejemplo, header `X-Gym-Id` o parámetro de ruta) y validarse contra los permisos del usuario.
 - Las validaciones de reservas y check-ins deben ejecutarse en backend.
 - La configuración de módulos debe venir desde backend y reflejarse en frontend.
 - Las cargas de media deben retornar URLs públicas o firmadas.
@@ -415,17 +459,21 @@ Regla: un usuario solo puede tener un check-in por día.
 ## 8. Migración sugerida por fases
 
 1. Autenticación real y usuarios.
-2. Configuración de gimnasio y módulos.
-3. Plantillas y agenda de clases.
-4. Rutinas.
-5. Check-in.
-6. POS e inventario.
-7. Landing blocks y media.
-8. Auditoría y notificaciones.
+2. Gimnasios (`gyms`) y asignación de staff (`user_gyms`).
+3. Configuración de gimnasio, contexto activo y módulos.
+4. Plantillas y agenda de clases.
+5. Rutinas.
+6. Check-in.
+7. POS e inventario.
+8. Landing blocks y media.
+9. Auditoría y notificaciones.
 
 ## 9. Observaciones importantes
 
 - El rol `admin` no debe ser editable, desactivable ni eliminable desde el frontend; backend debe aplicar esta regla definitivamente.
+- No se debe permitir eliminar el último gimnasio restante de la plataforma.
+- Al eliminar un gimnasio debe definirse una política de borrado (cascada) o de archivado de sus datos operativos.
+- Los datos operativos (clases, rutinas, POS, check-ins, usuarios, landing y media) se aíslan por `gym_id`.
 - Las cancelaciones y cambios de estado deben generar audit log.
 - Los pagos de miembros pueden requerir una tabla adicional de suscripciones si se desea controlar cobros dentro del sistema.
 - Las notificaciones pueden derivarse de `audit_logs` o generarse como eventos separados según la estrategia elegida.
