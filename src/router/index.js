@@ -42,6 +42,12 @@ const routes = [
   },
 
   {
+    path: '/checkin',
+    name: 'standalone-checkin',
+    component: () => import('@/pages/public/StandaloneCheckInPage.vue'),
+  },
+
+  {
     path: '/dashboard',
     component: DashboardLayout,
     meta: {
@@ -67,6 +73,7 @@ const routes = [
         component: () => import('@/pages/dashboard/LandingBuilderPage.vue'),
         meta: {
           requiresAuth: true,
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -75,6 +82,7 @@ const routes = [
         component: () => import('@/pages/dashboard/MediaLibraryPage.vue'),
         meta: {
           requiresAuth: true,
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -83,6 +91,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'calendar',
+          roles: ['admin', 'owner', 'trainer'],
         },
       },
       {
@@ -92,7 +101,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'pos',
-          roles: ['admin', 'trainer'],
+          roles: ['admin', 'owner', 'trainer'],
         },
       },
       {
@@ -102,7 +111,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'routines',
-          roles: ['admin', 'trainer'],
+          roles: ['admin', 'owner', 'trainer'],
         },
       },
       {
@@ -130,7 +139,16 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'checkin',
-          roles: ['admin', 'trainer'],
+          roles: ['admin', 'owner', 'trainer'],
+        },
+      },
+      {
+        path: 'members',
+        name: 'members',
+        component: () => import('@/pages/dashboard/MembersPage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin', 'owner', 'trainer'],
         },
       },
       {
@@ -139,7 +157,7 @@ const routes = [
         component: () => import('@/pages/dashboard/UsersPage.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['admin'],
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -168,7 +186,16 @@ router.beforeEach((to) => {
     return '/auth/login'
   }
 
+  if (to.name === 'standalone-checkin' && !moduleStore.isModuleEnabled('checkin')) {
+    return '/'
+  }
+
   if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
+    if (['member', 'guest'].includes(authStore.role)) {
+      if (moduleStore.isModuleEnabled('checkin')) return '/dashboard/checkin'
+      if (moduleStore.isModuleEnabled('routines')) return '/dashboard/routine'
+    }
+
     return '/dashboard'
   }
 

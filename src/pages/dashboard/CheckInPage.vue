@@ -8,14 +8,25 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
+import { useMemberStore } from '@/stores/useMemberStore'
+import { todayISO as getTodayISO } from '@/utils/date'
 
 const authStore = useAuthStore()
 const checkinStore = useCheckinStore()
 const scheduleStore = useClassScheduleStore()
+const memberStore = useMemberStore()
 
 const manualToken = ref('')
 
-const todayISO = new Date().toISOString().split('T')[0]
+const todayISO = getTodayISO()
+
+const member = computed(() => memberStore.findById(authStore.user?.id))
+
+const accessStatus = computed(() => {
+  if (!member.value) return null
+
+  return memberStore.getAccessStatus(member.value)
+})
 
 const gymCapacity = computed(() => {
   const total = scheduleStore.classes
@@ -26,13 +37,13 @@ const gymCapacity = computed(() => {
 })
 
 const occupancyPercent = computed(() => {
-  return Math.min(100, Math.round((checkinStore.todaysCheckins.length / gymCapacity.value) * 100))
+  return Math.min(100, Math.round((checkinStore.grantedToday.length / gymCapacity.value) * 100))
 })
 
 const hourlyCounts = computed(() => {
   const counts = Array.from({ length: 24 }, () => 0)
 
-  checkinStore.todaysCheckins.forEach((checkin) => {
+  checkinStore.grantedToday.forEach((checkin) => {
     const hour = new Date(checkin.timestamp).getHours()
     counts[hour] += 1
   })
@@ -54,7 +65,9 @@ let animationFrame = null
 let detector = null
 
 const userCheckins = computed(() => {
-  return checkinStore.checkins.filter((checkin) => checkin.userId === authStore.user?.id)
+  return checkinStore.checkins.filter(
+    (checkin) => String(checkin.userId) === String(authStore.user?.id),
+  )
 })
 
 const processToken = (token) => {
@@ -77,7 +90,14 @@ const processToken = (token) => {
 }
 
 const manualCheckIn = () => {
-  processToken(manualToken.value.trim())
+  const token = manualToken.value.trim()
+
+  if (!token) {
+    scannerStatus.value = 'Ingresa el token del kiosco'
+    return
+  }
+
+  processToken(token)
 
   manualToken.value = ''
 }
@@ -94,16 +114,25 @@ const stopScanner = () => {
     mediaStream.getTracks().forEach((track) => track.stop())
     mediaStream = null
   }
+
+  if (videoRef.value) {
+    videoRef.value.pause()
+    videoRef.value.srcObject = null
+  }
 }
 
 const scanFrame = async () => {
-  if (!scannerRunning.value || !videoRef.value || videoRef.value.readyState < 2 || !detector) {
+  if (!scannerRunning.value) return
+
+  if (!videoRef.value || videoRef.value.readyState < 2 || !detector) {
     animationFrame = requestAnimationFrame(scanFrame)
     return
   }
 
   try {
     const codes = await detector.detect(videoRef.value)
+
+    if (!scannerRunning.value) return
 
     if (codes.length) {
       processToken(codes[0].rawValue)
@@ -113,6 +142,8 @@ const scanFrame = async () => {
   } catch {
     // Keep scanning; transient detection errors are expected.
   }
+
+  if (!scannerRunning.value) return
 
   animationFrame = requestAnimationFrame(scanFrame)
 }
@@ -132,10 +163,14 @@ const startScanner = async () => {
       },
     })
 
-    if (videoRef.value) {
-      videoRef.value.srcObject = mediaStream
-      await videoRef.value.play()
+    if (!videoRef.value) {
+      mediaStream.getTracks().forEach((track) => track.stop())
+      mediaStream = null
+      return
     }
+
+    videoRef.value.srcObject = mediaStream
+    await videoRef.value.play()
 
     detector = new BarcodeDetector({ formats: ['qr_code'] })
     scannerRunning.value = true
@@ -161,6 +196,33 @@ onBeforeUnmount(() => {
         Registra tu llegada al gimnasio
       </p>
     </div>
+
+    <BaseCard v-if="member">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[var(--color-text-secondary)]">Estado de membresía</p>
+
+          <p class="text-2xl font-black mt-1">
+            {{ member.name }}
+          </p>
+
+          <p class="text-sm text-[var(--color-text-secondary)] mt-1">
+            Código {{ member.code }} · Próximo pago: {{ member.nextPaymentDate }}
+          </p>
+        </div>
+
+        <span
+          class="rounded-full px-3 py-1 text-sm font-semibold"
+          :class="
+            accessStatus?.allowed
+              ? 'bg-emerald-500/15 text-emerald-400'
+              : 'bg-red-500/15 text-red-400'
+          "
+        >
+          {{ accessStatus?.allowed ? 'Acceso habilitado' : accessStatus?.reason }}
+        </span>
+      </div>
+    </BaseCard>
 
     <div class="grid gap-6">
       <BaseCard>
@@ -209,7 +271,7 @@ onBeforeUnmount(() => {
           <h2 class="text-2xl font-bold">Ocupación en vivo</h2>
 
           <span class="text-sm text-[var(--color-text-secondary)]">
-            {{ checkinStore.todaysCheckins.length }} / {{ gymCapacity }} personas
+            {{ checkinStore.grantedToday.length }} / {{ gymCapacity }} personas
           </span>
         </div>
 
@@ -275,7 +337,8 @@ onBeforeUnmount(() => {
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
-              Método: {{ checkin.method }}
+              Método: {{ checkin.method }} ·
+              {{ checkin.allowed === false ? `Denegado: ${checkin.reason}` : 'Concedido' }}
             </p>
           </div>
         </div>

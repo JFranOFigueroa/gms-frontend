@@ -4,10 +4,15 @@ import { computed } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useModuleStore } from '@/stores/useModuleStore'
-import { moduleRegistry, modulePresets } from '@/config/moduleRegistry'
+import { moduleRegistry } from '@/config/moduleRegistry'
+import { canManageModules } from '@/config/permissions'
 
+const authStore = useAuthStore()
 const moduleStore = useModuleStore()
+
+const canManage = computed(() => canManageModules(authStore.role))
 
 const presets = [
   { id: 'traditional', label: 'Tradicional' },
@@ -25,7 +30,15 @@ const activePreset = computed(() => {
   return null
 })
 
+const toggleModule = (moduleId) => {
+  if (!canManage.value) return
+
+  moduleStore.toggleModule(moduleId)
+}
+
 const applyPreset = (presetId) => {
+  if (!canManage.value) return
+
   moduleStore.applyPreset(presetId)
 }
 </script>
@@ -63,7 +76,8 @@ const applyPreset = (presetId) => {
 
           <BaseButton
             variant="secondary"
-            @click="moduleStore.toggleModule(module.id)"
+            :disabled="!canManage"
+            @click="toggleModule(module.id)"
             :class="{
               '!border-[var(--color-primary)]': moduleStore.isModuleEnabled(module.id),
             }"

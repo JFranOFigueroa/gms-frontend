@@ -47,7 +47,9 @@ const accessAsGuest = () => {
 
   const redirectTo = moduleStore.isModuleEnabled('checkin')
     ? '/dashboard/checkin'
-    : '/dashboard/calendar'
+    : moduleStore.isModuleEnabled('calendar')
+      ? '/dashboard/calendar'
+      : '/dashboard'
 
   router.push(redirectTo)
 }

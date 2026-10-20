@@ -2,22 +2,10 @@ import { defineStore } from 'pinia'
 
 import { useGymsStore } from '@/stores/useGymsStore'
 
-const calculateNextPaymentDate = (startDate, paymentModality) => {
-  if (!startDate || !paymentModality) return null
-
-  const date = new Date(`${startDate}T00:00:00`)
-
-  if (Number.isNaN(date.getTime())) return null
-
-  if (paymentModality === 'monthly') {
-    date.setMonth(date.getMonth() + 1)
-  } else if (paymentModality === 'yearly') {
-    date.setFullYear(date.getFullYear() + 1)
-  }
-
-  return date.toISOString().split('T')[0]
-}
-
+/**
+ * Usuarios internos del sistema (staff).
+ * Los miembros viven en `useMemberStore`.
+ */
 export const useUserStore = defineStore(
   'users',
 
@@ -37,33 +25,32 @@ export const useUserStore = defineStore(
         {
           id: 2,
           gymId: 1,
-          gymIds: [1, 2],
+          gymIds: [1],
           defaultGymId: 1,
-          name: 'Trainer Demo',
-          email: 'trainer@gym.com',
+          name: 'Owner Demo',
+          email: 'owner@gym.com',
           phone: '5550000002',
-          role: 'trainer',
+          role: 'owner',
           active: true,
           createdAt: '2026-01-02',
         },
         {
           id: 3,
           gymId: 1,
-          name: 'Miembro Demo',
-          email: 'member@gym.com',
+          gymIds: [1, 2],
+          defaultGymId: 1,
+          name: 'Trainer Demo',
+          email: 'trainer@gym.com',
           phone: '5550000003',
-          role: 'member',
+          role: 'trainer',
           active: true,
           createdAt: '2026-01-03',
-          startDate: '2026-01-03',
-          paymentModality: 'monthly',
-          nextPaymentDate: '2026-02-03',
         },
       ],
     }),
 
     persist: {
-      key: 'gms-users-v2',
+      key: 'gms-users-v3',
     },
 
     getters: {
@@ -80,8 +67,8 @@ export const useUserStore = defineStore(
         })
       },
 
-      members() {
-        return this.users.filter((user) => user.role === 'member')
+      owners() {
+        return this.users.filter((user) => user.role === 'owner')
       },
 
       trainers() {
@@ -105,36 +92,30 @@ export const useUserStore = defineStore(
       addUser(payload) {
         const gymsStore = useGymsStore()
         const role = payload.role
-        const isMember = role === 'member'
-        const isTrainer = role === 'trainer'
 
-        const startDate = isMember ? payload.startDate || null : null
-        const paymentModality = isMember ? payload.paymentModality || null : null
+        if (role === 'admin') return null
 
-        const gymIds = isTrainer && Array.isArray(payload.gymIds) && payload.gymIds.length
+        const gymIds = Array.isArray(payload.gymIds) && payload.gymIds.length
           ? payload.gymIds
-          : isTrainer
-            ? [gymsStore.activeGymId]
-            : null
+          : [gymsStore.activeGymId]
 
-        const defaultGymId = isTrainer
-          ? payload.defaultGymId && gymIds.includes(payload.defaultGymId)
-            ? payload.defaultGymId
-            : gymIds[0]
-          : null
+        const defaultGymId = payload.defaultGymId && gymIds.includes(payload.defaultGymId)
+          ? payload.defaultGymId
+          : gymIds[0]
 
-        this.allUsers.unshift({
+        const user = {
           ...payload,
           id: Date.now(),
           active: true,
           createdAt: new Date().toISOString().split('T')[0],
-          gymId: role === 'admin' ? null : isTrainer ? defaultGymId : gymsStore.activeGymId,
+          gymId: defaultGymId,
           gymIds,
           defaultGymId,
-          startDate,
-          paymentModality,
-          nextPaymentDate: calculateNextPaymentDate(startDate, paymentModality),
-        })
+        }
+
+        this.allUsers.unshift(user)
+
+        return user
       },
 
       isAdminUser(id) {
@@ -148,47 +129,38 @@ export const useUserStore = defineStore(
 
         const current = this.allUsers[index]
         const role = payload.role || current.role
-        const isMember = role === 'member'
-        const isTrainer = role === 'trainer'
 
-        const startDate = isMember ? payload.startDate || current.startDate || null : null
-        const paymentModality = isMember ? payload.paymentModality || current.paymentModality || null : null
+        if (role === 'admin') return
 
-        const gymIds = isTrainer
-          ? Array.isArray(payload.gymIds) && payload.gymIds.length
-            ? payload.gymIds
-            : current.gymIds?.length
-              ? current.gymIds
-              : [current.gymId].filter(Boolean)
-          : null
+        const gymIds = Array.isArray(payload.gymIds) && payload.gymIds.length
+          ? payload.gymIds
+          : current.gymIds?.length
+            ? current.gymIds
+            : [current.gymId].filter(Boolean)
 
-        const defaultGymId = isTrainer
-          ? payload.defaultGymId && gymIds.includes(payload.defaultGymId)
-            ? payload.defaultGymId
-            : gymIds[0]
-          : null
+        const defaultGymId = payload.defaultGymId && gymIds.includes(payload.defaultGymId)
+          ? payload.defaultGymId
+          : gymIds[0]
 
         this.allUsers[index] = {
           ...current,
           ...payload,
+          gymId: defaultGymId,
           gymIds,
           defaultGymId,
-          startDate,
-          paymentModality,
-          nextPaymentDate: isMember ? calculateNextPaymentDate(startDate, paymentModality) : null,
         }
       },
 
       removeUser(id) {
-        const user = this.allUsers.find((user) => user.id === id)
+        const user = this.allUsers.find((entry) => entry.id === id)
 
         if (user?.role === 'admin') return
 
-        this.allUsers = this.allUsers.filter((user) => user.id !== id)
+        this.allUsers = this.allUsers.filter((entry) => entry.id !== id)
       },
 
       toggleActive(id) {
-        const user = this.allUsers.find((user) => user.id === id)
+        const user = this.allUsers.find((entry) => entry.id === id)
 
         if (!user || user.role === 'admin') return
 

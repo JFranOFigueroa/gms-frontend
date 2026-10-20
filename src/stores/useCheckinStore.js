@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 
 import { useGymsStore } from '@/stores/useGymsStore'
+import { useMemberStore } from '@/stores/useMemberStore'
+import { toDateOnly } from '@/utils/date'
 
-const todayKey = (timestamp = Date.now()) => {
-  return new Date(timestamp).toISOString().split('T')[0]
-}
+const todayKey = (timestamp = Date.now()) => toDateOnly(new Date(timestamp))
 
 export const useCheckinStore = defineStore(
   'checkin',
@@ -17,7 +17,7 @@ export const useCheckinStore = defineStore(
     }),
 
     persist: {
-      key: 'gms-checkin-v2',
+      key: 'gms-checkin-v3',
     },
 
     getters: {
@@ -40,12 +40,20 @@ export const useCheckinStore = defineStore(
         return this.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today)
       },
 
-      stats() {
-        const today = todayKey()
+      grantedToday() {
+        return this.todaysCheckins.filter((checkin) => checkin.allowed !== false)
+      },
 
+      deniedToday() {
+        return this.todaysCheckins.filter((checkin) => checkin.allowed === false)
+      },
+
+      stats() {
         return {
           total: this.checkins.length,
-          today: this.checkins.filter((checkin) => todayKey(new Date(checkin.timestamp).getTime()) === today).length,
+          today: this.todaysCheckins.length,
+          granted: this.grantedToday.length,
+          denied: this.deniedToday.length,
         }
       },
     },
@@ -74,46 +82,208 @@ export const useCheckinStore = defineStore(
       },
 
       validateToken(token) {
-        return token === this.activeToken && this.tokenIsValid
+        if (!token) return false
+
+        if (token === this.activeToken && this.tokenIsValid) return true
+
+        return this.isKioskTokenValid(token)
+      },
+
+      /**
+       * El kiosco y la app del miembro pueden estar en pestañas distintas.
+       * Mientras compartan navegador, el token rotativo se valida leyendo la
+       * copia que el kiosco publica en localStorage. Entre dispositivos hace
+       * falta validación de servidor.
+       */
+      isKioskTokenValid(token) {
+        if (typeof localStorage === 'undefined') return false
+
+        try {
+          const raw = localStorage.getItem('gms-kiosk-token')
+
+          if (!raw) return false
+
+          const parsed = JSON.parse(raw)
+
+          return parsed.token === token && Number(parsed.expiresAt) > Date.now()
+        } catch {
+          return false
+        }
       },
 
       hasCheckedInToday(userId) {
+        if (!userId) return false
+
         const today = todayKey()
 
         return this.checkins.some((checkin) => {
-          return checkin.userId === userId && todayKey(new Date(checkin.timestamp).getTime()) === today
+          return (
+            String(checkin.userId) === String(userId) &&
+            checkin.allowed !== false &&
+            todayKey(new Date(checkin.timestamp).getTime()) === today
+          )
         })
       },
 
-      checkIn({ userId, userName, role, method, token = null }) {
-        const normalizedUserId = userId || `guest:${userName || 'invitado'}`
-
-        if (this.hasCheckedInToday(normalizedUserId)) {
-          return {
-            ok: false,
-            reason: 'Ya registraste check-in hoy',
-          }
-        }
-
+      recordAccess({ member, userId, userName, role, method, token = null, allowed, reason }) {
         const gymsStore = useGymsStore()
 
         const checkin = {
           id: Date.now(),
           gymId: gymsStore.activeGymId,
-          userId: normalizedUserId,
-          userName: userName || 'Invitado',
-          role: role || 'member',
+          userId: member?.id ?? userId ?? null,
+          userName: member?.name ?? userName ?? 'Invitado',
+          role: role || (member ? 'member' : 'guest'),
           method,
           token,
+          allowed: allowed !== false,
+          reason: reason || (allowed !== false ? 'Acceso permitido' : 'Acceso denegado'),
           timestamp: new Date().toISOString(),
         }
 
         this.allCheckins.unshift(checkin)
 
-        return {
-          ok: true,
-          checkin,
+        return checkin
+      },
+
+      /**
+       * Check-in desde la cuenta del miembro (QR rotativo o token manual).
+       * Valida estado de cuenta y vigencia de pago.
+       */
+      checkIn({ userId, userName, role, method, token = null }) {
+        const memberStore = useMemberStore()
+
+        if (role === 'member') {
+          const member = memberStore.findById(userId)
+
+          if (!member) {
+            const reason = 'Miembro no encontrado'
+
+            this.recordAccess({
+              userId,
+              userName,
+              role,
+              method,
+              token,
+              allowed: false,
+              reason,
+            })
+
+            return { ok: false, allowed: false, reason }
+          }
+
+          const access = memberStore.getAccessStatus(member)
+
+          if (!access.allowed) {
+            this.recordAccess({
+              member,
+              method,
+              token,
+              allowed: false,
+              reason: access.reason,
+            })
+
+            return { ok: false, allowed: false, reason: access.reason }
+          }
+
+          if (this.hasCheckedInToday(member.id)) {
+            const reason = 'Ya registraste check-in hoy'
+
+            this.recordAccess({
+              member,
+              method,
+              token,
+              allowed: false,
+              reason,
+            })
+
+            return { ok: false, allowed: false, reason }
+          }
+
+          const checkin = this.recordAccess({
+            member,
+            method,
+            token,
+            allowed: true,
+            reason: access.reason,
+          })
+
+          return { ok: true, allowed: true, checkin }
         }
+
+        const normalizedUserId = userId || `guest:${userName || 'invitado'}`
+
+        if (this.hasCheckedInToday(normalizedUserId)) {
+          const reason = 'Ya registraste check-in hoy'
+
+          this.recordAccess({
+            userId: normalizedUserId,
+            userName,
+            role,
+            method,
+            token,
+            allowed: false,
+            reason,
+          })
+
+          return { ok: false, allowed: false, reason }
+        }
+
+        const checkin = this.recordAccess({
+          userId: normalizedUserId,
+          userName,
+          role,
+          method,
+          token,
+          allowed: true,
+          reason: 'Acceso permitido',
+        })
+
+        return { ok: true, allowed: true, checkin }
+      },
+
+      /**
+       * Check-in desde el kiosco standalone de la entrada.
+       */
+      registerAccess({ member, method, token = null }) {
+        const memberStore = useMemberStore()
+        const access = memberStore.getAccessStatus(member)
+
+        if (!access.allowed) {
+          const checkin = this.recordAccess({
+            member,
+            method,
+            token,
+            allowed: false,
+            reason: access.reason,
+          })
+
+          return { ...access, ok: false, checkin }
+        }
+
+        if (this.hasCheckedInToday(member.id)) {
+          const reason = 'Ya registró su entrada hoy'
+
+          const checkin = this.recordAccess({
+            member,
+            method,
+            token,
+            allowed: false,
+            reason,
+          })
+
+          return { allowed: false, code: 'duplicate', reason, ok: false, checkin }
+        }
+
+        const checkin = this.recordAccess({
+          member,
+          method,
+          token,
+          allowed: true,
+          reason: access.reason,
+        })
+
+        return { allowed: true, ok: true, reason: access.reason, checkin }
       },
     },
   },

@@ -18,13 +18,13 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
       <h1 class="text-4xl font-black">Auditoría de Check-in</h1>
 
       <p class="text-[var(--color-text-secondary)] mt-2">
-        Registro de llegadas para dashboards y control operativo
+        Registro de accesos concedidos y denegados para control operativo
       </p>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
-        <p class="text-[var(--color-text-secondary)]">Check-ins hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Intentos hoy</p>
 
         <h3 class="text-5xl font-black mt-4">
           {{ stats.today }}
@@ -32,7 +32,23 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
       </BaseCard>
 
       <BaseCard>
-        <p class="text-[var(--color-text-secondary)]">Check-ins totales</p>
+        <p class="text-[var(--color-text-secondary)]">Concedidos hoy</p>
+
+        <h3 class="text-5xl font-black mt-4 text-emerald-400">
+          {{ stats.granted }}
+        </h3>
+      </BaseCard>
+
+      <BaseCard>
+        <p class="text-[var(--color-text-secondary)]">Denegados hoy</p>
+
+        <h3 class="text-5xl font-black mt-4 text-red-400">
+          {{ stats.denied }}
+        </h3>
+      </BaseCard>
+
+      <BaseCard>
+        <p class="text-[var(--color-text-secondary)]">Registros totales</p>
 
         <h3 class="text-5xl font-black mt-4">
           {{ stats.total }}
@@ -42,7 +58,7 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
 
     <BaseCard>
       <div class="space-y-4">
-        <h2 class="text-2xl font-bold">Últimos check-ins</h2>
+        <h2 class="text-2xl font-bold">Últimos accesos</h2>
 
         <div v-if="!recent.length" class="text-[var(--color-text-secondary)]">
           No hay check-ins registrados
@@ -56,10 +72,21 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
           <div>
             <p class="font-semibold">
               {{ checkin.userName }}
+
+              <span
+                class="ml-2 rounded-full px-2 py-1 text-xs font-semibold"
+                :class="
+                  checkin.allowed === false
+                    ? 'bg-red-500/15 text-red-400'
+                    : 'bg-emerald-500/15 text-emerald-400'
+                "
+              >
+                {{ checkin.allowed === false ? 'Denegado' : 'Concedido' }}
+              </span>
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
-              {{ checkin.role }} · {{ checkin.method }}
+              {{ checkin.role }} · {{ checkin.method }} · {{ checkin.reason }}
             </p>
           </div>
 

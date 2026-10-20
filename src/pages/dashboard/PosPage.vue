@@ -9,12 +9,14 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { usePosStore } from '@/stores/usePosStore'
 
+import { isManager as isManagerRole } from '@/config/permissions'
+
 const authStore = useAuthStore()
 const posStore = usePosStore()
 
-const isAdmin = computed(() => authStore.role === 'admin')
+const isManager = computed(() => isManagerRole(authStore.role))
 const availableTabs = computed(() => {
-  return isAdmin.value ? ['sales', 'inventory', 'reports'] : ['sales']
+  return isManager.value ? ['sales', 'inventory', 'reports'] : ['sales']
 })
 const activeTab = ref('sales')
 
@@ -133,7 +135,7 @@ const updateProductField = (product, field, value) => {
       <h1 class="text-4xl font-black">POS</h1>
 
       <p class="text-[var(--color-text-secondary)] mt-2">
-        {{ isAdmin ? 'Ventas, inventario y reportes' : 'Punto de venta' }}
+        {{ isManager ? 'Ventas, inventario y reportes' : 'Punto de venta' }}
       </p>
     </div>
 
@@ -265,7 +267,7 @@ const updateProductField = (product, field, value) => {
     </div>
 
     <!-- Inventory -->
-    <div v-if="activeTab === 'inventory' && isAdmin" class="space-y-6">
+    <div v-if="activeTab === 'inventory' && isManager" class="space-y-6">
       <BaseCard>
         <div class="space-y-4">
           <h2 class="text-2xl font-bold">Nuevo producto</h2>
@@ -320,7 +322,7 @@ const updateProductField = (product, field, value) => {
     </div>
 
     <!-- Reports -->
-    <div v-if="activeTab === 'reports' && isAdmin" class="space-y-6">
+    <div v-if="activeTab === 'reports' && isManager" class="space-y-6">
       <div class="grid gap-6 md:grid-cols-4">
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Ventas</p>

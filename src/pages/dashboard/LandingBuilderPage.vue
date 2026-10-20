@@ -1,7 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useLandingStore } from '@/stores/useLandingStore'
+
+import { canManageModules } from '@/config/permissions'
 
 import BlockList from '@/components/dashboard/BlockList.vue'
 import ThemeEditor from '@/components/dashboard/ThemeEditor.vue'
@@ -12,9 +15,13 @@ import PreviewModal from '@/components/dashboard/PreviewModal.vue'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 
+const authStore = useAuthStore()
+
 const addBlockModal = ref(false)
 
 const previewModal = ref(false)
+
+const showModuleSettings = computed(() => canManageModules(authStore.role))
 
 const handleAddBlock = (config) => {
   landingStore.addBlock(config)
@@ -51,7 +58,7 @@ const landingStore = useLandingStore()
     <div class="max-w-5xl space-y-6">
       <GymSettingsCard />
 
-      <ModuleSettingsCard />
+      <ModuleSettingsCard v-if="showModuleSettings" />
 
       <ThemeEditor />
 

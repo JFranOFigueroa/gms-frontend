@@ -19,6 +19,8 @@ import { useGymsStore } from '@/stores/useGymsStore'
 
 import { useUserStore } from '@/stores/useUserStore'
 
+import { useMemberStore } from '@/stores/useMemberStore'
+
 const tenantStore = useTenantStore()
 
 const authStore = useAuthStore()
@@ -29,20 +31,51 @@ const gymsStore = useGymsStore()
 
 const userStore = useUserStore()
 
+const memberStore = useMemberStore()
+
 const router = useRouter()
 
 const email = ref('')
 
 const password = ref('')
 
-const login = () => {
-  const role = email.value.includes('admin')
-    ? 'admin'
-    : email.value.includes('trainer')
-      ? 'trainer'
-      : 'member'
+const loginError = ref('')
 
-  const matched = userStore.findByEmail(email.value)
+const login = () => {
+  loginError.value = ''
+
+  const normalizedEmail = email.value.trim().toLowerCase()
+
+  if (!normalizedEmail) {
+    loginError.value = 'Ingresa tu correo'
+    return
+  }
+
+  const staff = userStore.findByEmail(normalizedEmail)
+  const member = staff ? null : memberStore.findByEmail(normalizedEmail)
+
+  const fallbackRole = normalizedEmail.includes('admin')
+    ? 'admin'
+    : normalizedEmail.includes('owner')
+      ? 'owner'
+      : normalizedEmail.includes('trainer')
+        ? 'trainer'
+        : 'member'
+
+  const role = staff?.role || (member ? 'member' : fallbackRole)
+  const matched = staff || member
+
+  if (matched?.password && password.value !== matched.password) {
+    loginError.value = 'Contraseña incorrecta'
+    return
+  }
+
+  if (staff && staff.active === false) {
+    loginError.value = 'Tu cuenta de staff está desactivada'
+    return
+  }
+
+  const canSwitchGym = ['admin', 'owner', 'trainer'].includes(role)
 
   authStore.login({
     token: 'fake-jwt-token',
@@ -52,21 +85,31 @@ const login = () => {
 
       name: matched?.name ?? 'Demo User',
 
+      email: normalizedEmail,
+
       role,
 
-      gymIds: role === 'trainer' ? matched?.gymIds ?? null : null,
+      gymIds: canSwitchGym ? matched?.gymIds ?? null : null,
 
-      defaultGymId: role === 'trainer' ? matched?.defaultGymId ?? null : null,
+      defaultGymId: canSwitchGym ? matched?.defaultGymId ?? null : null,
     },
   })
 
-  if (role === 'trainer' && matched?.defaultGymId) {
+  if (role !== 'member' && matched?.defaultGymId) {
     gymsStore.setActiveGym(matched.defaultGymId)
   }
 
+  if (role === 'member' && matched?.gymId) {
+    gymsStore.setActiveGym(matched.gymId)
+  }
+
   const redirectTo =
-    authStore.user?.role === 'member' && moduleStore.isModuleEnabled('checkin')
-      ? '/dashboard/checkin'
+    role === 'member'
+      ? moduleStore.isModuleEnabled('checkin')
+        ? '/dashboard/checkin'
+        : moduleStore.isModuleEnabled('routines')
+          ? '/dashboard/routine'
+          : '/dashboard'
       : '/dashboard'
 
   router.push(redirectTo)
@@ -87,14 +130,44 @@ const login = () => {
 
         <BaseInput v-model="password" placeholder="Contraseña" type="password" />
 
-        <!-- ROLE SIM -->
+        <p
+          v-if="loginError"
+          class="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+        >
+          {{ loginError }}
+        </p>
 
         <BaseButton class="w-full" @click="login"> Entrar </BaseButton>
 
-        <div class="pt-4 text-center">
+        <div class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 text-sm">
+          <p class="font-semibold">Cuentas demo</p>
+
+          <ul class="mt-2 space-y-1 text-[var(--color-text-secondary)]">
+            <li>admin@gym.com · admin de GMS</li>
+            <li>owner@gym.com · propietario</li>
+            <li>trainer@gym.com · entrenador</li>
+            <li>member@gym.com · miembro activo</li>
+            <li>expired@gym.com · pago vencido</li>
+            <li>inactive@gym.com · cuenta desactivada</li>
+          </ul>
+
+          <p class="mt-3 text-xs text-[var(--color-text-secondary)]">
+            Staff: cualquier contraseña. Miembros: member123.
+          </p>
+        </div>
+
+        <div class="space-y-3 pt-4 text-center">
+          <RouterLink
+            v-if="moduleStore.isModuleEnabled('checkin')"
+            to="/checkin"
+            class="block text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-all"
+          >
+            Check-in en recepción
+          </RouterLink>
+
           <RouterLink
             to="/guest-access"
-            class="text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-all"
+            class="block text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-all"
           >
             Ingresar como invitado
           </RouterLink>

@@ -8,6 +8,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useCheckinStore } from '@/stores/useCheckinStore'
+import { useMemberStore } from '@/stores/useMemberStore'
 
 const props = defineProps({
   open: Boolean,
@@ -16,6 +17,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const checkinStore = useCheckinStore()
+const memberStore = useMemberStore()
 
 const activeTab = ref('credentials')
 
@@ -32,24 +34,38 @@ let refreshInterval = null
 let countdownInterval = null
 
 const submitCredentials = () => {
-  if (!username.value.trim() || !password.value.trim()) {
-    credentialStatus.value = 'Ingresa usuario y contraseña'
+  const identifier = username.value.trim()
+
+  if (!identifier || !password.value.trim()) {
+    credentialStatus.value = 'Ingresa tu código o correo y contraseña'
 
     return
   }
 
-  const result = checkinStore.checkIn({
-    userId: `user:${username.value.trim()}`,
-    userName: username.value.trim(),
-    role: 'member',
+  const member = memberStore.findByCode(identifier)
+
+  if (!member) {
+    credentialStatus.value = 'Miembro no encontrado'
+
+    return
+  }
+
+  if (member.password && password.value !== member.password) {
+    credentialStatus.value = 'Contraseña incorrecta'
+
+    return
+  }
+
+  const result = checkinStore.registerAccess({
+    member,
     method: 'credentials',
   })
 
-  credentialStatus.value = result.ok
+  credentialStatus.value = result.allowed
     ? 'Check-in registrado correctamente'
     : result.reason
 
-  if (result.ok) {
+  if (result.allowed) {
     username.value = ''
     password.value = ''
   }
@@ -133,7 +149,7 @@ onBeforeUnmount(() => {
           @click="activeTab = 'credentials'"
           :class="{ '!border-[var(--color-primary)]': activeTab === 'credentials' }"
         >
-          Usuario y contraseña
+          Código o correo
         </BaseButton>
 
         <BaseButton
@@ -146,7 +162,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="activeTab === 'credentials'" class="space-y-4">
-        <BaseInput v-model="username" placeholder="Usuario" />
+        <BaseInput v-model="username" placeholder="Código del miembro o correo" />
 
         <BaseInput v-model="password" type="password" placeholder="Contraseña" />
 

@@ -9,29 +9,38 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useUserStore } from '@/stores/useUserStore'
+import { useMemberStore } from '@/stores/useMemberStore'
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
 import { usePosStore } from '@/stores/usePosStore'
+import { useModuleStore } from '@/stores/useModuleStore'
+
+import { isManager as isManagerRole } from '@/config/permissions'
+import { toDateOnly, todayISO as getTodayISO } from '@/utils/date'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const memberStore = useMemberStore()
 const scheduleStore = useClassScheduleStore()
 const checkinStore = useCheckinStore()
 const posStore = usePosStore()
+const moduleStore = useModuleStore()
 
 const isAdmin = computed(() => authStore.role === 'admin')
+const isOwner = computed(() => authStore.role === 'owner')
+const isManager = computed(() => isManagerRole(authStore.role))
 const isTrainer = computed(() => authStore.role === 'trainer')
 
-const todayISO = new Date().toISOString().split('T')[0]
+const todayISO = getTodayISO()
 
-const activeMembers = computed(() => userStore.users.filter((user) => user.role === 'member' && user.active).length)
-const activeTrainers = computed(() => userStore.users.filter((user) => user.role === 'trainer' && user.active).length)
+const activeMembers = computed(() => memberStore.activeMembers.length)
+const activeTrainers = computed(() => userStore.trainers.filter((user) => user.active).length)
 
 const todayClasses = computed(() => {
   return scheduleStore.classes.filter((gymClass) => gymClass.date === todayISO)
 })
 
-const todayCheckins = computed(() => checkinStore.todaysCheckins)
+const todayCheckins = computed(() => checkinStore.grantedToday)
 
 const occupancy = computed(() => {
   const capacity = todayClasses.value.reduce((total, gymClass) => total + (Number(gymClass.capacity) || 0), 0)
@@ -43,7 +52,7 @@ const occupancy = computed(() => {
 })
 
 const posSalesToday = computed(() => {
-  return posStore.sales.filter((sale) => sale.createdAt.split('T')[0] === todayISO)
+  return posStore.sales.filter((sale) => toDateOnly(new Date(sale.createdAt)) === todayISO)
 })
 
 const posRevenueToday = computed(() => {
@@ -59,10 +68,14 @@ const todaySchedule = computed(() => {
 const adminActivity = computed(() => {
   const checkinEvents = checkinStore.checkins.slice(0, 10).map((checkin) => ({
     id: `checkin-${checkin.id}`,
-    title: `${checkin.userName} hizo check-in`,
-    description: `${checkin.method} · ${checkin.role}`,
+    title:
+      checkin.allowed === false
+        ? `Acceso denegado: ${checkin.userName}`
+        : `${checkin.userName} hizo check-in`,
+    description:
+      checkin.allowed === false ? checkin.reason : `${checkin.method} · ${checkin.role}`,
     timestamp: checkin.timestamp,
-    type: 'check-in',
+    type: checkin.allowed === false ? 'Acceso' : 'Check-in',
   }))
 
   const saleEvents = posStore.sales.slice(0, 10).map((sale) => ({
@@ -99,7 +112,7 @@ const closeDetail = () => {
 const hourlyOccupancy = computed(() => {
   const counts = Array.from({ length: 24 }, () => 0)
 
-  checkinStore.todaysCheckins.forEach((checkin) => {
+  checkinStore.grantedToday.forEach((checkin) => {
     counts[new Date(checkin.timestamp).getHours()] += 1
   })
 
@@ -135,16 +148,6 @@ const detailTitle = computed(() => {
 
   return titles[detailMetric.value] || 'Detalle'
 })
-
-const saleItems = computed(() => {
-  return posStore.sales.flatMap((sale) =>
-    sale.items.map((item) => ({
-      ...item,
-      createdAt: sale.createdAt,
-      createdBy: sale.createdBy,
-    })),
-  )
-})
 </script>
 
 <template>
@@ -153,16 +156,36 @@ const saleItems = computed(() => {
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <h1 class="text-4xl font-black">
-          {{ isAdmin ? 'Dashboard administrativo' : 'Dashboard de entrenador' }}
+          {{
+            isAdmin
+              ? 'Dashboard administrativo'
+              : isOwner
+                ? 'Dashboard del gimnasio'
+                : isTrainer
+                  ? 'Dashboard de entrenador'
+                  : 'Dashboard'
+          }}
         </h1>
 
         <p class="text-[var(--color-text-secondary)] mt-2">
-          {{ isAdmin ? 'Resumen operativo del gimnasio' : 'Resumen de tu jornada y actividad' }}
+          {{
+            isAdmin
+              ? 'Resumen operativo de la plataforma'
+              : isOwner
+                ? 'Resumen operativo de tu gimnasio'
+                : isTrainer
+                  ? 'Resumen de tu jornada y actividad'
+                  : 'Resumen general'
+          }}
         </p>
       </div>
 
       <div class="flex flex-wrap gap-3">
-        <RouterLink v-if="isAdmin" to="/dashboard/users">
+        <RouterLink v-if="isManager" to="/dashboard/members">
+          <BaseButton variant="secondary"> Miembros </BaseButton>
+        </RouterLink>
+
+        <RouterLink v-if="isManager" to="/dashboard/users">
           <BaseButton variant="secondary"> Usuarios </BaseButton>
         </RouterLink>
 
@@ -170,18 +193,35 @@ const saleItems = computed(() => {
           <BaseButton variant="secondary"> Gimnasios </BaseButton>
         </RouterLink>
 
-        <RouterLink to="/dashboard/pos">
+        <RouterLink
+          v-if="(isManager || isTrainer) && moduleStore.isModuleEnabled('pos')"
+          to="/dashboard/pos"
+        >
           <BaseButton variant="secondary"> POS </BaseButton>
         </RouterLink>
 
-        <RouterLink to="/dashboard/calendar">
+        <RouterLink v-if="moduleStore.isModuleEnabled('calendar')" to="/dashboard/calendar">
           <BaseButton variant="secondary"> Calendario </BaseButton>
+        </RouterLink>
+
+        <RouterLink
+          v-if="!isManager && !isTrainer && moduleStore.isModuleEnabled('checkin')"
+          to="/dashboard/checkin"
+        >
+          <BaseButton variant="secondary"> Check-in </BaseButton>
+        </RouterLink>
+
+        <RouterLink
+          v-if="!isManager && !isTrainer && moduleStore.isModuleEnabled('routines')"
+          to="/dashboard/routine"
+        >
+          <BaseButton variant="secondary"> Mi rutina </BaseButton>
         </RouterLink>
       </div>
     </div>
 
-    <!-- Admin stats -->
-    <div v-if="isAdmin" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <!-- Manager stats -->
+    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Miembros activos</p>
         <h3 class="text-5xl font-black mt-4">{{ activeMembers }}</h3>
@@ -203,8 +243,8 @@ const saleItems = computed(() => {
       </BaseCard>
     </div>
 
-    <!-- Admin secondary stats -->
-    <div v-if="isAdmin" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <!-- Manager secondary stats -->
+    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard class="cursor-pointer" @click="openDetail('occupancy')">
         <p class="text-[var(--color-text-secondary)]">Ocupación de clases hoy</p>
         <h3 class="text-5xl font-black mt-4">{{ occupancy }}%</h3>
@@ -252,7 +292,7 @@ const saleItems = computed(() => {
     <!-- Main content -->
     <div class="grid gap-6 xl:grid-cols-2">
       <!-- Agenda -->
-      <BaseCard>
+      <BaseCard v-if="moduleStore.isModuleEnabled('calendar')">
         <div class="space-y-4">
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-2xl font-bold">Agenda de hoy</h2>
@@ -288,13 +328,16 @@ const saleItems = computed(() => {
         </div>
       </BaseCard>
 
-      <!-- Admin activity -->
-      <BaseCard v-if="isAdmin">
+      <!-- Manager activity -->
+      <BaseCard v-if="isManager">
         <div class="space-y-4">
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-2xl font-bold">Actividad reciente</h2>
 
-            <RouterLink to="/dashboard/checkin-audit">
+            <RouterLink
+              v-if="moduleStore.isModuleEnabled('checkin')"
+              to="/dashboard/checkin-audit"
+            >
               <BaseButton variant="secondary"> Auditoría </BaseButton>
             </RouterLink>
           </div>

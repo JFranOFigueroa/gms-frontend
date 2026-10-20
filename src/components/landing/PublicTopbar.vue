@@ -1,24 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+
 import { RouterLink } from 'vue-router'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 
-import { useTenantStore } from '@/stores/useTenantStore'
-
-import { computed } from 'vue'
-
 import { useAuthStore } from '@/stores/useAuthStore'
-
-import CheckInModal from '@/components/public/CheckInModal.vue'
+import { useModuleStore } from '@/stores/useModuleStore'
+import { useTenantStore } from '@/stores/useTenantStore'
 
 const authStore = useAuthStore()
 
+const moduleStore = useModuleStore()
+
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
-const tenantStore = useTenantStore()
+const checkinEnabled = computed(() => moduleStore.isModuleEnabled('checkin'))
 
-const checkInOpen = ref(false)
+const tenantStore = useTenantStore()
 </script>
 
 <template>
@@ -34,9 +33,9 @@ const checkInOpen = ref(false)
 
       <!-- ACTIONS -->
       <div class="flex items-center gap-4">
-        <BaseButton size="sm" variant="secondary" @click="checkInOpen = true">
-          Check-in
-        </BaseButton>
+        <RouterLink v-if="checkinEnabled" to="/checkin">
+          <BaseButton size="sm" variant="secondary"> Check-in </BaseButton>
+        </RouterLink>
 
         <!-- NOT AUTH -->
         <template v-if="!isAuthenticated">
@@ -58,6 +57,4 @@ const checkInOpen = ref(false)
       </div>
     </div>
   </header>
-
-  <CheckInModal :open="checkInOpen" @close="checkInOpen = false" />
 </template>

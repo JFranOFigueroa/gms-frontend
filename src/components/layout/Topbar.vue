@@ -1,7 +1,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 
-import { RouterLink, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
+
+import { ROLE_LABELS } from '@/config/permissions'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
@@ -20,20 +22,28 @@ const router = useRouter()
 
 const notificationOpen = ref(false)
 
-const canSwitchGym = computed(() => ['admin', 'trainer'].includes(authStore.role))
+const canSwitchGym = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
+
+const isStaff = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
 
 const availableGyms = computed(() => {
   if (authStore.role === 'admin') return gymsStore.gyms
 
   const allowedIds = authStore.user?.gymIds
 
-  if (!allowedIds?.length) return gymsStore.gyms
+  if (!allowedIds?.length) {
+    return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
+  }
 
   return gymsStore.gyms.filter((gym) => allowedIds.includes(gym.id))
 })
 
 const changeGym = (event) => {
-  gymsStore.setActiveGym(Number(event.target.value))
+  const gymId = Number(event.target.value)
+
+  if (!availableGyms.value.some((gym) => gym.id === gymId)) return
+
+  gymsStore.setActiveGym(gymId)
 
   posStore.clearCart()
 }
@@ -52,30 +62,19 @@ watch(
 
 const userName = computed(() => authStore.user?.name || 'Usuario')
 
-const userRole = computed(() => {
-  switch (authStore.role) {
-    case 'admin':
-      return 'Administrador'
-    case 'trainer':
-      return 'Entrenador'
-    case 'member':
-      return 'Miembro'
-    case 'guest':
-      return 'Invitado'
-    default:
-      return 'Usuario'
-  }
-})
+const userRole = computed(() => ROLE_LABELS[authStore.role] || 'Usuario')
 
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 
 const syncNotifications = () => {
   checkinStore.checkins.slice(0, 10).forEach((checkin) => {
+    const denied = checkin.allowed === false
+
     notificationStore.ensureNotification({
       id: `checkin-${checkin.id}`,
-      type: 'check-in',
-      title: `${checkin.userName} hizo check-in`,
-      description: `${checkin.method} · ${checkin.role}`,
+      type: denied ? 'acceso' : 'check-in',
+      title: denied ? `Acceso denegado: ${checkin.userName}` : `${checkin.userName} hizo check-in`,
+      description: denied ? checkin.reason : `${checkin.method} · ${checkin.role}`,
       timestamp: checkin.timestamp,
       target: '/dashboard/checkin-audit',
     })
@@ -117,8 +116,10 @@ const syncNotifications = () => {
 }
 
 watch(
-  () => [checkinStore.checkins, posStore.sales, posStore.lowStockProducts],
-  syncNotifications,
+  () => [authStore.role, checkinStore.checkins, posStore.sales, posStore.lowStockProducts],
+  () => {
+    if (isStaff.value) syncNotifications()
+  },
   { immediate: true, deep: true },
 )
 
@@ -178,7 +179,7 @@ const openNotification = (notification) => {
       </div>
 
       <!-- Notifications -->
-      <div class="relative">
+      <div v-if="isStaff" class="relative">
         <button
           class="relative w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
           @click="toggleNotifications"

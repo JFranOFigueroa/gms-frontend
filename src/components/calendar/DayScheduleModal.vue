@@ -14,6 +14,7 @@ import { useBookingValidation } from '@/composables/useBookingValidation'
 import CreateClassModal from '@/components/calendar/CreateClassModal.vue'
 
 import { classCategories } from '@/config/classCategories'
+import { todayISO } from '@/utils/date'
 
 const categoryMap = Object.fromEntries(classCategories.map((category) => [category.id, category]))
 
@@ -40,13 +41,13 @@ const dayClasses = computed(() => {
 })
 
 const canManage = computed(() => {
-  return ['admin', 'trainer'].includes(authStore.role)
+  return ['admin', 'owner', 'trainer'].includes(authStore.role)
 })
 
 const isPastDay = computed(() => {
   if (!props.selectedDay) return false
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayISO()
 
   return props.selectedDay < today
 })
