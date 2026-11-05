@@ -113,12 +113,12 @@ const title = computed({
           <button
             type="button"
             class="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-all"
-            @click="landingStore.removeBlock(block.id)"
+            @click="landingStore.removeBlock(block.id).catch(e=>alert(e.message))"
           >
             <Trash2 class="w-5 h-5" />
           </button>
 
-          <BaseButton variant="secondary" @click="landingStore.toggleBlock(block.id)">
+          <BaseButton variant="secondary" @click="landingStore.toggleBlock(block.id).catch(e=>alert(e.message))">
             {{ block.enabled ? 'Ocultar' : 'Mostrar' }}
           </BaseButton>
         </div>

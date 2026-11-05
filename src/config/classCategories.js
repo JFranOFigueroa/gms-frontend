@@ -1,5 +1,9 @@
 export const classCategories = [
   {
+    id: 'functional', name: 'Funcional', allowOverlap: false,
+    badge: 'Funcional', color: 'zinc',
+  },
+  {
     id: 'normal',
 
     name: 'Normal',

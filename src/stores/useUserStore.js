@@ -1,171 +1,72 @@
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
+import { api } from '@/api/service';
+import { mapStaff } from '@/api/mappers';
+import { useGymsStore } from './useGymsStore';
+import { useIntegrationStore } from './useIntegrationStore';
 
-import { useGymsStore } from '@/stores/useGymsStore'
-
-/**
- * Usuarios internos del sistema (staff).
- * Los miembros viven en `useMemberStore`.
- */
-export const useUserStore = defineStore(
-  'users',
-
-  {
-    state: () => ({
-      allUsers: [
-        {
-          id: 1,
-          gymId: null,
-          name: 'Admin Demo',
-          email: 'admin@gym.com',
-          phone: '5550000001',
-          role: 'admin',
-          active: true,
-          createdAt: '2026-01-01',
-        },
-        {
-          id: 2,
-          gymId: 1,
-          gymIds: [1],
-          defaultGymId: 1,
-          name: 'Owner Demo',
-          email: 'owner@gym.com',
-          phone: '5550000002',
-          role: 'owner',
-          active: true,
-          createdAt: '2026-01-02',
-        },
-        {
-          id: 3,
-          gymId: 1,
-          gymIds: [1, 2],
-          defaultGymId: 1,
-          name: 'Trainer Demo',
-          email: 'trainer@gym.com',
-          phone: '5550000003',
-          role: 'trainer',
-          active: true,
-          createdAt: '2026-01-03',
-        },
-      ],
-    }),
-
-    persist: {
-      key: 'gms-users-v3',
-    },
-
-    getters: {
-      users(state) {
-        const gymsStore = useGymsStore()
-        const activeGymId = gymsStore.activeGymId
-
-        return state.allUsers.filter((user) => {
-          if (user.gymId == null && !user.gymIds?.length) return true
-          if (user.gymId === activeGymId) return true
-          if (user.gymIds?.includes(activeGymId)) return true
-
-          return false
-        })
-      },
-
-      owners() {
-        return this.users.filter((user) => user.role === 'owner')
-      },
-
-      trainers() {
-        return this.users.filter((user) => user.role === 'trainer')
-      },
-
-      activeUsers() {
-        return this.users.filter((user) => user.active)
-      },
-    },
-
-    actions: {
-      findByEmail(email) {
-        const query = (email || '').trim().toLowerCase()
-
-        if (!query) return null
-
-        return this.allUsers.find((user) => user.email.toLowerCase() === query) || null
-      },
-
-      addUser(payload) {
-        const gymsStore = useGymsStore()
-        const role = payload.role
-
-        if (role === 'admin') return null
-
-        const gymIds = Array.isArray(payload.gymIds) && payload.gymIds.length
-          ? payload.gymIds
-          : [gymsStore.activeGymId]
-
-        const defaultGymId = payload.defaultGymId && gymIds.includes(payload.defaultGymId)
-          ? payload.defaultGymId
-          : gymIds[0]
-
-        const user = {
-          ...payload,
-          id: Date.now(),
-          active: true,
-          createdAt: new Date().toISOString().split('T')[0],
-          gymId: defaultGymId,
-          gymIds,
-          defaultGymId,
-        }
-
-        this.allUsers.unshift(user)
-
-        return user
-      },
-
-      isAdminUser(id) {
-        return this.allUsers.find((user) => user.id === id)?.role === 'admin'
-      },
-
-      updateUser(id, payload) {
-        const index = this.allUsers.findIndex((user) => user.id === id)
-
-        if (index === -1 || this.allUsers[index].role === 'admin') return
-
-        const current = this.allUsers[index]
-        const role = payload.role || current.role
-
-        if (role === 'admin') return
-
-        const gymIds = Array.isArray(payload.gymIds) && payload.gymIds.length
-          ? payload.gymIds
-          : current.gymIds?.length
-            ? current.gymIds
-            : [current.gymId].filter(Boolean)
-
-        const defaultGymId = payload.defaultGymId && gymIds.includes(payload.defaultGymId)
-          ? payload.defaultGymId
-          : gymIds[0]
-
-        this.allUsers[index] = {
-          ...current,
-          ...payload,
-          gymId: defaultGymId,
-          gymIds,
-          defaultGymId,
-        }
-      },
-
-      removeUser(id) {
-        const user = this.allUsers.find((entry) => entry.id === id)
-
-        if (user?.role === 'admin') return
-
-        this.allUsers = this.allUsers.filter((entry) => entry.id !== id)
-      },
-
-      toggleActive(id) {
-        const user = this.allUsers.find((entry) => entry.id === id)
-
-        if (!user || user.role === 'admin') return
-
-        user.active = !user.active
-      },
-    },
+// La cuenta global ya existe si falla solamente la asignación al gimnasio.
+export class OwnerLinkPendingError extends Error {
+  constructor(userId, gymId) {
+    super('La cuenta se creó, pero no se pudo asignar al gimnasio. Intenta completar la asignación.');
+    this.name = 'OwnerLinkPendingError';
+    this.userId = userId;
+    this.gymId = gymId;
+  }
+}
+export const useUserStore = defineStore('users', {
+  state: () => ({ allUsers: [] }),
+  getters: {
+    users: s => s.allUsers.filter(u => u.gymId === useGymsStore().activeGymId),
+    owners() { return this.users.filter(u=>u.roles.includes('owner')); },
+    trainers() { return this.users.filter(u=>u.roles.includes('trainer')); },
+    activeUsers() { return this.users.filter(u=>u.active); },
   },
-)
+  actions: {
+    async load(gym = useGymsStore().activeGymId) {
+      if (!gym) { this.allUsers=[]; return; }
+      const data = await useIntegrationStore().track('personal', () => api.staff.list(gym));
+      if (useGymsStore().activeGymId===gym) this.allUsers=data.map(mapStaff);
+    },
+    findByEmail(email) { return this.allUsers.find(u=>u.email.toLowerCase()===String(email||'').toLowerCase()) || null; },
+    isAdminUser(id) { return this.allUsers.some(u=>u.id===id && u.roles.includes('admin')); },
+    async registerTrainer(data, gym=useGymsStore().activeGymId) {
+      const result=await useIntegrationStore().track('personal',()=>api.staff.register(gym,{
+        fullName:data.name,email:data.email,phone:data.phone,password:data.password,status:'active',
+      }));
+      await this.load(gym);return result;
+    },
+    async registerOwner(data, gym=useGymsStore().activeGymId) {
+      // Primero cuenta global, después vínculo owner. Nunca enviar owner a staff/register.
+      const account=await useIntegrationStore().track('cuentas globales',()=>api.users.create({
+        fullName:data.name,email:data.email,phone:data.phone,password:data.password,status:'active',
+      }));
+      if (!account?.id) throw new Error('El servidor no confirmó la creación de la cuenta.');
+      let staff;
+      try {
+        staff=await useIntegrationStore().track('personal',()=>api.staff.create(gym,{userId:account.id,role:'owner'}));
+      } catch {
+        // Guardar identificador solamente en memoria, sin repetir POST /users.
+        throw new OwnerLinkPendingError(account.id, gym);
+      }
+      await this.load(gym);
+      return {account,staff};
+    },
+    async linkStaff(userId, role, gym=useGymsStore().activeGymId) {
+      const result=await useIntegrationStore().track('personal',()=>api.staff.create(gym,{userId,role}));
+      await this.load(gym);return result;
+    },
+    addUser() { throw new Error('Para crear cuentas globales usa la gestión de cuentas del administrador.'); },
+    async updateUser(id,payload) {
+      const gym=useGymsStore().activeGymId;
+      if (!payload.role) throw new Error('Selecciona un permiso válido para esta persona.');
+      const row=await useIntegrationStore().track('personal',()=>api.staff.update(gym,id,{role:payload.role}));
+      this.allUsers=this.allUsers.map(u=>u.id===id?mapStaff(row):u);
+    },
+    async removeUser(id) {
+      const gym=useGymsStore().activeGymId;
+      await useIntegrationStore().track('personal',()=>api.staff.remove(gym,id));
+      await this.load(gym);
+    },
+    toggleActive() { throw new Error('Esta opción no está disponible desde esta sección.'); },
+  },
+});

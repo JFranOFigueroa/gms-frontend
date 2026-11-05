@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch, ref } from 'vue'
 
 import BaseModal from '@/components/ui/BaseModal.vue'
 
@@ -8,6 +8,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useMyReservationsStore } from '@/stores/useMyReservationsStore'
 
 const props = defineProps({
   open: Boolean,
@@ -20,35 +21,32 @@ const emit = defineEmits(['close'])
 const scheduleStore = useClassScheduleStore()
 
 const authStore = useAuthStore()
+const mine = useMyReservationsStore()
+const busy = ref(false)
+const error = ref('')
 
 const gymClass = computed(() => {
-  return scheduleStore.classes.find((c) => c.id === Number(props.classId))
+  return scheduleStore.classes.find((c) => String(c.id) === String(props.classId))
 })
 
-const alreadyBooked = computed(() => {
-  if (!gymClass.value) return false
-
-  return gymClass.value.attendees.includes(authStore.user?.id)
-})
-
-const spotsLeft = computed(() => {
-  if (!gymClass.value) return 0
-
-  return gymClass.value.capacity - gymClass.value.attendees.length
-})
-
-const bookClass = () => {
-  if (!gymClass.value) return
-
-  if (alreadyBooked.value) return
-
-  gymClass.value.attendees.push(authStore.user.id)
+const availability = computed(() => scheduleStore.availabilityByClass[gymClass.value?.id])
+const alreadyBooked = computed(() => Boolean(availability.value?.myReservationStatus))
+const spotsLeft = computed(() => availability.value?.available ?? null)
+watch(() => [props.open,props.classId,gymClass.value?.id], async () => {
+  if(props.open && gymClass.value) {error.value='';try{await scheduleStore.loadAvailability(gymClass.value.id)}catch(e){error.value=e.message}}
+}, {immediate:true})
+const bookClass = async () => {
+  if(!gymClass.value || !availability.value?.bookable || busy.value)return
+  busy.value=true;error.value=''
+  try{await scheduleStore.bookClass(gymClass.value.id);await mine.load();}
+  catch(e){error.value=e.message}finally{busy.value=false}
 }
 </script>
 
 <template>
   <BaseModal :open="open" @close="emit('close')">
     <div v-if="gymClass" class="space-y-6">
+      <p v-if="error" role="alert" class="text-red-400">{{ error }}</p>
       <div>
         <div class="flex items-center gap-4">
           <div
@@ -84,18 +82,18 @@ const bookClass = () => {
 
         <p>
           Inscritos:
-          {{ gymClass.attendees.length }}
+          {{ availability?.reserved ?? '—' }}
         </p>
 
         <p>
           Lugares disponibles:
-          {{ spotsLeft }}
+          {{ spotsLeft ?? '—' }}
         </p>
       </div>
 
       <!-- ACTION -->
-      <BaseButton class="w-full" :disabled="alreadyBooked || spotsLeft <= 0" @click="bookClass">
-        {{ alreadyBooked ? 'Ya reservado' : spotsLeft <= 0 ? 'Clase llena' : 'Reservar clase' }}
+      <BaseButton class="w-full" :disabled="busy || !availability?.bookable" @click="bookClass">
+        {{ alreadyBooked ? 'Ya reservado' : spotsLeft === 0 ? 'Clase llena' : availability ? 'Reservar clase' : 'Consultando…' }}
       </BaseButton>
     </div>
   </BaseModal>

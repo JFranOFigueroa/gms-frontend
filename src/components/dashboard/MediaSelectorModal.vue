@@ -17,6 +17,11 @@ const props = defineProps({
 const emit = defineEmits(['close', 'select'])
 
 const mediaStore = useMediaStore()
+// Fotografías que ya figuraban en el frontend original. Solo referencia visual, nunca datos de negocio.
+const designReferences = [
+  { name: 'Hero Banner', url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200' },
+  { name: 'Gym Interior', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200' },
+]
 
 const isSelected = (id) => {
   return props.selected.includes(id)
@@ -52,6 +57,15 @@ const isSelected = (id) => {
 
         <!-- GRID -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-h-[70vh] overflow-auto pr-2">
+          <div v-if="!mediaStore.assets.length" class="md:col-span-3 space-y-4">
+            <p class="text-sm text-[var(--color-text-secondary)]">Todavía no hay imágenes disponibles para seleccionar.</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div v-for="photo in designReferences" :key="photo.url" class="overflow-hidden rounded-3xl border border-[var(--color-border)]">
+                <img :src="photo.url" :alt="photo.name + ' (imagen de referencia)'" class="w-full aspect-video object-cover" />
+                <p class="p-3 text-sm text-[var(--color-text-secondary)]">{{ photo.name }} · referencia visual</p>
+              </div>
+            </div>
+          </div>
           <button
             v-for="asset in mediaStore.assets"
             :key="asset.id"

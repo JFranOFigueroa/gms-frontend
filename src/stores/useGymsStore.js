@@ -1,90 +1,40 @@
-import { defineStore } from 'pinia'
-
-export const useGymsStore = defineStore(
-  'gyms',
-
-  {
-    state: () => ({
-      gyms: [
-        {
-          id: 1,
-          name: 'Gym Manager Software',
-          shortName: 'GMS',
-          logo: null,
-          address: '',
-          phone: '',
-          active: true,
-          createdAt: '2026-01-01',
-        },
-        {
-          id: 2,
-          name: 'Iron Temple Fitness',
-          shortName: 'ITF',
-          logo: null,
-          address: '',
-          phone: '',
-          active: true,
-          createdAt: '2026-01-10',
-        },
-      ],
-      activeGymId: 1,
-    }),
-
-    persist: true,
-
-    getters: {
-      activeGym(state) {
-        return state.gyms.find((gym) => gym.id === state.activeGymId) || state.gyms[0] || null
-      },
+import { defineStore } from 'pinia';
+import { api } from '@/api/service';
+import { mapGym } from '@/api/mappers';
+import { useIntegrationStore } from './useIntegrationStore';
+export const useGymsStore = defineStore('gyms', {
+  state: () => ({ gyms: [], activeGymId: null, loaded: false }),
+  getters: { activeGym(state) { return state.gyms.find(g => g.id === state.activeGymId) || null; } },
+  actions: {
+    reset() { this.gyms = []; this.activeGymId = null; this.loaded = false; },
+    setFromSession(access) {
+      this.gyms = (access || []).map(g => ({ id:g.id, name:g.name, slug:g.slug,
+        shortName:g.name, active:true, roles:g.roles || [], address:'', phone:'', logo:null }));
+      if (!this.gyms.some(g => g.id === this.activeGymId)) this.activeGymId = null;
     },
-
-    actions: {
-      getGymById(id) {
-        return this.gyms.find((gym) => gym.id === id) || null
-      },
-
-      setActiveGym(id) {
-        if (this.gyms.some((gym) => gym.id === id)) {
-          this.activeGymId = id
-        }
-      },
-
-      addGym(payload) {
-        const gym = {
-          id: Date.now(),
-          logo: null,
-          address: '',
-          phone: '',
-          active: true,
-          createdAt: new Date().toISOString().split('T')[0],
-          ...payload,
-        }
-
-        this.gyms.push(gym)
-
-        return gym
-      },
-
-      updateGym(id, payload) {
-        const index = this.gyms.findIndex((gym) => gym.id === id)
-
-        if (index === -1) return
-
-        this.gyms[index] = {
-          ...this.gyms[index],
-          ...payload,
-        }
-      },
-
-      removeGym(id) {
-        if (this.gyms.length <= 1) return
-
-        this.gyms = this.gyms.filter((gym) => gym.id !== id)
-
-        if (this.activeGymId === id) {
-          this.activeGymId = this.gyms[0]?.id ?? null
-        }
-      },
+    async load() {
+      const rows = await useIntegrationStore().track('gimnasios', () => api.gyms.list());
+      this.gyms = rows.map(mapGym); this.loaded = true;
+    },
+    getGymById(id) { return this.gyms.find(g => g.id === id) || null; },
+    setActiveGym(id) {
+      if (id == null) { this.activeGymId = null; return; }
+      if (!this.gyms.some(g => g.id === id)) throw new Error('Gimnasio no autorizado.');
+      this.activeGymId = id;
+    },
+    async addGym(payload) {
+      // El backend nuevo autogenera el slug y resuelve colisiones automáticas.
+      const row = await useIntegrationStore().track('gimnasios', () => api.gyms.create(null, payload));
+      const gym = mapGym(row); this.gyms.push(gym); return gym;
+    },
+    async updateGym(id, payload) {
+      const row = await useIntegrationStore().track('gimnasios', () => api.gyms.update(null,id,payload));
+      const updated = mapGym(row); this.gyms = this.gyms.map(g=>g.id===id?updated:g); return updated;
+    },
+    async removeGym(id) {
+      await useIntegrationStore().track('gimnasios', () => api.gyms.remove(null,id));
+      this.gyms = this.gyms.filter(g=>g.id!==id);
+      if (this.activeGymId===id) this.activeGymId=this.gyms[0]?.id || null;
     },
   },
-)
+});

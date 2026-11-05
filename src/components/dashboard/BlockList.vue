@@ -19,7 +19,7 @@ const draggableBlocks = computed({
   },
 
   set(value) {
-    landingStore.setBlocks(value)
+    landingStore.setBlocks(value).catch(e=>alert(e.message))
   },
 })
 </script>

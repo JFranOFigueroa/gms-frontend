@@ -5,6 +5,7 @@ import QRCode from 'qrcode'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import MemberPhoto from '@/components/members/MemberPhoto.vue'
 
 import { useMemberStore } from '@/stores/useMemberStore'
 
@@ -29,8 +30,15 @@ const status = computed(() => {
     return { label: 'Inactivo', class: 'bg-red-500/15 text-red-400' }
   }
 
-  if (memberStore.isPaymentExpired(props.member)) {
+  const state = memberStore.memberPaymentState(props.member)
+  if (state === 'no_payment') {
+    return { label: 'Sin pago registrado', class: 'bg-amber-500/15 text-amber-400' }
+  }
+  if (state === 'expired') {
     return { label: 'Pago vencido', class: 'bg-amber-500/15 text-amber-400' }
+  }
+  if (state === 'unknown') {
+    return { label: 'Vigencia por confirmar', class: 'bg-amber-500/15 text-amber-400' }
   }
 
   return { label: 'Activo', class: 'bg-emerald-500/15 text-emerald-400' }
@@ -95,14 +103,7 @@ watch(
           <div
             class="h-36 w-36 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface-hover)] flex items-center justify-center"
           >
-            <img
-              v-if="member.photo"
-              :src="member.photo"
-              alt="Foto del miembro"
-              class="h-full w-full object-cover"
-            />
-
-            <span v-else class="text-5xl">👤</span>
+            <MemberPhoto :member="member" placeholder-class="text-5xl" />
           </div>
 
           <div v-if="qrDataUrl" class="rounded-2xl bg-white p-2">

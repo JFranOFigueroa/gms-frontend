@@ -11,12 +11,14 @@ import { useRoutineStore } from '@/stores/useRoutineStore'
 const routineStore = useRoutineStore()
 
 const modalOpen = ref(false)
+const actionError = ref('')
 const editingId = ref(null)
 
 const name = ref('')
 const description = ref('')
 const level = ref('beginner')
 const goal = ref('')
+const published = ref(true)
 const days = ref([{ day: 'Día 1', exercisesText: '' }])
 
 const resetForm = () => {
@@ -25,6 +27,7 @@ const resetForm = () => {
   description.value = ''
   level.value = 'beginner'
   goal.value = ''
+  published.value = true
   days.value = [{ day: 'Día 1', exercisesText: '' }]
 }
 
@@ -39,6 +42,7 @@ const openEdit = (routine) => {
   description.value = routine.description
   level.value = routine.level
   goal.value = routine.goal
+  published.value = routine.published
   days.value = routine.days.map((day) => ({
     day: day.day,
     exercisesText: day.exercises
@@ -75,7 +79,7 @@ const parseExercises = (text) => {
     })
 }
 
-const saveRoutine = () => {
+const saveRoutine = async () => {
   if (!name.value.trim()) return
 
   const payload = {
@@ -83,31 +87,33 @@ const saveRoutine = () => {
     description: description.value.trim(),
     level: level.value,
     goal: goal.value.trim(),
+    published: published.value,
     days: days.value.map((day) => ({
       day: day.day.trim() || 'Día',
       exercises: parseExercises(day.exercisesText),
     })),
   }
 
-  if (editingId.value) {
-    routineStore.updateRoutine(editingId.value, payload)
-  } else {
-    routineStore.addRoutine(payload)
-  }
-
-  modalOpen.value = false
-  resetForm()
+  try {
+    if (editingId.value) await routineStore.updateRoutine(editingId.value, payload)
+    else await routineStore.addRoutine(payload)
+    modalOpen.value = false
+    resetForm()
+    actionError.value = ''
+  } catch(error) { actionError.value = error.message }
 }
 
-const deleteRoutine = (id) => {
+const deleteRoutine = async (id) => {
   if (!confirm('¿Eliminar esta rutina?')) return
 
-  routineStore.removeRoutine(id)
+  try { await routineStore.removeRoutine(id) }
+  catch(error) { actionError.value = error.message }
 }
 </script>
 
 <template>
   <div class="space-y-8">
+    <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <div class="flex items-center justify-between gap-4">
       <div>
         <h1 class="text-4xl font-black">Rutinas</h1>
@@ -175,6 +181,7 @@ const deleteRoutine = (id) => {
           <BaseInput v-model="goal" placeholder="Objetivo" />
         </div>
 
+        <label class="flex items-center gap-3 text-sm"><input v-model="published" type="checkbox" /> Publicar para miembros</label>
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-bold">Días</h3>

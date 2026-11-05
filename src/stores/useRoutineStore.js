@@ -1,137 +1,25 @@
-import { defineStore } from 'pinia'
-
-import { useGymsStore } from '@/stores/useGymsStore'
-
-const createExercise = (name, sets, reps, rest, notes = '') => ({
-  name,
-  sets,
-  reps,
-  rest,
-  notes,
-})
-
-const createDay = (day, exercises) => ({
-  day,
-  exercises,
-})
-
-export const useRoutineStore = defineStore(
-  'routines',
-
-  {
-    state: () => ({
-      allRoutines: [
-        {
-          id: 1,
-          gymId: 1,
-          name: 'Rutina 3 días',
-          description: 'Rutina general de cuerpo completo para empezar a entrenar.',
-          level: 'beginner',
-          goal: 'Condición general',
-          days: [
-            createDay('Día 1', [
-              createExercise('Sentadilla', '4', '12', '60s', 'Controlar la bajada'),
-              createExercise('Press de banca', '3', '10', '90s', ''),
-              createExercise('Remo con barra', '3', '10', '90s', ''),
-            ]),
-            createDay('Día 2', [
-              createExercise('Prensa de pierna', '4', '12', '60s', ''),
-              createExercise('Press militar', '3', '10', '90s', ''),
-              createExercise('Jalón al pecho', '3', '10', '90s', ''),
-            ]),
-            createDay('Día 3', [
-              createExercise('Peso muerto rumano', '4', '10', '90s', ''),
-              createExercise('Fondos', '3', '12', '60s', ''),
-              createExercise('Plancha', '3', '45s', '60s', ''),
-            ]),
-          ],
-          published: true,
-          createdAt: '2026-01-01',
-          createdBy: 'Admin',
-        },
-        {
-          id: 2,
-          gymId: 1,
-          name: 'Rutina 4 días (Avanzado)',
-          description: 'Rutina dividida para mayor volumen y fuerza.',
-          level: 'advanced',
-          goal: 'Hipertrofia',
-          days: [
-            createDay('Lunes', [
-              createExercise('Sentadilla', '5', '8', '120s', ''),
-              createExercise('Prensa', '4', '12', '90s', ''),
-              createExercise('Extensiones de cuádriceps', '3', '15', '60s', ''),
-            ]),
-            createDay('Martes', [
-              createExercise('Press de banca', '5', '8', '120s', ''),
-              createExercise('Aperturas con mancuernas', '4', '12', '90s', ''),
-              createExercise('Tríceps en polea', '3', '12', '60s', ''),
-            ]),
-            createDay('Jueves', [
-              createExercise('Peso muerto', '5', '6', '120s', ''),
-              createExercise('Remo con mancuerna', '4', '10', '90s', ''),
-              createExercise('Curl de bíceps', '3', '12', '60s', ''),
-            ]),
-            createDay('Viernes', [
-              createExercise('Press militar', '4', '10', '90s', ''),
-              createExercise('Elevaciones laterales', '4', '15', '60s', ''),
-              createExercise('Dominadas', '3', '8', '120s', ''),
-            ]),
-          ],
-          published: true,
-          createdAt: '2026-01-05',
-          createdBy: 'Admin',
-        },
-      ],
-    }),
-
-    persist: {
-      key: 'gms-routines-v2',
+import { defineStore } from 'pinia';
+import { api } from '@/api/service';
+import { mapRoutine } from '@/api/mappers';
+import { useGymsStore } from './useGymsStore';
+import { useIntegrationStore } from './useIntegrationStore';
+export const useRoutineStore = defineStore('routines', {
+  state:()=>({allRoutines:[]}),
+  getters:{routines:s=>s.allRoutines.filter(r=>r.gymId===useGymsStore().activeGymId),
+    publishedRoutines(){return this.routines.filter(r=>r.published);}},
+  actions:{
+    async load(gym=useGymsStore().activeGymId){if(!gym){this.allRoutines=[];return;}
+      const rows=await useIntegrationStore().track('rutinas',()=>api.routines.list(gym));
+      if(gym===useGymsStore().activeGymId)this.allRoutines=rows.map(mapRoutine);
     },
-
-    getters: {
-      routines(state) {
-        const gymsStore = useGymsStore()
-        const activeGymId = gymsStore.activeGymId
-
-        return state.allRoutines.filter((routine) => {
-          return routine.gymId == null || routine.gymId === activeGymId
-        })
-      },
-
-      publishedRoutines() {
-        return this.routines.filter((routine) => routine.published)
-      },
-    },
-
-    actions: {
-      addRoutine(payload) {
-        const gymsStore = useGymsStore()
-
-        this.allRoutines.push({
-          id: Date.now(),
-          gymId: gymsStore.activeGymId,
-          published: true,
-          createdAt: new Date().toISOString().split('T')[0],
-          createdBy: 'Admin',
-          ...payload,
-        })
-      },
-
-      updateRoutine(id, payload) {
-        const index = this.allRoutines.findIndex((routine) => routine.id === id)
-
-        if (index === -1) return
-
-        this.allRoutines[index] = {
-          ...this.allRoutines[index],
-          ...payload,
-        }
-      },
-
-      removeRoutine(id) {
-        this.allRoutines = this.allRoutines.filter((routine) => routine.id !== id)
-      },
-    },
+    async addRoutine(payload){const gym=useGymsStore().activeGymId;
+      const row=await useIntegrationStore().track('rutinas',()=>api.routines.create(gym,{...payload,published:payload.published??false}));
+      this.allRoutines.push(mapRoutine(row));return row;},
+    async updateRoutine(id,payload){const gym=useGymsStore().activeGymId;
+      const row=await useIntegrationStore().track('rutinas',()=>api.routines.update(gym,id,payload));
+      this.allRoutines=this.allRoutines.map(r=>r.id===id?mapRoutine(row):r);return row;},
+    async removeRoutine(id){const gym=useGymsStore().activeGymId;
+      await useIntegrationStore().track('rutinas',()=>api.routines.remove(gym,id));
+      this.allRoutines=this.allRoutines.filter(r=>r.id!==id);},
   },
-)
+});

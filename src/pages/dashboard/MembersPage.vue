@@ -7,6 +7,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 import MemberRegistrationForm from '@/components/members/MemberRegistrationForm.vue'
+import MemberPhoto from '@/components/members/MemberPhoto.vue'
 import MemberDetailModal from '@/components/members/MemberDetailModal.vue'
 import MemberPaymentModal from '@/components/members/MemberPaymentModal.vue'
 
@@ -19,6 +20,7 @@ const authStore = useAuthStore()
 const memberStore = useMemberStore()
 
 const canManage = computed(() => canManageMembers(authStore.role))
+const actionError = ref('')
 
 const activeTab = ref('members')
 const search = ref('')
@@ -37,9 +39,7 @@ const paymentMember = ref(null)
 const tabs = computed(() => {
   const items = [{ id: 'members', label: 'Miembros' }]
 
-  if (canManage.value) {
-    items.push({ id: 'new', label: 'Altas' })
-  }
+  if (canManage.value) items.push({ id: 'new', label: 'Altas' })
 
   items.push({ id: 'inactive', label: 'Bajas' })
   items.push({ id: 'payments', label: 'Pagos' })
@@ -53,8 +53,15 @@ const memberStatus = (member) => {
     return { label: 'Inactivo', class: 'bg-red-500/15 text-red-400' }
   }
 
-  if (memberStore.isPaymentExpired(member)) {
+  const paymentState = memberStore.memberPaymentState(member)
+  if (paymentState === 'no_payment') {
+    return { label: 'Sin pago registrado', class: 'bg-amber-500/15 text-amber-400' }
+  }
+  if (paymentState === 'expired') {
     return { label: 'Pago vencido', class: 'bg-amber-500/15 text-amber-400' }
+  }
+  if (paymentState === 'unknown') {
+    return { label: 'Vigencia por confirmar', class: 'bg-amber-500/15 text-amber-400' }
   }
 
   return { label: 'Activo', class: 'bg-emerald-500/15 text-emerald-400' }
@@ -75,11 +82,14 @@ const matchesSearch = (member) => {
 
 const matchesStatus = (member) => {
   if (statusFilter.value === 'active') {
-    return member.active && !memberStore.isPaymentExpired(member)
+    return member.active && memberStore.memberPaymentState(member) === 'current'
   }
 
   if (statusFilter.value === 'expired') {
     return member.active && memberStore.isPaymentExpired(member)
+  }
+  if (statusFilter.value === 'no_payment') {
+    return member.active && memberStore.memberPaymentState(member) === 'no_payment'
   }
 
   return true
@@ -123,6 +133,7 @@ const closeDetail = () => {
 }
 
 const openCreate = () => {
+  actionError.value = ''
   altasKey.value += 1
   activeTab.value = 'new'
 }
@@ -158,17 +169,17 @@ const closePayment = () => {
   paymentMember.value = null
 }
 
-const deactivate = (member) => {
+const deactivate = async (member) => {
   if (!canManage.value) return
   if (!confirm(`¿Dar de baja a ${member.name}?`)) return
 
-  memberStore.deactivateMember(member.id)
+  try { await memberStore.deactivateMember(member.id) } catch(error) {actionError.value=error.message}
 }
 
-const reactivate = (member) => {
+const reactivate = async (member) => {
   if (!canManage.value) return
 
-  memberStore.reactivateMember(member.id)
+  try { await memberStore.reactivateMember(member.id) } catch(error) {actionError.value=error.message}
 }
 </script>
 
@@ -194,6 +205,7 @@ const reactivate = (member) => {
       Tienes acceso de solo lectura al módulo de miembros.
     </p>
 
+    <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <!-- Stats -->
     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
@@ -247,6 +259,7 @@ const reactivate = (member) => {
           <option value="all">Todos los estados</option>
           <option value="active">Activos y al día</option>
           <option value="expired">Pago vencido</option>
+          <option value="no_payment">Sin pago registrado</option>
         </select>
       </div>
 
@@ -261,14 +274,7 @@ const reactivate = (member) => {
               <div
                 class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-hover)] flex items-center justify-center"
               >
-                <img
-                  v-if="member.photo"
-                  :src="member.photo"
-                  alt="Foto del miembro"
-                  class="h-full w-full object-cover"
-                />
-
-                <span v-else class="text-2xl">👤</span>
+                <MemberPhoto :member="member" />
               </div>
 
               <div class="min-w-0">
@@ -290,10 +296,12 @@ const reactivate = (member) => {
             <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
               <p v-if="member.phone">Teléfono: {{ member.phone }}</p>
               <p>Inscripción: {{ member.startDate }}</p>
-              <p>
+              <p v-if="member.nextPaymentDate">
                 Próximo pago: {{ member.nextPaymentDate }}
-                ({{ member.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})
+                <template v-if="member.paymentModality"> ({{ member.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})</template>
               </p>
+              <p v-else-if="memberStore.memberPaymentState(member) === 'no_payment'">Sin pago registrado</p>
+              <p v-else>Próximo pago: por confirmar</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -342,14 +350,7 @@ const reactivate = (member) => {
               <div
                 class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-hover)] flex items-center justify-center"
               >
-                <img
-                  v-if="member.photo"
-                  :src="member.photo"
-                  alt="Foto del miembro"
-                  class="h-full w-full object-cover"
-                />
-
-                <span v-else class="text-2xl">👤</span>
+                <MemberPhoto :member="member" />
               </div>
 
               <div class="min-w-0">
@@ -405,7 +406,7 @@ const reactivate = (member) => {
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-lg font-bold">
-              {{ payment.memberName }} · ${{ payment.amount }}
+              {{ memberStore.findById(payment.memberId)?.name || payment.memberId }} · ${{ payment.amount }}
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">

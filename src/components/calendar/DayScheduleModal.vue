@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import BaseModal from '@/components/ui/BaseModal.vue'
 
@@ -8,8 +8,8 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useMyReservationsStore } from '@/stores/useMyReservationsStore'
 
-import { useBookingValidation } from '@/composables/useBookingValidation'
 
 import CreateClassModal from '@/components/calendar/CreateClassModal.vue'
 
@@ -20,7 +20,6 @@ const categoryMap = Object.fromEntries(classCategories.map((category) => [catego
 
 const getCategory = (id) => categoryMap[id]
 
-const { validateBooking } = useBookingValidation()
 
 const createModalOpen = ref(false)
 
@@ -35,6 +34,21 @@ const emit = defineEmits(['close'])
 const scheduleStore = useClassScheduleStore()
 
 const authStore = useAuthStore()
+const myReservations = useMyReservationsStore()
+const availabilityFor = (id) => scheduleStore.availabilityByClass[id]
+const myReservation = (id) => myReservations.findByClass(id)
+const ownStatus = (id) => availabilityFor(id)?.myReservationStatus || myReservation(id)?.status
+const isBookable = (c) => {
+  const a = availabilityFor(c.id)
+  return !!a && a.bookable === true && !isClassPast(c)
+}
+const cancelOwn = async (gymClass) => {
+  const own=myReservation(gymClass.id)
+  if(!own?.id) { alert('Actualiza tus reservas antes de cancelar.'); return }
+  if(!confirm('¿Cancelar la reserva de esta clase?'))return
+  try { await myReservations.cancel(own.id); await scheduleStore.loadAvailability(gymClass.id) }
+  catch(e){alert(e.message)}
+}
 
 const dayClasses = computed(() => {
   return scheduleStore.classes.filter((gymClass) => gymClass.date === props.selectedDay)
@@ -43,6 +57,14 @@ const dayClasses = computed(() => {
 const canManage = computed(() => {
   return ['admin', 'owner', 'trainer'].includes(authStore.role)
 })
+// Los miembros consultan cupos anónimos (sin listas de asistentes).
+watch(() => [props.open, props.selectedDay, dayClasses.value.map(c=>c.id).join(',')], async () => {
+  if (!props.open) return
+  const tasks=dayClasses.value.map(c=>scheduleStore.loadAvailability(c.id))
+  if (canManage.value) tasks.push(...dayClasses.value.map(c=>scheduleStore.loadReservationsForClass(c.id)))
+  else if(props.selectedDay) tasks.push(myReservations.load(undefined,{from:props.selectedDay,to:props.selectedDay}))
+  await Promise.allSettled(tasks)
+}, { immediate: true })
 
 const isPastDay = computed(() => {
   if (!props.selectedDay) return false
@@ -62,7 +84,7 @@ const isClassPast = (gymClass) => {
   return classDateTime < new Date()
 }
 
-const bookClass = (gymClass) => {
+const bookClass = async (gymClass) => {
   const [year, month, day] = gymClass.date.split('-').map(Number)
 
   const [hour, minute] = gymClass.startTime.split(':').map(Number)
@@ -77,29 +99,14 @@ const bookClass = (gymClass) => {
     return
   }
 
-  const userBookings = scheduleStore.classes.filter((booking) =>
-    booking.attendees.includes(authStore.user.id),
-  )
-
-  const result = validateBooking({
-    gymClass,
-    userBookings,
-    settings: {
-      allowMultipleNormalClassesPerDay: false,
-    },
-    role: authStore.role,
-  })
-
-  if (!result.valid) {
-    alert(result.reason)
-    return
-  }
-
-  gymClass.attendees.push(authStore.user.id)
+  try { await scheduleStore.bookClass(gymClass.id)
+    await myReservations.load(undefined,{from:props.selectedDay,to:props.selectedDay})
+    alert('Reserva registrada en el servidor.');
+  } catch(error) { alert(error.message) }
 }
 
-const removeClass = (classId) => {
-  scheduleStore.removeClass(classId)
+const removeClass = async (classId) => {
+  try { await scheduleStore.removeClass(classId) } catch(error) { alert(error.message) }
 }
 </script>
 
@@ -194,36 +201,24 @@ const removeClass = (classId) => {
 
             <div>
               Inscritos:
-              {{ gymClass.attendees.length }}
+              {{ availabilityFor(gymClass.id)?.reserved ?? gymClass.attendeeCount ?? '—' }}
             </div>
 
             <div>
               Disponibles:
-              {{ gymClass.capacity - gymClass.attendees.length }}
+              {{ availabilityFor(gymClass.id)?.available ?? (gymClass.attendeeCount == null ? '—' : gymClass.capacity - gymClass.attendeeCount) }}
             </div>
           </div>
 
-          <!-- ACTION -->
-          <BaseButton
-            v-if="!canManage"
-            class="w-full"
-            :disabled="
-              gymClass.attendees.includes(authStore.user.id) ||
-              gymClass.attendees.length >= gymClass.capacity ||
-              isClassPast(gymClass)
-            "
-            @click="bookClass(gymClass)"
-          >
-            {{
-              gymClass.attendees.includes(authStore.user.id)
-                ? 'Ya reservado'
-                : isClassPast(gymClass)
-                  ? 'Clase En Curso o Finalizada'
-                  : gymClass.attendees.length >= gymClass.capacity
-                    ? 'Clase llena'
-                    : 'Reservar clase'
-            }}
-          </BaseButton>
+          <!-- ACCIÓN PROPIA: confirmar siempre en backend, no en estado local. -->
+          <div v-if="!canManage" class="space-y-2">
+            <BaseButton v-if="ownStatus(gymClass.id) === 'booked'" variant="secondary" class="w-full" :disabled="!myReservation(gymClass.id)" @click="cancelOwn(gymClass)">
+              Cancelar mi reserva
+            </BaseButton>
+            <BaseButton v-else class="w-full" :disabled="!isBookable(gymClass)" @click="bookClass(gymClass)">
+              {{ ownStatus(gymClass.id) ? 'Ya reservado' : isClassPast(gymClass) ? 'Clase iniciada' : availabilityFor(gymClass.id) ? (availabilityFor(gymClass.id).available === 0 ? 'Clase llena' : availabilityFor(gymClass.id).bookable ? 'Reservar clase' : 'No disponible') : 'Consultando cupos…' }}
+            </BaseButton>
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useMemberStore } from '@/stores/useMemberStore'
-import { useAuthStore } from '@/stores/useAuthStore'
+import { usePlanStore } from '@/stores/usePlanStore'
 import { addMonths, addYears, todayISO } from '@/utils/date'
 
 const props = defineProps({
@@ -20,17 +20,17 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved'])
 
 const memberStore = useMemberStore()
-const authStore = useAuthStore()
+const plansStore = usePlanStore()
+const saving = ref(false)
+const selectedPlanId = ref('')
+const selectedPlan = computed(() => plansStore.activePlans.find(p => String(p.id)===String(selectedPlanId.value)) || null)
 
 const error = ref('')
 const selectedMemberId = ref('')
 
 const form = reactive({
-  amount: '',
   method: 'cash',
-  periodicity: 'monthly',
   periods: 1,
-  paidAt: todayISO(),
   notes: '',
 })
 
@@ -47,24 +47,21 @@ const addPeriods = (dateString, periodicity, periods) => {
 }
 
 const previewNextPayment = computed(() => {
-  if (!selectedMember.value || !form.paidAt) return '—'
+  if (!selectedMember.value || !selectedPlan.value) return '—'
 
-  const base =
-    selectedMember.value.nextPaymentDate && selectedMember.value.nextPaymentDate > form.paidAt
-      ? selectedMember.value.nextPaymentDate
-      : form.paidAt
-
-  return addPeriods(base, form.periodicity, Math.max(1, Number(form.periods) || 1))
+  const today = todayISO()
+  const base = selectedMember.value.nextPaymentDate && selectedMember.value.nextPaymentDate > today
+    ? selectedMember.value.nextPaymentDate : today
+  return addPeriods(base, selectedPlan.value.billingPeriod,
+    (selectedPlan.value.intervalCount || 1) * Math.max(1, Number(form.periods) || 1))
 })
 
 const resetForm = () => {
   error.value = ''
   selectedMemberId.value = props.member?.id ? String(props.member.id) : ''
-  form.amount = ''
+  selectedPlanId.value = plansStore.activePlans.find(p=>p.billingPeriod===props.member?.paymentModality)?.id || plansStore.activePlans[0]?.id || ''
   form.method = 'cash'
-  form.periodicity = props.member?.paymentModality || 'monthly'
   form.periods = 1
-  form.paidAt = todayISO()
   form.notes = ''
 }
 
@@ -76,39 +73,21 @@ watch(
   { immediate: true },
 )
 
-watch(selectedMemberId, () => {
-  if (selectedMember.value) {
-    form.periodicity = selectedMember.value.paymentModality || 'monthly'
-  }
-})
+const totalAmount = computed(() => selectedPlan.value ? Number(selectedPlan.value.price) * Math.max(1,Number(form.periods)||1) : 0)
 
-const submit = () => {
-  if (!selectedMemberId.value) {
-    error.value = 'Selecciona un miembro'
-    return
-  }
-
-  if (!form.amount || Number(form.amount) <= 0) {
-    error.value = 'Ingresa un monto válido'
-    return
-  }
-
-  const result = memberStore.registerPayment(selectedMemberId.value, {
-    amount: form.amount,
-    method: form.method,
-    periodicity: form.periodicity,
-    periods: form.periods,
-    paidAt: form.paidAt,
-    notes: form.notes,
-    createdBy: authStore.user?.name || 'Sistema',
-  })
-
-  if (!result.ok) {
-    error.value = result.reason
-    return
-  }
-
-  emit('saved')
+const submit = async () => {
+  error.value = ''
+  if (!selectedMemberId.value) { error.value = 'Selecciona un miembro'; return }
+  if (!selectedPlan.value) { error.value = 'Selecciona un plan de membresía'; return }
+  saving.value = true
+  try {
+    const result = await memberStore.registerPayment(selectedMemberId.value, {
+      planId: selectedPlan.value.id, method: form.method, periods: form.periods, notes: form.notes,
+    })
+    if (!result.ok) { error.value = result.reason; return }
+    emit('saved')
+  } catch (e) { error.value=e.message }
+  finally { saving.value=false }
 }
 
 const close = () => {
@@ -123,7 +102,7 @@ const close = () => {
         <h2 class="text-3xl font-black">Registrar pago</h2>
 
         <p class="text-[var(--color-text-secondary)] mt-2">
-          El próximo pago se calcula automáticamente según la modalidad.
+          El importe y el próximo vencimiento se determinan según el plan elegido.
         </p>
       </div>
 
@@ -156,7 +135,10 @@ const close = () => {
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <BaseInput v-model="form.amount" type="number" placeholder="Monto *" />
+        <div class="p-4 rounded-2xl border border-[var(--color-border)]">
+          <p class="text-sm text-[var(--color-text-secondary)]">Monto calculado</p>
+          <p class="font-bold">${{ totalAmount.toFixed(2) }}</p>
+        </div>
 
         <div>
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Método de pago</p>
@@ -172,23 +154,16 @@ const close = () => {
         </div>
 
         <div>
-          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Periodicidad</p>
-
-          <select
-            v-model="form.periodicity"
-            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
-          >
-            <option value="monthly">Mensual</option>
-            <option value="yearly">Anual</option>
+          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Plan de membresía</p>
+          <select v-model="selectedPlanId" class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+            <option value="">Selecciona un plan</option>
+            <option v-for="plan in plansStore.activePlans" :key="plan.id" :value="plan.id">
+              {{ plan.name }} · {{ plan.billingPeriod === 'yearly' ? 'Anual' : 'Mensual' }} · ${{ plan.price }}
+            </option>
           </select>
         </div>
 
         <BaseInput v-model="form.periods" type="number" placeholder="Periodos" />
-
-        <div class="sm:col-span-2">
-          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Fecha de pago</p>
-          <BaseInput v-model="form.paidAt" type="date" />
-        </div>
 
         <div class="sm:col-span-2">
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Notas</p>
@@ -203,14 +178,14 @@ const close = () => {
       </div>
 
       <div class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4">
-        <p class="text-sm text-[var(--color-text-secondary)]">Nuevo próximo pago</p>
+        <p class="text-sm text-[var(--color-text-secondary)]">Próximo pago estimado (confirmado por servidor al registrar)</p>
         <p class="text-2xl font-black mt-1">{{ previewNextPayment }}</p>
       </div>
 
       <div class="flex flex-wrap justify-end gap-3">
         <BaseButton variant="secondary" @click="close"> Cancelar </BaseButton>
 
-        <BaseButton @click="submit"> Registrar pago </BaseButton>
+        <BaseButton :disabled="saving || !selectedPlan" @click="submit"> {{ saving ? 'Registrando…' : 'Registrar pago' }} </BaseButton>
       </div>
     </div>
   </BaseModal>

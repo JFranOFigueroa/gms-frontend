@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { RouterLink } from 'vue-router'
 
@@ -14,6 +14,8 @@ import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
 import { usePosStore } from '@/stores/usePosStore'
 import { useModuleStore } from '@/stores/useModuleStore'
+import { useDashboardSummaryStore } from '@/stores/useDashboardSummaryStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 import { isManager as isManagerRole } from '@/config/permissions'
 import { toDateOnly, todayISO as getTodayISO } from '@/utils/date'
@@ -25,6 +27,13 @@ const scheduleStore = useClassScheduleStore()
 const checkinStore = useCheckinStore()
 const posStore = usePosStore()
 const moduleStore = useModuleStore()
+const summary = useDashboardSummaryStore()
+const gyms = useGymsStore()
+watch(() => [gyms.activeGymId,authStore.role], async ([gym,role]) => {
+  if (gym && ['admin','owner'].includes(role)) await summary.load(gym).catch(() => {})
+}, { immediate: true })
+const daily = computed(() => summary.gymId === gyms.activeGymId ? summary.data : null)
+const money = (value) => new Intl.NumberFormat('es-MX', {style:'currency',currency:daily.value?.currency || 'MXN'}).format(Number(value ?? 0))
 
 const isAdmin = computed(() => authStore.role === 'admin')
 const isOwner = computed(() => authStore.role === 'owner')
@@ -42,14 +51,8 @@ const todayClasses = computed(() => {
 
 const todayCheckins = computed(() => checkinStore.grantedToday)
 
-const occupancy = computed(() => {
-  const capacity = todayClasses.value.reduce((total, gymClass) => total + (Number(gymClass.capacity) || 0), 0)
-  const attendees = todayClasses.value.reduce((total, gymClass) => total + (gymClass.attendees?.length || 0), 0)
-
-  if (capacity <= 0) return 0
-
-  return Math.round((attendees / capacity) * 100)
-})
+// No hay un endpoint de ocupación total. Mostrar solo métricas verificadas.
+const occupancy = computed(() => null)
 
 const posSalesToday = computed(() => {
   return posStore.sales.filter((sale) => toDateOnly(new Date(sale.createdAt)) === todayISO)
@@ -93,7 +96,7 @@ const adminActivity = computed(() => {
 
 const trainerSales = computed(() => {
   return posStore.sales
-    .filter((sale) => sale.createdBy === authStore.user?.name)
+    .filter((sale) => sale.createdBy === authStore.user?.id)
     .slice(0, 10)
 })
 
@@ -220,6 +223,24 @@ const detailTitle = computed(() => {
       </div>
     </div>
 
+    <!-- Cifras calculadas por SQL sobre TODO el rango, no solo 100 filas. -->
+    <BaseCard v-if="isManager && gyms.activeGymId">
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div><h2 class="text-2xl font-bold">Resumen del día</h2><p class="text-sm text-[var(--color-text-secondary)]">Actividad del {{ daily?.from || todayISO }}. Ventas y pagos de membresías por separado.</p></div>
+          <BaseButton variant="secondary" :disabled="summary.loading" @click="summary.load(gyms.activeGymId).catch(() => {})">Actualizar</BaseButton>
+        </div>
+        <p v-if="summary.loading">Cargando indicadores…</p>
+        <p v-if="summary.error" role="alert" class="text-red-400">{{ summary.error }}</p>
+        <div v-if="daily" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div><p class="text-sm text-[var(--color-text-secondary)]">Miembros activos</p><p class="text-2xl font-black">{{ daily.members?.active ?? '—' }}</p></div>
+          <div><p class="text-sm text-[var(--color-text-secondary)]">Accesos concedidos / denegados</p><p class="text-2xl font-black">{{ daily.checkins?.granted ?? '—' }} / {{ daily.checkins?.denied ?? '—' }}</p></div>
+          <div><p class="text-sm text-[var(--color-text-secondary)]">Ventas ({{ daily.sales?.count ?? 0 }})</p><p class="text-2xl font-black">{{ money(daily.sales?.revenue) }}</p></div>
+          <div><p class="text-sm text-[var(--color-text-secondary)]">Pagos membresías ({{ daily.payments?.count ?? 0 }})</p><p class="text-2xl font-black">{{ money(daily.payments?.collected) }}</p></div>
+        </div>
+      </div>
+    </BaseCard>
+
     <!-- Manager stats -->
     <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
@@ -238,7 +259,7 @@ const detailTitle = computed(() => {
       </BaseCard>
 
       <BaseCard>
-        <p class="text-[var(--color-text-secondary)]">Check-ins hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Check-ins hoy (últimos 100)</p>
         <h3 class="text-5xl font-black mt-4">{{ todayCheckins.length }}</h3>
       </BaseCard>
     </div>
@@ -246,17 +267,17 @@ const detailTitle = computed(() => {
     <!-- Manager secondary stats -->
     <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard class="cursor-pointer" @click="openDetail('occupancy')">
-        <p class="text-[var(--color-text-secondary)]">Ocupación de clases hoy</p>
-        <h3 class="text-5xl font-black mt-4">{{ occupancy }}%</h3>
+        <p class="text-[var(--color-text-secondary)]">Ocupación de clases</p>
+        <h3 class="text-5xl font-black mt-4">{{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('sales')">
-        <p class="text-[var(--color-text-secondary)]">Ventas POS hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Ventas POS hoy (últimas 100)</p>
         <h3 class="text-5xl font-black mt-4">{{ posSalesToday.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('revenue')">
-        <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy (últimas 100)</p>
         <h3 class="text-5xl font-black mt-4">${{ posRevenueToday }}</h3>
       </BaseCard>
 
@@ -274,17 +295,17 @@ const detailTitle = computed(() => {
       </BaseCard>
 
       <BaseCard>
-        <p class="text-[var(--color-text-secondary)]">Check-ins hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Check-ins hoy (últimos 100)</p>
         <h3 class="text-5xl font-black mt-4">{{ todayCheckins.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('sales')">
-        <p class="text-[var(--color-text-secondary)]">Ventas POS hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Ventas POS hoy (últimas 100)</p>
         <h3 class="text-5xl font-black mt-4">{{ posSalesToday.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('revenue')">
-        <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy</p>
+        <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy (últimas 100)</p>
         <h3 class="text-5xl font-black mt-4">${{ posRevenueToday }}</h3>
       </BaseCard>
     </div>
@@ -431,12 +452,12 @@ const detailTitle = computed(() => {
           <div v-if="detailMetric === 'occupancy'" class="space-y-5">
             <BaseCard>
               <div class="space-y-2">
-                <p class="text-[var(--color-text-secondary)]">Ocupación actual</p>
+                <p class="text-[var(--color-text-secondary)]">Ocupación de clases no disponible</p>
                 <h3 class="text-5xl font-black">
-                  {{ occupancy }}%
+                  {{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}
                 </h3>
                 <p class="text-[var(--color-text-secondary)]">
-                  {{ todayClasses.length ? 'Clases programadas hoy' : 'Sin clases programadas hoy' }}
+                  La gráfica presenta los accesos registrados durante el periodo.
                 </p>
               </div>
             </BaseCard>

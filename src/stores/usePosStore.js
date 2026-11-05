@@ -1,189 +1,54 @@
-import { defineStore } from 'pinia'
-
-import { useGymsStore } from '@/stores/useGymsStore'
-
-export const usePosStore = defineStore(
-  'pos',
-
-  {
-    state: () => ({
-      allProducts: [
-        { id: 1, gymId: 1, name: 'Agua 500ml', category: 'Bebidas', price: 25, stock: 40, sku: 'SKU-001', barcode: '750100010001' },
-        { id: 2, gymId: 1, name: 'Bebida isotónica', category: 'Bebidas', price: 45, stock: 25, sku: 'SKU-002', barcode: '750100010002' },
-        { id: 3, gymId: 1, name: 'Barra proteica', category: 'Suplementos', price: 60, stock: 30, sku: 'SKU-003', barcode: '750100010003' },
-        { id: 4, gymId: 1, name: 'Toalla deportiva', category: 'Accesorios', price: 150, stock: 12, sku: 'SKU-004', barcode: '750100010004' },
-        { id: 5, gymId: 1, name: 'Guantes de entrenamiento', category: 'Accesorios', price: 320, stock: 8, sku: 'SKU-005', barcode: '750100010005' },
-      ],
-      allSales: [],
-      cart: [],
-    }),
-
-    persist: {
-      key: 'gms-pos-v2',
-    },
-
-    getters: {
-      products(state) {
-        const gymsStore = useGymsStore()
-        const activeGymId = gymsStore.activeGymId
-
-        return state.allProducts.filter((product) => {
-          return product.gymId == null || product.gymId === activeGymId
-        })
-      },
-
-      sales(state) {
-        const gymsStore = useGymsStore()
-        const activeGymId = gymsStore.activeGymId
-
-        return state.allSales.filter((sale) => {
-          return sale.gymId == null || sale.gymId === activeGymId
-        })
-      },
-
-      cartTotal(state) {
-        return state.cart.reduce((total, item) => total + item.price * item.qty, 0)
-      },
-
-      totalRevenue() {
-        return this.sales.reduce((total, sale) => total + sale.total, 0)
-      },
-
-      totalSales() {
-        return this.sales.length
-      },
-
-      lowStockProducts() {
-        return this.products.filter((product) => product.stock <= 5)
-      },
-
-      salesByProduct() {
-        const summary = new Map()
-
-        this.sales.forEach((sale) => {
-          sale.items.forEach((item) => {
-            const current = summary.get(item.productId) || {
-              productId: item.productId,
-              name: item.name,
-              qty: 0,
-              revenue: 0,
-            }
-
-            current.qty += item.qty
-            current.revenue += item.price * item.qty
-
-            summary.set(item.productId, current)
-          })
-        })
-
-        return Array.from(summary.values()).sort((a, b) => b.revenue - a.revenue)
-      },
-    },
-
-    actions: {
-      addToCart(product) {
-        if (product.stock <= 0) return
-
-        const existing = this.cart.find((item) => item.productId === product.id)
-
-        if (existing) {
-          existing.qty += 1
-        } else {
-          this.cart.push({
-            productId: product.id,
-            name: product.name,
-            price: product.price,
-            qty: 1,
-          })
-        }
-      },
-
-      updateCartItemQty(productId, qty) {
-        const item = this.cart.find((cartItem) => cartItem.productId === productId)
-
-        if (!item) return
-
-        const product = this.products.find((entry) => entry.id === productId)
-
-        if (!product) return
-
-        const nextQty = Math.max(1, Math.min(product.stock, Number(qty) || 1))
-
-        item.qty = nextQty
-      },
-
-      removeFromCart(productId) {
-        this.cart = this.cart.filter((item) => item.productId !== productId)
-      },
-
-      clearCart() {
-        this.cart = []
-      },
-
-      checkout({ soldBy = 'Trainer' } = {}) {
-        if (!this.cart.length) {
-          return { ok: false, reason: 'El carrito está vacío' }
-        }
-
-        const unavailable = this.cart.find((item) => {
-          const product = this.allProducts.find((entry) => entry.id === item.productId)
-
-          return !product || product.stock < item.qty
-        })
-
-        if (unavailable) {
-          return { ok: false, reason: 'Stock insuficiente para uno o más productos' }
-        }
-
-        this.cart.forEach((item) => {
-          const product = this.allProducts.find((entry) => entry.id === item.productId)
-
-          if (product) {
-            product.stock -= item.qty
-          }
-        })
-
-        const gymsStore = useGymsStore()
-
-        const sale = {
-          id: Date.now(),
-          gymId: gymsStore.activeGymId,
-          items: this.cart.map((item) => ({ ...item })),
-          total: this.cartTotal,
-          createdBy: soldBy,
-          createdAt: new Date().toISOString(),
-        }
-
-        this.allSales.unshift(sale)
-        this.clearCart()
-
-        return { ok: true, sale }
-      },
-
-      addProduct(payload) {
-        const gymsStore = useGymsStore()
-
-        this.allProducts.push({
-          id: Date.now(),
-          gymId: gymsStore.activeGymId,
-          stock: 0,
-          sku: (payload.sku || '').trim() || `SKU-${Date.now()}`,
-          barcode: (payload.barcode || '').trim(),
-          ...payload,
-        })
-      },
-
-      updateProduct(id, payload) {
-        const product = this.allProducts.find((entry) => entry.id === id)
-
-        if (!product) return
-
-        Object.assign(product, payload)
-      },
-
-      removeProduct(id) {
-        this.allProducts = this.allProducts.filter((product) => product.id !== id)
-      },
-    },
+import { defineStore } from 'pinia';
+import { api } from '@/api/service';
+import { mapProduct,mapSale } from '@/api/mappers';
+import { useGymsStore } from './useGymsStore';
+import { useIntegrationStore } from './useIntegrationStore';
+export const usePosStore = defineStore('pos', {
+  state:()=>({allProducts:[],allSales:[],cart:[]}),
+  getters:{
+    products:s=>s.allProducts.filter(p=>p.gymId===useGymsStore().activeGymId),
+    sales:s=>s.allSales.filter(sale=>sale.gymId===useGymsStore().activeGymId),
+    cartTotal:s=>s.cart.reduce((sum,i)=>sum+i.price*i.qty,0),
+    totalRevenue(){return this.sales.reduce((sum,s)=>sum+s.total,0);},
+    totalSales(){return this.sales.length;},
+    lowStockProducts(){return this.products.filter(p=>p.stock<=(p.lowStockThreshold??5));},
+    salesByProduct(){const map=new Map();for(const sale of this.sales)for(const item of sale.items){
+      const row=map.get(item.productId)||{productId:item.productId,name:item.name,qty:0,revenue:0};
+      row.qty+=item.qty;row.revenue+=item.price*item.qty;map.set(item.productId,row);
+    }return Array.from(map.values()).sort((a,b)=>b.revenue-a.revenue);},
   },
-)
+  actions:{
+    async load(gym=useGymsStore().activeGymId){
+      if(!gym){this.allProducts=[];this.allSales=[];return;}
+      const [products,sales]=await Promise.all([
+        useIntegrationStore().track('productos',()=>api.products.list(gym)),
+        useIntegrationStore().track('ventas',()=>api.sales.list(gym)),
+      ]);
+      if(useGymsStore().activeGymId===gym){this.allProducts=products.map(mapProduct);this.allSales=sales.map(mapSale);}
+    },
+    addToCart(product){if(product.stock<=0)return;const row=this.cart.find(i=>i.productId===product.id);
+      if(row){if(row.qty<product.stock)row.qty++;}else this.cart.push({productId:product.id,name:product.name,price:product.price,qty:1});},
+    updateCartItemQty(id,qty){const row=this.cart.find(i=>i.productId===id);const p=this.products.find(p=>p.id===id);
+      if(row&&p)row.qty=Math.max(1,Math.min(p.stock,Number(qty)||1));},
+    removeFromCart(id){this.cart=this.cart.filter(i=>i.productId!==id);},
+    clearCart(){this.cart=[];},
+    async checkout(){
+      if(!this.cart.length)return {ok:false,reason:'El carrito está vacío'};
+      const gym=useGymsStore().activeGymId;
+      try{
+        const row=await useIntegrationStore().track('ventas',()=>api.sales.checkout(gym,this.cart.map(i=>({productId:i.productId,quantity:i.qty}))));
+        this.clearCart();await this.load(gym);return {ok:true,sale:mapSale(row)};
+      }catch(error){return {ok:false,reason:error.message};}
+    },
+    async addProduct(data){const gym=useGymsStore().activeGymId;
+      const body={...data,sku:data.sku?.trim(),barcode:data.barcode?.trim()||null};
+      const row=await useIntegrationStore().track('productos',()=>api.products.create(gym,body));
+      this.allProducts.push(mapProduct(row));return row;},
+    async updateProduct(id,data){const gym=useGymsStore().activeGymId;
+      const row=await useIntegrationStore().track('productos',()=>api.products.update(gym,id,data));
+      this.allProducts=this.allProducts.map(p=>p.id===id?mapProduct(row):p);return row;},
+    async removeProduct(id){const gym=useGymsStore().activeGymId;
+      await useIntegrationStore().track('productos',()=>api.products.remove(gym,id));
+      this.allProducts=this.allProducts.filter(p=>p.id!==id);},
+  },
+});

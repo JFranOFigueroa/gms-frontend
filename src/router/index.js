@@ -25,6 +25,12 @@ const routes = [
   },
 
   {
+    path: '/g/:slug',
+    component: PublicLayout,
+    children: [{ path: '', name: 'public-gym', component: HomePage }],
+  },
+
+  {
     path: '/auth',
     component: AuthLayout,
     children: [
@@ -186,7 +192,9 @@ router.beforeEach((to) => {
     return '/auth/login'
   }
 
-  if (to.name === 'standalone-checkin' && !moduleStore.isModuleEnabled('checkin')) {
+  // El kiosco público no requiere haber cargado módulos de una sesión privada.
+  if (to.name === 'standalone-checkin' && authStore.isAuthenticated &&
+      moduleStore.loaded && !moduleStore.isModuleEnabled('checkin')) {
     return '/'
   }
 
@@ -199,7 +207,7 @@ router.beforeEach((to) => {
     return '/dashboard'
   }
 
-  if (to.meta.module && !moduleStore.isModuleEnabled(to.meta.module)) {
+  if (to.meta.module && moduleStore.loaded && !moduleStore.isModuleEnabled(to.meta.module)) {
     return '/dashboard'
   }
 })

@@ -1,12 +1,15 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, onBeforeUnmount } from 'vue'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 
 import { useMemberStore } from '@/stores/useMemberStore'
-import { useUserStore } from '@/stores/useUserStore'
+import { api } from '@/api/service'
+import { useGymsStore } from '@/stores/useGymsStore'
 import { calculateNextPaymentDate, todayISO } from '@/utils/date'
+import { validateImageFile } from '@/stores/useMediaStore'
+import { usePrivateMemberPhoto } from '@/composables/usePrivateMemberPhoto'
 
 const props = defineProps({
   member: {
@@ -18,18 +21,33 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const memberStore = useMemberStore()
-const userStore = useUserStore()
+const gymsStore = useGymsStore()
 
 const today = todayISO()
 
 const isEdit = computed(() => !!props.member)
+const creationMode = ref('new')
+const searchingAccount = ref(false)
+const verifiedEmail = ref('')
 
 const step = ref(1)
 const error = ref('')
+const submitting = ref(false)
 const photoError = ref('')
 const photoInput = ref(null)
+const selectedPhoto = ref(null)
+let localPhotoUrl = null
+const { source: storedPhoto } = usePrivateMemberPhoto(() => props.member)
+const shownPhoto = computed(() => form.photo || storedPhoto.value)
+const releaseLocalPhoto = () => {
+  if (localPhotoUrl) URL.revokeObjectURL(localPhotoUrl)
+  localPhotoUrl = null
+}
+onBeforeUnmount(releaseLocalPhoto)
 
 const form = reactive({
+  userId: '',
+  code: '',
   name: '',
   email: '',
   password: '',
@@ -45,6 +63,10 @@ const form = reactive({
 })
 
 const loadMember = (member) => {
+  releaseLocalPhoto()
+  selectedPhoto.value = null
+  form.userId = ''
+  form.code = member?.code || ''
   form.name = member?.name || ''
   form.email = member?.email || ''
   form.password = ''
@@ -53,7 +75,7 @@ const loadMember = (member) => {
   form.address = member?.address || ''
   form.emergencyContactName = member?.emergencyContactName || ''
   form.emergencyContactPhone = member?.emergencyContactPhone || ''
-  form.photo = member?.photo || null
+  form.photo = null
   form.startDate = member?.startDate || today
   form.paymentModality = member?.paymentModality || 'monthly'
   form.notes = member?.notes || ''
@@ -63,6 +85,8 @@ watch(
   () => props.member,
   (member) => {
     loadMember(member)
+    creationMode.value = 'new'
+    verifiedEmail.value = ''
     step.value = 1
     error.value = ''
     photoError.value = ''
@@ -77,37 +101,47 @@ const previewNextPayment = computed(() => {
 })
 
 const validateStepOne = () => {
-  if (!form.name.trim()) return 'El nombre completo es obligatorio'
-  if (!form.email.trim()) return 'El correo es obligatorio'
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Ingresa un correo válido'
-
-  if (!isEdit.value && !form.password.trim()) return 'La contraseña es obligatoria'
-  if (form.password && form.password.length < 6) {
-    return 'La contraseña debe tener al menos 6 caracteres'
-  }
-
-  const duplicate = memberStore.allMembers.find((entry) => {
-    return (
-      entry.email.toLowerCase() === form.email.trim().toLowerCase() &&
-      String(entry.id) !== String(props.member?.id)
-    )
-  })
-
-  if (duplicate) return 'Ya existe un miembro con ese correo'
-
-  if (userStore.findByEmail(form.email.trim().toLowerCase())) {
-    return 'Ese correo ya pertenece a un usuario del staff'
-  }
-
+  if (isEdit.value) return ''
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Ingresa un correo válido.'
+  if (creationMode.value === 'existing') return ''
+  if (!form.name.trim()) return 'Introduce el nombre completo.'
+  if (form.password.length < 10) return 'La contraseña debe tener al menos 10 caracteres.'
   return ''
 }
 
-const goNext = () => {
+const goNext = async () => {
   error.value = validateStepOne()
-
-  if (!error.value) {
-    step.value = 2
+  if (error.value) return
+  if (creationMode.value === 'existing' && !isEdit.value) {
+    searchingAccount.value = true
+    try {
+      const account = await api.users.search(form.email.trim().toLowerCase(), gymsStore.activeGymId)
+      if (account.status !== 'active') throw new Error('Esta cuenta no está activa.')
+      form.userId = account.id // Identificador de uso interno; nunca se muestra en pantalla.
+      verifiedEmail.value = form.email.trim().toLowerCase()
+      form.name = account.fullName || ''
+      form.phone = account.phone || ''
+    } catch (e) {
+      form.userId = ''
+      verifiedEmail.value = ''
+      error.value = e.status === 404 || e.status === 403
+        ? 'No se encontró una cuenta disponible para vincular. Puedes darla de alta como nueva o solicitar ayuda al administrador.'
+        : e.message
+      return
+    } finally { searchingAccount.value = false }
   }
+  step.value = 2
+}
+
+const changeMode = (mode) => {
+  creationMode.value = mode
+  form.userId = ''
+  verifiedEmail.value = ''
+  form.name = ''
+  form.email = ''
+  form.password = ''
+  form.phone = ''
+  error.value = ''
 }
 
 const goBack = () => {
@@ -115,65 +149,28 @@ const goBack = () => {
   step.value = 1
 }
 
-const triggerPhotoInput = () => {
-  photoInput.value?.click()
-}
-
+const triggerPhotoInput = () => { photoInput.value?.click() }
 const onPhotoSelected = (event) => {
   const file = event.target.files?.[0]
-
   photoError.value = ''
-
   if (!file) return
-
-  if (!file.type.startsWith('image/')) {
-    photoError.value = 'El archivo debe ser una imagen'
-    return
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    photoError.value = 'La imagen debe pesar menos de 5 MB'
-    return
-  }
-
-  const reader = new FileReader()
-
-  reader.onload = () => {
-    const image = new Image()
-
-    image.onload = () => {
-      const maxSide = 512
-      const scale = Math.min(1, maxSide / Math.max(image.width, image.height))
-      const canvas = document.createElement('canvas')
-
-      canvas.width = Math.max(1, Math.round(image.width * scale))
-      canvas.height = Math.max(1, Math.round(image.height * scale))
-
-      const context = canvas.getContext('2d')
-
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
-      form.photo = canvas.toDataURL('image/jpeg', 0.82)
-    }
-
-    image.onerror = () => {
-      photoError.value = 'No se pudo procesar la imagen'
-    }
-
-    image.src = String(reader.result)
-  }
-
-  reader.readAsDataURL(file)
+  try {
+    validateImageFile(file)
+    releaseLocalPhoto()
+    selectedPhoto.value = file
+    localPhotoUrl = URL.createObjectURL(file)
+    form.photo = localPhotoUrl
+  } catch (error) { photoError.value = error.message }
 }
-
 const removePhoto = () => {
+  selectedPhoto.value = null
+  releaseLocalPhoto()
   form.photo = null
-
-  if (photoInput.value) {
-    photoInput.value.value = ''
-  }
+  if (photoInput.value) photoInput.value.value = ''
 }
 
-const submit = () => {
+const submit = async () => {
+  if (submitting.value) return
   const stepOneError = validateStepOne()
 
   if (stepOneError) {
@@ -188,6 +185,8 @@ const submit = () => {
   }
 
   const payload = {
+    userId: form.userId.trim(),
+    code: form.code.trim() || undefined,
     name: form.name.trim(),
     email: form.email.trim().toLowerCase(),
     password: form.password || props.member?.password || '',
@@ -196,19 +195,35 @@ const submit = () => {
     address: form.address.trim(),
     emergencyContactName: form.emergencyContactName.trim(),
     emergencyContactPhone: form.emergencyContactPhone.trim(),
-    photo: form.photo,
     startDate: form.startDate,
     paymentModality: form.paymentModality,
     notes: form.notes.trim(),
   }
 
-  if (isEdit.value) {
-    memberStore.updateMember(props.member.id, payload)
-  } else {
-    memberStore.addMember(payload)
-  }
-
-  emit('saved')
+  submitting.value = true
+  try {
+    let saved
+    if (isEdit.value) saved = await memberStore.updateMember(props.member.id, payload)
+    else if (creationMode.value === 'new') saved = await memberStore.registerNewMember(payload)
+    else {
+      if (!form.userId || form.email.trim().toLowerCase() !== verifiedEmail.value) { error.value = 'Verifica nuevamente la cuenta por correo.'; step.value = 1; return }
+      saved = await memberStore.addMember(payload)
+    }
+    if (selectedPhoto.value) {
+      const memberId = saved?.member?.id || saved?.id ||
+        memberStore.members.find(m => m.email?.toLowerCase() === form.email.trim().toLowerCase())?.id
+      try {
+        if (!memberId) throw new Error('No se encontró el miembro registrado.')
+        await memberStore.updateMemberPhoto(memberId, selectedPhoto.value)
+      } catch (photoFailure) {
+        // El registro ya se guardó: no invitar a repetirlo y duplicar la cuenta.
+        alert(`Los datos del miembro se guardaron, pero su fotografía no: ${photoFailure.message}`)
+      }
+    }
+    removePhoto()
+    emit('saved')
+  } catch(e) { error.value=e.message }
+  finally { submitting.value = false }
 }
 
 const cancel = () => {
@@ -256,39 +271,27 @@ const cancel = () => {
       {{ error }}
     </p>
 
-    <!-- Step 1 -->
+    <!-- Paso 1 conserva el orden y la distribución original de los datos personales. -->
     <div v-if="step === 1" class="grid gap-4 md:grid-cols-2">
-      <BaseInput v-model="form.name" placeholder="Nombre completo *" />
-
-      <BaseInput v-model="form.email" type="email" placeholder="Correo *" />
-
-      <BaseInput
-        v-model="form.password"
-        type="password"
-        :placeholder="isEdit ? 'Nueva contraseña (opcional)' : 'Contraseña *'"
-      />
-
+      <div v-if="!isEdit" class="md:col-span-2 flex justify-end">
+        <button type="button" class="text-sm underline text-[var(--color-text-secondary)] hover:text-[var(--color-text)]" @click="changeMode(creationMode === 'new' ? 'existing' : 'new')">
+          {{ creationMode === 'new' ? '¿Ya tiene una cuenta? Vincular por correo' : 'Registrar persona nueva' }}
+        </button>
+      </div>
+      <BaseInput v-model="form.name" :placeholder="creationMode === 'existing' && !isEdit ? 'Nombre (se obtiene al buscar la cuenta)' : 'Nombre completo *'" :disabled="isEdit || creationMode === 'existing'" />
+      <BaseInput v-model="form.email" type="email" placeholder="Correo electrónico *" :disabled="isEdit" />
+      <BaseInput v-if="!isEdit && creationMode === 'new'" v-model="form.password" type="password" placeholder="Contraseña *" />
+      <div v-else class="flex items-center text-sm text-[var(--color-text-secondary)]">{{ creationMode === 'existing' ? 'El acceso se mantiene en la cuenta original.' : '' }}</div>
       <div>
         <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Fecha de nacimiento</p>
         <BaseInput v-model="form.birthDate" type="date" />
       </div>
-
-      <BaseInput v-model="form.phone" placeholder="Teléfono" />
-
+      <BaseInput v-model="form.phone" placeholder="Teléfono" :disabled="isEdit || creationMode === 'existing'" />
       <BaseInput v-model="form.address" placeholder="Dirección" />
-
       <BaseInput v-model="form.emergencyContactName" placeholder="Contacto de emergencia" />
-
-      <BaseInput
-        v-model="form.emergencyContactPhone"
-        placeholder="Teléfono de emergencia"
-      />
-
+      <BaseInput v-model="form.emergencyContactPhone" placeholder="Teléfono de emergencia" />
       <div class="md:col-span-2">
-        <p class="mb-2 text-sm text-[var(--color-text-secondary)]">
-          Información adicional
-        </p>
-
+        <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Información adicional</p>
         <textarea
           v-model="form.notes"
           rows="3"
@@ -305,8 +308,8 @@ const cancel = () => {
           class="h-32 w-32 shrink-0 overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface-hover)] flex items-center justify-center"
         >
           <img
-            v-if="form.photo"
-            :src="form.photo"
+            v-if="shownPhoto"
+            :src="shownPhoto"
             alt="Foto del miembro"
             class="h-full w-full object-cover"
           />
@@ -329,7 +332,7 @@ const cancel = () => {
             </BaseButton>
 
             <BaseButton
-              v-if="form.photo"
+              v-if="selectedPhoto"
               type="button"
               variant="secondary"
               @click="removePhoto"
@@ -339,7 +342,7 @@ const cancel = () => {
           </div>
 
           <p class="text-sm text-[var(--color-text-secondary)]">
-            JPG o PNG, máximo 5 MB. La imagen se optimiza y guarda localmente en esta demo.
+            Puedes agregar una imagen PNG, JPG o WebP de hasta 8 MB.
           </p>
 
           <p v-if="photoError" class="text-sm text-red-400">
@@ -349,16 +352,18 @@ const cancel = () => {
       </div>
 
       <div class="grid gap-4 md:grid-cols-2">
+        <BaseInput v-if="!isEdit" v-model="form.code" placeholder="Código de miembro (opcional)" />
         <div>
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Fecha de inscripción *</p>
           <BaseInput v-model="form.startDate" type="date" />
         </div>
 
         <div>
-          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Modalidad de pago</p>
+          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Modalidad actual (se asigna mediante pagos y planes)</p>
 
           <select
             v-model="form.paymentModality"
+            disabled
             class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
           >
             <option value="monthly">Mensual</option>
@@ -387,11 +392,11 @@ const cancel = () => {
           Atrás
         </BaseButton>
 
-        <BaseButton v-if="step === 1" type="button" @click="goNext">
+        <BaseButton v-if="step === 1" type="button" :disabled="searchingAccount" @click="goNext">
           Siguiente
         </BaseButton>
 
-        <BaseButton v-else type="button" @click="submit">
+        <BaseButton v-else type="button" :disabled="submitting" @click="submit">
           {{ isEdit ? 'Guardar cambios' : 'Registrar miembro' }}
         </BaseButton>
       </div>

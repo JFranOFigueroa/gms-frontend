@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
+import ApiStatusBanner from '@/components/layout/ApiStatusBanner.vue'
 import MobileSidebar from '@/components/layout/MobileSidebar.vue'
 
 const sidebarOpen = ref(false)
@@ -22,6 +23,7 @@ const sidebarOpen = ref(false)
       </header>
 
       <main class="flex-1 overflow-auto p-6">
+        <ApiStatusBanner />
         <RouterView />
       </main>
     </div>

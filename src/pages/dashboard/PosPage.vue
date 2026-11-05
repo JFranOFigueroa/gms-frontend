@@ -22,6 +22,7 @@ const activeTab = ref('sales')
 
 const search = ref('')
 const checkoutStatus = ref('')
+const actionError = ref('')
 
 const filteredProducts = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -62,10 +63,10 @@ const closePayment = () => {
   cashAmount.value = ''
 }
 
-const confirmPayment = () => {
+const confirmPayment = async () => {
   if (!canPay.value) return
 
-  const result = posStore.checkout({
+  const result = await posStore.checkout({
     soldBy: authStore.user?.name || 'Trainer',
   })
 
@@ -100,10 +101,10 @@ const productBarcode = ref('')
 const productPrice = ref('')
 const productStock = ref('')
 
-const addProduct = () => {
+const addProduct = async () => {
   if (!productName.value.trim()) return
 
-  posStore.addProduct({
+  try { await posStore.addProduct({
     name: productName.value.trim(),
     category: productCategory.value.trim() || 'General',
     sku: productSku.value.trim(),
@@ -111,6 +112,8 @@ const addProduct = () => {
     price: Number(productPrice.value) || 0,
     stock: Number(productStock.value) || 0,
   })
+  actionError.value = ''
+  } catch(error) {actionError.value = error.message; return}
 
   productName.value = ''
   productCategory.value = ''
@@ -120,17 +123,19 @@ const addProduct = () => {
   productStock.value = ''
 }
 
-const updateProductField = (product, field, value) => {
+const updateProductField = async (product, field, value) => {
   const payload = {
     [field]: field === 'price' || field === 'stock' ? Number(value) || 0 : value,
   }
 
-  posStore.updateProduct(product.id, payload)
+  try { await posStore.updateProduct(product.id, payload) }
+  catch(error) { actionError.value = error.message }
 }
 </script>
 
 <template>
   <div class="space-y-8">
+    <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <div>
       <h1 class="text-4xl font-black">POS</h1>
 
@@ -312,7 +317,7 @@ const updateProductField = (product, field, value) => {
             <BaseInput :model-value="product.stock" type="number" @update:modelValue="updateProductField(product, 'stock', $event)" />
 
             <div class="flex gap-3">
-              <BaseButton variant="secondary" @click="posStore.removeProduct(product.id)">
+              <BaseButton variant="secondary" @click="async () => { try { await posStore.removeProduct(product.id) } catch(e) { actionError=e.message } }">
                 Eliminar
               </BaseButton>
             </div>
@@ -401,9 +406,7 @@ const updateProductField = (product, field, value) => {
             class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 space-y-2"
           >
             <div class="flex items-center justify-between gap-4">
-              <p class="font-semibold">
-                #{{ sale.id }}
-              </p>
+              <p class="font-semibold">Venta registrada</p>
 
               <p class="text-sm text-[var(--color-text-secondary)]">
                 {{ new Date(sale.createdAt).toLocaleString() }}
@@ -415,7 +418,7 @@ const updateProductField = (product, field, value) => {
             </p>
 
             <p class="font-bold">
-              Total: ${{ sale.total }} · {{ sale.createdBy }}
+              Total: ${{ sale.total }}
             </p>
           </div>
         </div>

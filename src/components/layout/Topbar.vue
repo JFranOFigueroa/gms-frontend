@@ -22,14 +22,14 @@ const router = useRouter()
 
 const notificationOpen = ref(false)
 
-const canSwitchGym = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
+const canSwitchGym = computed(() => availableGyms.value.length > 1)
 
 const isStaff = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
 
 const availableGyms = computed(() => {
-  if (authStore.role === 'admin') return gymsStore.gyms
+  if (authStore.user?.platformAdmin) return gymsStore.gyms
 
-  const allowedIds = authStore.user?.gymIds
+  const allowedIds = authStore.gymAccess.map(g => g.id)
 
   if (!allowedIds?.length) {
     return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
@@ -39,11 +39,11 @@ const availableGyms = computed(() => {
 })
 
 const changeGym = (event) => {
-  const gymId = Number(event.target.value)
+  const gymId = event.target.value
 
   if (!availableGyms.value.some((gym) => gym.id === gymId)) return
 
-  gymsStore.setActiveGym(gymId)
+  authStore.selectGym(gymId)
 
   posStore.clearCart()
 }
@@ -54,7 +54,7 @@ watch(
     if (!canSwitchGym.value || !gyms.length) return
 
     if (!gyms.some((gym) => gym.id === gymsStore.activeGymId)) {
-      gymsStore.setActiveGym(gyms[0].id)
+      authStore.selectGym(gyms[0].id)
     }
   },
   { immediate: true },
@@ -107,7 +107,7 @@ const syncNotifications = () => {
   notificationStore.items
     .filter((notification) => notification.id.startsWith('stock-'))
     .forEach((notification) => {
-      const id = Number(notification.id.replace('stock-', ''))
+      const id = notification.id.replace('stock-', '')
 
       if (!lowStockIds.has(id)) {
         notificationStore.removeNotification(notification.id)

@@ -23,10 +23,9 @@ const previewModal = ref(false)
 
 const showModuleSettings = computed(() => canManageModules(authStore.role))
 
-const handleAddBlock = (config) => {
-  landingStore.addBlock(config)
-
-  addBlockModal.value = false
+const handleAddBlock = async (config) => {
+  try { await landingStore.addBlock(config); addBlockModal.value=false }
+  catch(e) { alert(e.message) }
 }
 
 const landingStore = useLandingStore()

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -12,7 +12,8 @@ import { canManageModules } from '@/config/permissions'
 const authStore = useAuthStore()
 const moduleStore = useModuleStore()
 
-const canManage = computed(() => canManageModules(authStore.role))
+const canManage = computed(() => authStore.user?.platformAdmin === true)
+const actionError = ref('')
 
 const presets = [
   { id: 'traditional', label: 'Tradicional' },
@@ -30,16 +31,16 @@ const activePreset = computed(() => {
   return null
 })
 
-const toggleModule = (moduleId) => {
+const toggleModule = async (moduleId) => {
   if (!canManage.value) return
-
-  moduleStore.toggleModule(moduleId)
+  try { await moduleStore.toggleModule(moduleId); actionError.value='' }
+  catch(e){ actionError.value=e.message }
 }
 
-const applyPreset = (presetId) => {
+const applyPreset = async (presetId) => {
   if (!canManage.value) return
-
-  moduleStore.applyPreset(presetId)
+  try { await moduleStore.applyPreset(presetId); actionError.value='' }
+  catch(e){ actionError.value=e.message }
 }
 </script>
 
@@ -54,6 +55,8 @@ const applyPreset = (presetId) => {
         </p>
       </div>
 
+      <p v-if="!canManage" class="text-sm text-[var(--color-text-secondary)]">Solo el administrador del sistema puede cambiar estas opciones.</p>
+      <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
       <div class="space-y-4">
         <div
           v-for="module in moduleRegistry"

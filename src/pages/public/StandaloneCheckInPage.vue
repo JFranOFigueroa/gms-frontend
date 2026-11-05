@@ -1,224 +1,29 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
-import QRCode from 'qrcode'
-
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
-
-import { useCheckinStore } from '@/stores/useCheckinStore'
-import { useMemberStore } from '@/stores/useMemberStore'
 import { useTenantStore } from '@/stores/useTenantStore'
 
-const checkinStore = useCheckinStore()
-const memberStore = useMemberStore()
 const tenantStore = useTenantStore()
-
+const gymName = computed(() => tenantStore.gym?.name || 'GMS FITNESS')
+const todayLabel = computed(() => new Date().toLocaleDateString('es-MX', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+}))
 const manualCode = ref('')
-const scannerStatus = ref('')
+const scannerStatus = ref('El registro de acceso no está disponible por el momento.')
 const scannerRunning = ref(false)
 const videoRef = ref(null)
-
 const result = ref(null)
 const qrImage = ref('')
-const tokenText = ref('')
-const remainingSeconds = ref(10)
-const qrExpiresAt = ref(0)
-
-const gymName = computed(() => tenantStore.gym?.name || 'GMS FITNESS')
-const scannerSupported = computed(() => typeof window !== 'undefined' && 'BarcodeDetector' in window)
-const todayLabel = computed(() =>
-  new Date().toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }),
-)
-
-const recentAccesses = computed(() => checkinStore.todaysCheckins.slice(0, 8))
-
-const stats = computed(() => checkinStore.stats)
-
-let mediaStream = null
-let animationFrame = null
-let detector = null
-let qrRefreshInterval = null
-let countdownInterval = null
-let resultTimeout = null
-
-const showResult = (payload) => {
-  result.value = {
-    ...payload,
-    timestamp: new Date(),
-  }
-
-  if (resultTimeout) clearTimeout(resultTimeout)
-
-  resultTimeout = setTimeout(() => {
-    result.value = null
-  }, 7000)
-}
-
-const processMemberCode = (code) => {
-  const member = memberStore.findByCode(code)
-  const access = checkinStore.registerAccess({ member, method: 'member-code' })
-
-  showResult({
-    allowed: access.allowed,
-    reason: access.reason,
-    member,
-  })
-
-  return access
-}
-
-const submitCode = () => {
-  const code = manualCode.value.trim()
-
-  if (!code) {
-    scannerStatus.value = 'Ingresa el código del miembro'
-    return
-  }
-
-  processMemberCode(code)
-  manualCode.value = ''
-  scannerStatus.value = ''
-}
-
-const stopScanner = () => {
-  scannerRunning.value = false
-
-  if (animationFrame) {
-    cancelAnimationFrame(animationFrame)
-    animationFrame = null
-  }
-
-  if (mediaStream) {
-    mediaStream.getTracks().forEach((track) => track.stop())
-    mediaStream = null
-  }
-
-  if (videoRef.value) {
-    videoRef.value.pause()
-    videoRef.value.srcObject = null
-  }
-}
-
-const scanFrame = async () => {
-  if (!scannerRunning.value) return
-
-  if (!videoRef.value || videoRef.value.readyState < 2 || !detector) {
-    animationFrame = requestAnimationFrame(scanFrame)
-    return
-  }
-
-  try {
-    const codes = await detector.detect(videoRef.value)
-
-    if (!scannerRunning.value) return
-
-    if (codes.length) {
-      processMemberCode(codes[0].rawValue)
-      stopScanner()
-      scannerStatus.value = 'Credencial escaneada'
-      return
-    }
-  } catch {
-    // Keep scanning; transient detection errors are expected.
-  }
-
-  if (!scannerRunning.value) return
-
-  animationFrame = requestAnimationFrame(scanFrame)
-}
-
-const startScanner = async () => {
-  if (!scannerSupported.value) {
-    scannerStatus.value =
-      'Este navegador no soporta escaneo automático. Ingresa el código del miembro manualmente.'
-    return
-  }
-
-  stopScanner()
-
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
-    })
-
-    if (!videoRef.value) {
-      mediaStream.getTracks().forEach((track) => track.stop())
-      mediaStream = null
-      return
-    }
-
-    videoRef.value.srcObject = mediaStream
-    await videoRef.value.play()
-
-    detector = new BarcodeDetector({ formats: ['qr_code'] })
-    scannerRunning.value = true
-    scannerStatus.value = 'Escaneando credencial...'
-    animationFrame = requestAnimationFrame(scanFrame)
-  } catch {
-    scannerStatus.value = 'No se pudo acceder a la cámara. Ingresa el código manualmente.'
-    stopScanner()
-  }
-}
-
-const refreshQr = async () => {
-  const { token, expiresAt } = checkinStore.generateToken()
-
-  tokenText.value = token
-  qrExpiresAt.value = expiresAt
-  remainingSeconds.value = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
-
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('gms-kiosk-token', JSON.stringify({ token, expiresAt }))
-  }
-
-  try {
-    qrImage.value = await QRCode.toDataURL(token, {
-      width: 280,
-      margin: 1,
-      color: { dark: '#111111', light: '#ffffff' },
-    })
-  } catch {
-    qrImage.value = ''
-  }
-}
-
-const startQrRotation = () => {
-  refreshQr()
-
-  qrRefreshInterval = setInterval(refreshQr, 10000)
-  countdownInterval = setInterval(() => {
-    remainingSeconds.value = Math.max(0, Math.ceil((qrExpiresAt.value - Date.now()) / 1000))
-  }, 1000)
-}
-
-const stopQrRotation = () => {
-  if (qrRefreshInterval) clearInterval(qrRefreshInterval)
-  if (countdownInterval) clearInterval(countdownInterval)
-
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('gms-kiosk-token')
-  }
-}
-
-onMounted(() => {
-  startQrRotation()
-})
-
-onBeforeUnmount(() => {
-  stopScanner()
-  stopQrRotation()
-
-  if (resultTimeout) clearTimeout(resultTimeout)
-})
+const tokenText = ref('No disponible')
+const remainingSeconds = ref('—')
+const recentAccesses = computed(() => []) // No endpoint público: nunca mostrar datos simulados
+const stats = computed(() => ({ today: '—', granted: '—', denied: '—' }))
+function submitCode() { scannerStatus.value = 'No fue posible registrar el acceso. Esta opción todavía no está disponible.' }
+function startScanner() { scannerStatus.value = 'El escaneo todavía no está disponible.' }
+function stopScanner() { scannerRunning.value = false }
 </script>
 
 <template>
@@ -353,8 +158,8 @@ onBeforeUnmount(() => {
 
             <div class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 text-sm text-[var(--color-text-secondary)]">
               <p class="font-semibold text-[var(--color-text)]">Reglas de acceso</p>
-              <p class="mt-1">Se concede acceso si la cuenta está activa y el pago no está vencido.</p>
-              <p>Se deniega si el miembro está desactivado, no existe o su pago caducó.</p>
+              <p class="mt-1">Para entrar, tu membresía debe estar vigente.</p>
+              <p>Por el momento, solicita tu acceso en recepción.</p>
             </div>
           </div>
         </BaseCard>
@@ -380,14 +185,13 @@ onBeforeUnmount(() => {
                 />
 
                 <div v-else class="h-64 w-64 flex items-center justify-center text-black">
-                  Generando QR...
+                  Código QR no disponible
                 </div>
               </div>
             </div>
 
             <p class="text-center text-[var(--color-text-secondary)]">
-              El código cambia en
-              <span class="font-bold text-[var(--color-text)]">{{ remainingSeconds }}s</span>
+              El código QR estará disponible próximamente.
             </p>
 
             <p class="text-center text-sm text-[var(--color-text-secondary)]">
@@ -413,7 +217,7 @@ onBeforeUnmount(() => {
           </div>
 
           <p v-if="!recentAccesses.length" class="text-[var(--color-text-secondary)]">
-            Aún no hay accesos registrados hoy.
+            La auditoría pública de accesos no está disponible por seguridad.
           </p>
 
           <div

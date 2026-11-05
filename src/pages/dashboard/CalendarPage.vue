@@ -1,13 +1,20 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import DayScheduleModal from '@/components/calendar/DayScheduleModal.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
+import { useMyReservationsStore } from '@/stores/useMyReservationsStore'
+import { useGymsStore } from '@/stores/useGymsStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 const scheduleStore = useClassScheduleStore()
+const myReservations = useMyReservationsStore()
+const gyms = useGymsStore()
+const auth = useAuthStore()
+const loadingError = ref('')
 
 const today = new Date()
 const currentYear = ref(today.getFullYear())
@@ -34,6 +41,17 @@ const toLocalISO = (date) => {
 }
 
 const todayISO = toLocalISO(today)
+watch(() => [gyms.activeGymId,currentYear.value,currentMonth.value,auth.role], async ([gym,year,month,role]) => {
+  if (!gym) return
+  const from=toLocalISO(new Date(year,month,1))
+  const to=toLocalISO(new Date(year,month+1,0))
+  loadingError.value=''
+  const requests=[scheduleStore.loadRange(gym,from,to)]
+  if(role==='member') requests.push(myReservations.load(gym,{from,to}))
+  const results=await Promise.allSettled(requests)
+  const failure=results.find(r=>r.status==='rejected')
+  if(failure && gyms.activeGymId===gym) loadingError.value=failure.reason?.message||'No fue posible cargar el calendario'
+}, { immediate: true })
 
 const eventsByDate = computed(() => {
   const grouped = {}
@@ -133,6 +151,8 @@ const openDaySchedule = (date) => {
         <BaseButton variant="secondary" @click="nextMonth">Siguiente</BaseButton>
       </div>
     </div>
+
+    <p v-if="loadingError" role="alert" class="text-sm text-red-400">{{ loadingError }}</p>
 
     <!-- CALENDAR -->
     <BaseCard class="space-y-4">

@@ -9,14 +9,16 @@ import { useMediaStore } from '@/stores/useMediaStore'
 
 const props = defineProps({
   data: Object,
+  mediaAssets: { type: Array, default: null },
+  publicGym: { type: Object, default: null },
 })
 
 const mediaStore = useMediaStore()
 
 const slides = computed(() => {
-  return props.data.slides
-    ?.map((id) => {
-      return mediaStore.assets.find((asset) => asset.id === id)
+  return (Array.isArray(props.data?.slides) ? props.data.slides : [])
+    .map((id) => {
+      return (props.mediaAssets ?? mediaStore.assets).find((asset) => asset.id === id)
     })
     .filter(Boolean)
 })

@@ -21,10 +21,10 @@ const navigation = computed(() => {
 
 const emit = defineEmits(['close'])
 
-const logout = () => {
+const logout = async () => {
   emit('close')
 
-  authStore.logout()
+  await authStore.logout()
 
   router.push('/')
 }

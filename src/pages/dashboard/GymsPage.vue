@@ -7,7 +7,9 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useGymsStore } from '@/stores/useGymsStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useLandingStore } from '@/stores/useLandingStore'
+const saveError = ref('')
 
 const gymsStore = useGymsStore()
 const landingStore = useLandingStore()
@@ -45,8 +47,9 @@ const openEdit = (gym) => {
   modalOpen.value = true
 }
 
-const saveGym = () => {
+const saveGym = async () => {
   if (!name.value.trim()) return
+  saveError.value = '' 
 
   const payload = {
     name: name.value.trim(),
@@ -55,28 +58,23 @@ const saveGym = () => {
     phone: phone.value.trim(),
   }
 
-  if (editingId.value) {
-    gymsStore.updateGym(editingId.value, payload)
-  } else {
-    const gym = gymsStore.addGym(payload)
-
-    landingStore.seedDefaultsForGym(gym.id)
-  }
-
-  modalOpen.value = false
-  resetForm()
+  try {
+    if (editingId.value) await gymsStore.updateGym(editingId.value, payload)
+    else await gymsStore.addGym(payload)
+    modalOpen.value = false
+    resetForm()
+  } catch(error) { saveError.value = error.message }
 }
 
-const selectGym = (id) => {
-  gymsStore.setActiveGym(id)
-}
+const selectGym = (id) => { useAuthStore().selectGym(id) }
 
-const removeGym = (id) => {
+const removeGym = async (id) => {
   if (gymsStore.gyms.length <= 1) return
 
   if (!confirm('¿Eliminar este gimnasio y toda su información asociada?')) return
 
-  gymsStore.removeGym(id)
+  try { await gymsStore.removeGym(id) }
+  catch(error) { saveError.value = error.message }
 }
 </script>
 
@@ -94,6 +92,7 @@ const removeGym = (id) => {
       <BaseButton @click="openCreate"> Nuevo gimnasio </BaseButton>
     </div>
 
+    <p v-if="saveError" role="alert" class="text-red-400">{{ saveError }}</p>
     <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="gym in gymsStore.gyms" :key="gym.id">
         <div class="space-y-4">

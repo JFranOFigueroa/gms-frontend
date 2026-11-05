@@ -2,10 +2,9 @@
 import { blockRegistry } from './blockRegistry'
 
 defineProps({
-  blocks: {
-    type: Array,
-    required: true,
-  },
+  blocks: { type: Array, required: true },
+  mediaAssets: { type: Array, default: null },
+  publicGym: { type: Object, default: null },
 })
 
 const resolveComponent = (type) => {
@@ -19,5 +18,7 @@ const resolveComponent = (type) => {
     :key="block.id"
     :is="resolveComponent(block.type)"
     :data="block.data"
+    :media-assets="mediaAssets"
+    :public-gym="publicGym"
   />
 </template>

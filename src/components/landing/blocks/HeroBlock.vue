@@ -13,20 +13,22 @@ import { useTenantStore } from '@/stores/useTenantStore'
 
 const props = defineProps({
   data: Object,
+  mediaAssets: { type: Array, default: null },
+  publicGym: { type: Object, default: null },
 })
 
 const mediaStore = useMediaStore()
 const tenantStore = useTenantStore()
 
 const slides = computed(() => {
-  return props.data.slides
-    ?.map((id) => {
-      return mediaStore.assets.find((asset) => asset.id === id)
+  return (Array.isArray(props.data?.slides) ? props.data.slides : [])
+    .map((id) => {
+      return (props.mediaAssets ?? mediaStore.assets).find((asset) => asset.id === id)
     })
     .filter(Boolean)
 })
 
-const gymName = computed(() => tenantStore.gym?.name || 'GMS FITNESS')
+const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name || 'GMS FITNESS')
 </script>
 
 <template>

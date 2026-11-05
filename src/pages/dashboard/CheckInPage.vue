@@ -1,190 +1,35 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
-
+import { computed, ref, watch } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
-
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
-import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 import { useMemberStore } from '@/stores/useMemberStore'
-import { todayISO as getTodayISO } from '@/utils/date'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 const authStore = useAuthStore()
 const checkinStore = useCheckinStore()
-const scheduleStore = useClassScheduleStore()
 const memberStore = useMemberStore()
-
+const gyms = useGymsStore()
+const loadError = ref('')
 const manualToken = ref('')
-
-const todayISO = getTodayISO()
-
-const member = computed(() => memberStore.findById(authStore.user?.id))
-
-const accessStatus = computed(() => {
-  if (!member.value) return null
-
-  return memberStore.getAccessStatus(member.value)
-})
-
-const gymCapacity = computed(() => {
-  const total = scheduleStore.classes
-    .filter((gymClass) => gymClass.date === todayISO)
-    .reduce((sum, gymClass) => sum + (Number(gymClass.capacity) || 0), 0)
-
-  return total > 0 ? total : 100
-})
-
-const occupancyPercent = computed(() => {
-  return Math.min(100, Math.round((checkinStore.grantedToday.length / gymCapacity.value) * 100))
-})
-
-const hourlyCounts = computed(() => {
-  const counts = Array.from({ length: 24 }, () => 0)
-
-  checkinStore.grantedToday.forEach((checkin) => {
-    const hour = new Date(checkin.timestamp).getHours()
-    counts[hour] += 1
-  })
-
-  return counts
-})
-
-const maxHourlyCount = computed(() => {
-  return Math.max(1, ...hourlyCounts.value)
-})
-const scannerStatus = ref('')
+const scannerStatus = ref('El acceso con QR todavía no está disponible.')
 const scannerRunning = ref(false)
 const videoRef = ref(null)
-
-const scannerSupported = computed(() => typeof window !== 'undefined' && 'BarcodeDetector' in window)
-
-let mediaStream = null
-let animationFrame = null
-let detector = null
-
-const userCheckins = computed(() => {
-  return checkinStore.checkins.filter(
-    (checkin) => String(checkin.userId) === String(authStore.user?.id),
-  )
-})
-
-const processToken = (token) => {
-  if (!checkinStore.validateToken(token)) {
-    scannerStatus.value = 'Código QR inválido o expirado'
-    return
-  }
-
-  const result = checkinStore.checkIn({
-    userId: authStore.user?.id,
-    userName: authStore.user?.name,
-    role: authStore.role,
-    method: 'qr',
-    token,
-  })
-
-  scannerStatus.value = result.ok
-    ? 'Check-in registrado con QR'
-    : result.reason
-}
-
-const manualCheckIn = () => {
-  const token = manualToken.value.trim()
-
-  if (!token) {
-    scannerStatus.value = 'Ingresa el token del kiosco'
-    return
-  }
-
-  processToken(token)
-
-  manualToken.value = ''
-}
-
-const stopScanner = () => {
-  scannerRunning.value = false
-
-  if (animationFrame) {
-    cancelAnimationFrame(animationFrame)
-    animationFrame = null
-  }
-
-  if (mediaStream) {
-    mediaStream.getTracks().forEach((track) => track.stop())
-    mediaStream = null
-  }
-
-  if (videoRef.value) {
-    videoRef.value.pause()
-    videoRef.value.srcObject = null
-  }
-}
-
-const scanFrame = async () => {
-  if (!scannerRunning.value) return
-
-  if (!videoRef.value || videoRef.value.readyState < 2 || !detector) {
-    animationFrame = requestAnimationFrame(scanFrame)
-    return
-  }
-
-  try {
-    const codes = await detector.detect(videoRef.value)
-
-    if (!scannerRunning.value) return
-
-    if (codes.length) {
-      processToken(codes[0].rawValue)
-      stopScanner()
-      return
-    }
-  } catch {
-    // Keep scanning; transient detection errors are expected.
-  }
-
-  if (!scannerRunning.value) return
-
-  animationFrame = requestAnimationFrame(scanFrame)
-}
-
-const startScanner = async () => {
-  if (!scannerSupported.value) {
-    scannerStatus.value = 'Este navegador no soporta escaneo automático. Ingresa el token manualmente.'
-    return
-  }
-
-  stopScanner()
-
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: 'environment',
-      },
-    })
-
-    if (!videoRef.value) {
-      mediaStream.getTracks().forEach((track) => track.stop())
-      mediaStream = null
-      return
-    }
-
-    videoRef.value.srcObject = mediaStream
-    await videoRef.value.play()
-
-    detector = new BarcodeDetector({ formats: ['qr_code'] })
-    scannerRunning.value = true
-    scannerStatus.value = 'Escaneando código QR...'
-    animationFrame = requestAnimationFrame(scanFrame)
-  } catch {
-    scannerStatus.value = 'No se pudo acceder a la cámara. Ingresa el token manualmente.'
-    stopScanner()
-  }
-}
-
-onBeforeUnmount(() => {
-  stopScanner()
-})
+const member = computed(() => memberStore.ownMember?.gymId === gyms.activeGymId ? memberStore.ownMember : null)
+watch(() => gyms.activeGymId, async (gym) => {
+  if(!gym) return
+  loadError.value=''
+  const results=await Promise.allSettled([memberStore.loadMine(gym),checkinStore.loadMine(gym)])
+  const failure=results.find(r=>r.status==='rejected')
+  if(failure && gyms.activeGymId===gym)loadError.value=failure.reason?.message||'No fue posible cargar tu información'
+}, {immediate:true})
+const accessStatus = computed(() => member.value ? memberStore.getAccessStatus(member.value) : null)
+const userCheckins = computed(() => member.value ? checkinStore.ownCheckins : [])
+function startScanner() { scannerStatus.value = 'El escaneo todavía no está disponible.' }
+function stopScanner() { scannerRunning.value = false }
+function manualCheckIn() { scannerStatus.value = 'El registro por QR todavía no está disponible.' }
 </script>
 
 <template>
@@ -193,10 +38,11 @@ onBeforeUnmount(() => {
       <h1 class="text-4xl font-black">Check-in</h1>
 
       <p class="text-[var(--color-text-secondary)] mt-2">
-        Registra tu llegada al gimnasio
+        Consulta tu membresía y tu historial de accesos.
       </p>
     </div>
 
+    <p v-if="loadError" role="alert" class="text-sm text-red-400">{{ loadError }}</p>
     <BaseCard v-if="member">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -255,10 +101,10 @@ onBeforeUnmount(() => {
           </p>
 
           <div class="space-y-3">
-            <BaseInput v-model="manualToken" placeholder="O ingresa el token QR manualmente" />
+            <BaseInput v-model="manualToken" placeholder="O escribe el código de acceso" />
 
             <BaseButton variant="secondary" class="w-full" @click="manualCheckIn">
-              Validar token
+              Validar código
             </BaseButton>
           </div>
         </div>
@@ -271,7 +117,7 @@ onBeforeUnmount(() => {
           <h2 class="text-2xl font-bold">Ocupación en vivo</h2>
 
           <span class="text-sm text-[var(--color-text-secondary)]">
-            {{ checkinStore.grantedToday.length }} / {{ gymCapacity }} personas
+            Datos de ocupación no disponibles
           </span>
         </div>
 
@@ -279,12 +125,12 @@ onBeforeUnmount(() => {
           <div class="h-4 w-full overflow-hidden rounded-full bg-[var(--color-surface)]/60">
             <div
               class="h-full rounded-full bg-[var(--color-primary)] transition-all duration-500"
-              :style="{ width: `${occupancyPercent}%` }"
+              :style="{ width: '0%' }"
             />
           </div>
 
           <p class="text-[var(--color-text-secondary)]">
-            {{ occupancyPercent }}% de ocupación actual
+            Todavía no hay información de ocupación disponible.
           </p>
         </div>
       </div>
@@ -300,24 +146,8 @@ onBeforeUnmount(() => {
           </p>
         </div>
 
-        <div class="flex h-48 items-end gap-1">
-          <div
-            v-for="(count, hour) in hourlyCounts"
-            :key="hour"
-            class="flex flex-1 flex-col items-center gap-1"
-          >
-            <div
-              class="w-full rounded-t-md bg-[var(--color-primary)]/70 transition-all duration-300"
-              :style="{
-                height: `${Math.max(4, (count / maxHourlyCount) * 100)}%`,
-              }"
-              :title="`${hour}:00 - ${count} check-ins`"
-            />
-
-            <span v-if="hour % 3 === 0" class="text-[10px] text-[var(--color-text-secondary)]">
-              {{ hour }}h
-            </span>
-          </div>
+        <div class="flex h-48 items-center justify-center rounded-2xl border border-[var(--color-border)] text-center text-[var(--color-text-secondary)]">
+          La información por hora no está disponible por el momento.
         </div>
       </div>
     </BaseCard>
@@ -327,7 +157,7 @@ onBeforeUnmount(() => {
         <h2 class="text-2xl font-bold">Mis check-ins</h2>
 
         <div v-if="!userCheckins.length" class="text-[var(--color-text-secondary)]">
-          Aún no tienes check-ins registrados
+          Todavía no hay accesos registrados en este gimnasio.
         </div>
 
         <div v-for="checkin in userCheckins" :key="checkin.id" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">

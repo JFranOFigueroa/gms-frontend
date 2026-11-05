@@ -10,6 +10,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useClassTemplateStore } from '@/stores/useClassTemplateStore'
 
 const templateStore = useClassTemplateStore()
+const actionError = ref('')
 
 const name = ref('')
 
@@ -19,20 +20,14 @@ const duration = ref(60)
 
 const capacity = ref(20)
 
-const addTemplate = () => {
+const addTemplate = async () => {
   if (!name.value) return
 
-  templateStore.addTemplate({
-    name: name.value,
-
-    color: color.value,
-
-    duration: duration.value,
-
-    capacity: capacity.value,
-  })
-
-  name.value = ''
+  try {
+    await templateStore.addTemplate({name:name.value,color:color.value,duration:duration.value,capacity:capacity.value})
+    name.value = ''
+    actionError.value = ''
+  } catch (error) { actionError.value = error.message }
 }
 </script>
 
@@ -45,6 +40,7 @@ const addTemplate = () => {
       <p class="text-[var(--color-text-secondary)] mt-2">Gestiona los tipos de entrenamiento</p>
     </div>
 
+    <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <!-- FORM -->
     <BaseCard>
       <div class="space-y-4">
