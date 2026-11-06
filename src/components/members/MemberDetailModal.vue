@@ -107,7 +107,7 @@ watch(
           </div>
 
           <div v-if="qrDataUrl" class="rounded-2xl bg-white p-2">
-            <img :src="qrDataUrl" alt="QR de acceso del miembro" class="h-36 w-36" />
+            <img :src="qrDataUrl" alt="QR administrativo de expediente, no válido para Check-in" class="h-36 w-36" />
           </div>
         </div>
 

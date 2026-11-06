@@ -86,7 +86,7 @@ async function renewAccess() {
 }
 
 export async function request(path, { method = 'GET', body, auth = true, query, signal,
-  responseType = 'json', retried = false } = {}) {
+  responseType = 'json', retried = false, extraHeaders = {}, credentials } = {}) {
   if (!baseUrl) throw new ApiError('El servicio no está configurado. Comunícate con soporte.');
   const root = new URL(baseUrl, window.location.origin);
   const url = new URL(`${root.href.replace(/\/+$/, '')}${path}`);
@@ -94,7 +94,7 @@ export async function request(path, { method = 'GET', body, auth = true, query, 
     if (value != null && value !== '') url.searchParams.set(key, String(value));
   }
   const form = typeof FormData !== 'undefined' && body instanceof FormData;
-  const headers = { Accept: responseType === 'blob' ? '*/*' : 'application/json' };
+  const headers = { Accept: responseType === 'blob' ? '*/*' : 'application/json', ...extraHeaders };
   if (body !== undefined && !form) headers['Content-Type'] = 'application/json';
   const sentToken = tokenStorage.get();
   if (auth) {
@@ -105,7 +105,7 @@ export async function request(path, { method = 'GET', body, auth = true, query, 
   try {
     response = await fetch(url, { method, headers,
       body: body === undefined ? undefined : form ? body : JSON.stringify(body),
-      signal, cache: 'no-store' });
+      signal, cache: 'no-store', ...(credentials ? { credentials } : {}) });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
     throw new ApiError('No fue posible conectar con el servicio. Inténtalo más tarde.');
@@ -126,7 +126,7 @@ export async function request(path, { method = 'GET', body, auth = true, query, 
         throw error;
       }
       // Errores 400/403/404 de la petición reintentada no deben cerrar la sesión.
-      return request(path, { method, body, auth, query, signal, responseType, retried: true });
+      return request(path, { method, body, auth, query, signal, responseType, extraHeaders, credentials, retried: true });
     }
     sessionTokens.clear();
     onAuthExpired?.();

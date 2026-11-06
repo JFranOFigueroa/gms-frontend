@@ -1,14 +1,40 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
-
+import CheckinDevicesPanel from '@/components/dashboard/CheckinDevicesPanel.vue'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 const checkinStore = useCheckinStore()
-
-const stats = computed(() => checkinStore.stats)
-
+const gyms = useGymsStore()
+const auth = useAuthStore()
+const canManageDevices = computed(() => auth.isAuthenticated && Boolean(gyms.activeGymId) &&
+  (auth.user?.platformAdmin === true || auth.role === 'owner'))
+const auditError = ref('')
+// Los indicadores son los intentos del DÍA según backend, no aforo actual.
+const stats = computed(() => checkinStore.checkinStats ? {
+  today:checkinStore.checkinStats.total,
+  granted:checkinStore.checkinStats.granted,
+  denied:checkinStore.checkinStats.denied,
+  total:checkinStore.checkinStats.total,
+} : { today:'—', granted:'—', denied:'—', total:'—' })
+const hourly = computed(() => checkinStore.checkinStats?.byHour || [])
+watch(() => gyms.activeGymId, async (gym) => {
+  checkinStore.checkinStats = null
+  auditError.value = ''
+  if (!gym) return
+  const dateParts = new Intl.DateTimeFormat('en', { timeZone:'America/Mexico_City',
+    year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date())
+  const val = type => dateParts.find(p => p.type === type)?.value
+  const day = `${val('year')}-${val('month')}-${val('day')}`
+  const results = await Promise.allSettled([
+    checkinStore.load(gym), checkinStore.loadStats(gym, { from:day, to:day }),
+  ])
+  if (gym !== gyms.activeGymId) return
+  if (results.some(r => r.status === 'rejected')) auditError.value = 'No se pudieron cargar todos los registros de acceso.'
+}, { immediate:true })
 const recent = computed(() => checkinStore.checkins.slice(0, 30))
 const methodLabel = (method) => ({manual: 'En recepción', kiosk_qr: 'Código QR', kiosk_code: 'Código personal'}[method] || 'Registro de acceso')
 const reasonLabel = (reason) => ({granted: 'Acceso permitido', expired: 'Membresía vencida', no_payment: 'Pago pendiente', inactive: 'Membresía inactiva', duplicate: 'Acceso ya registrado'}[reason] || '')
@@ -24,6 +50,7 @@ const reasonLabel = (reason) => ({granted: 'Acceso permitido', expired: 'Membres
       </p>
     </div>
 
+    <p v-if="auditError" role="alert" class="text-sm text-red-400">{{ auditError }}</p>
     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Intentos hoy</p>
@@ -50,12 +77,24 @@ const reasonLabel = (reason) => ({granted: 'Acceso permitido', expired: 'Membres
       </BaseCard>
 
       <BaseCard>
-        <p class="text-[var(--color-text-secondary)]">Registros totales</p>
+        <p class="text-[var(--color-text-secondary)]">Registros de hoy</p>
 
         <h3 class="text-5xl font-black mt-4">
           {{ stats.total }}
         </h3>
       </BaseCard>
+    </div>
+
+    <CheckinDevicesPanel v-if="canManageDevices" :key="gyms.activeGymId"
+      :gym-id="gyms.activeGymId" :gym-slug="gyms.activeGym?.slug || ''" />
+
+    <div v-if="hourly.length" class="space-y-2">
+      <p class="text-sm text-[var(--color-text-secondary)]">Intentos por hora (horario del gimnasio)</p>
+      <div class="flex flex-wrap gap-3 text-sm">
+        <span v-for="hour in hourly" :key="hour.hour" class="rounded-lg border border-[var(--color-border)] px-3 py-2">
+          {{ hour.hour }} · {{ hour.granted }} concedidos / {{ hour.denied }} denegados
+        </span>
+      </div>
     </div>
 
     <BaseCard>

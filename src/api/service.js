@@ -60,6 +60,37 @@ export const api = {
     list: (gym) => http.get(e.checkins(gym), { limit: 100 }),
     manual: (gym, memberId) => http.post(e.checkins(gym), { memberId }),
     mine: (gym, params = {}) => http.get(e.checkinsMe(gym), params),
+    scanGymQr: (gym, kioskToken, idempotencyKey) => http.post(
+      e.checkinScanGymQr(gym), { kioskToken }, { extraHeaders: { 'Idempotency-Key': idempotencyKey } }),
+    issueMyQr: (gym) => http.post(e.checkinMyQr(gym)),
+    issueMyCode: (gym) => http.post(e.checkinMyCode(gym)),
+    stats: (gym, params) => http.get(e.checkinStats(gym), params),
+  },
+  // El kiosco usa solamente su cookie HttpOnly y CSRF, jamás el Bearer privado.
+  kiosk: {
+    publicConfig: (slug) => http.get(e.publicCheckinConfig(slug), undefined, { auth: false }),
+    session: () => http.get(e.kioskSession, undefined, { auth: false, credentials: 'include' }),
+    activate: (slug, activationCode) => http.post(e.kioskActivate, { slug, activationCode },
+      { auth: false, credentials: 'include' }),
+    issueGymQr: (csrfToken) => http.post(e.kioskGymQr, undefined,
+      { auth: false, credentials: 'include', extraHeaders: { 'X-CSRF-Token': csrfToken } }),
+    scanMemberQr: (memberQr, idempotencyKey, csrfToken) => http.post(e.kioskScanMemberQr,
+      { memberQr }, { auth: false, credentials: 'include', extraHeaders: {
+        'X-CSRF-Token': csrfToken, 'Idempotency-Key': idempotencyKey,
+      } }),
+    validateCode: (accessCode, idempotencyKey, csrfToken) => http.post(e.kioskValidateCode,
+      { accessCode }, { auth: false, credentials: 'include', extraHeaders: {
+        'X-CSRF-Token': csrfToken, 'Idempotency-Key': idempotencyKey,
+      } }),
+    logout: (csrfToken) => http.post(e.kioskLogout, undefined,
+      { auth: false, credentials: 'include', extraHeaders: { 'X-CSRF-Token': csrfToken } }),
+  },
+  checkinDevices: {
+    list: (gym) => http.get(e.checkinDevices(gym)),
+    create: (gym, deviceName) => http.post(e.checkinDevices(gym), { deviceName }),
+    reissue: (gym, deviceId) => http.post(e.checkinDeviceReissue(gym, deviceId)),
+    update: (gym, deviceId, active) => http.patch(e.checkinDevice(gym, deviceId), { active }),
+    remove: (gym, deviceId) => http.delete(e.checkinDevice(gym, deviceId)),
   },
   settings: {
     get: (gym) => http.get(e.settings(gym)),

@@ -66,7 +66,15 @@ export const mapReservation = (r) => ({ id:r.id, classId:pick(r,'classId','class
 export const mapCheckin = (e) => ({
   id:e.id, gymId:pick(e,'gymId','gym_id'),
   userId:pick(e,'memberId','member_id') || pick(e,'staffUserId','staff_user_id') || pick(e,'guestPassId','guest_pass_id'),
-  userName:pick(e,'reasonDetail','reason_detail','') || (pick(e,'memberId','member_id') ? `Miembro ${pick(e,'memberId','member_id')}` : pick(e,'staffUserId','staff_user_id') ? `Personal ${pick(e,'staffUserId','staff_user_id')}` : 'Acceso'),
+  userName:(() => {
+    const name = pick(e, 'displayName', 'display_name') || pick(e, 'memberName', 'member_name') ||
+      pick(e, 'staffName', 'staff_name');
+    // Nunca convertir claves técnicas en nombres visibles.
+    if (typeof name === 'string' && name.trim() &&
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name.trim())) return name.trim();
+    return pick(e,'memberId','member_id') ? 'Miembro' :
+      pick(e,'staffUserId','staff_user_id') ? 'Personal' : 'Acceso sin identificar';
+  })(),
   role:pick(e,'memberId','member_id') ? 'member' : pick(e,'staffUserId','staff_user_id') ? 'staff' : 'guest',
   allowed:e.allowed === true, method:e.method, reason:pick(e,'reasonCode','reason_code',''),
   timestamp:pick(e,'occurredAt','occurred_at'),
