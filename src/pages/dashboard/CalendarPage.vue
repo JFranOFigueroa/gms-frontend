@@ -41,17 +41,22 @@ const toLocalISO = (date) => {
 }
 
 const todayISO = toLocalISO(today)
-watch(() => [gyms.activeGymId,currentYear.value,currentMonth.value,auth.role], async ([gym,year,month,role]) => {
-  if (!gym) return
-  const from=toLocalISO(new Date(year,month,1))
-  const to=toLocalISO(new Date(year,month+1,0))
-  loadingError.value=''
-  const requests=[scheduleStore.loadRange(gym,from,to)]
-  if(role==='member') requests.push(myReservations.load(gym,{from,to}))
-  const results=await Promise.allSettled(requests)
-  const failure=results.find(r=>r.status==='rejected')
-  if(failure && gyms.activeGymId===gym) loadingError.value=failure.reason?.message||'No fue posible cargar el calendario'
-}, { immediate: true })
+watch(
+  () => [gyms.activeGymId, currentYear.value, currentMonth.value, auth.role],
+  async ([gym, year, month, role]) => {
+    if (!gym) return
+    const from = toLocalISO(new Date(year, month, 1))
+    const to = toLocalISO(new Date(year, month + 1, 0))
+    loadingError.value = ''
+    const requests = [scheduleStore.loadRange(gym, from, to)]
+    if (role === 'member') requests.push(myReservations.load(gym, { from, to }))
+    const results = await Promise.allSettled(requests)
+    const failure = results.find((r) => r.status === 'rejected')
+    if (failure && gyms.activeGymId === gym)
+      loadingError.value = failure.reason?.message || 'No fue posible cargar el calendario'
+  },
+  { immediate: true },
+)
 
 const eventsByDate = computed(() => {
   const grouped = {}
@@ -138,9 +143,7 @@ const openDaySchedule = (date) => {
       <div>
         <h1 class="text-4xl font-black">Calendario</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
-          Gestión de clases y eventos
-        </p>
+        <p class="text-[var(--color-text-secondary)] mt-2">Gestión de clases y eventos</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
@@ -218,10 +221,7 @@ const openDaySchedule = (date) => {
                 {{ cell.summary.total }} clase{{ cell.summary.total === 1 ? '' : 's' }}
               </p>
 
-              <p
-                v-if="cell.summary.special"
-                class="text-xs text-[var(--color-text-secondary)]"
-              >
+              <p v-if="cell.summary.special" class="text-xs text-[var(--color-text-secondary)]">
                 {{ cell.summary.special }} especial{{ cell.summary.special === 1 ? '' : 'es' }}
               </p>
             </div>

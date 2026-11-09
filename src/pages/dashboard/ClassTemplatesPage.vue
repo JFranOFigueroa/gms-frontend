@@ -24,10 +24,17 @@ const addTemplate = async () => {
   if (!name.value) return
 
   try {
-    await templateStore.addTemplate({name:name.value,color:color.value,duration:duration.value,capacity:capacity.value})
+    await templateStore.addTemplate({
+      name: name.value,
+      color: color.value,
+      duration: duration.value,
+      capacity: capacity.value,
+    })
     name.value = ''
     actionError.value = ''
-  } catch (error) { actionError.value = error.message }
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 </script>
 

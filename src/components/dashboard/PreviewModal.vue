@@ -63,8 +63,12 @@ onBeforeUnmount(() => {
         class="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden"
       >
         <div class="min-h-screen flex items-start justify-center p-4 md:p-6">
-          <div class="w-full max-w-6xl my-4 md:my-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl overflow-hidden">
-            <div class="sticky top-4 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div
+            class="w-full max-w-6xl my-4 md:my-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl overflow-hidden"
+          >
+            <div
+              class="sticky top-4 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]"
+            >
               <div>
                 <h2 class="text-2xl font-black">Vista previa</h2>
 

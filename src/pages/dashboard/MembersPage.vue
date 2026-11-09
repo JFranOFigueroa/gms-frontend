@@ -96,7 +96,9 @@ const matchesStatus = (member) => {
 }
 
 const activeMembersList = computed(() => {
-  return memberStore.members.filter((member) => member.active && matchesSearch(member) && matchesStatus(member))
+  return memberStore.members.filter(
+    (member) => member.active && matchesSearch(member) && matchesStatus(member),
+  )
 })
 
 const inactiveMembersList = computed(() => {
@@ -104,9 +106,7 @@ const inactiveMembersList = computed(() => {
 })
 
 const additionalMembersList = computed(() => {
-  return [...memberStore.members]
-    .filter(matchesSearch)
-    .sort((a, b) => a.name.localeCompare(b.name))
+  return [...memberStore.members].filter(matchesSearch).sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const paymentList = computed(() => {
@@ -173,13 +173,21 @@ const deactivate = async (member) => {
   if (!canManage.value) return
   if (!confirm(`¿Dar de baja a ${member.name}?`)) return
 
-  try { await memberStore.deactivateMember(member.id) } catch(error) {actionError.value=error.message}
+  try {
+    await memberStore.deactivateMember(member.id)
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 
 const reactivate = async (member) => {
   if (!canManage.value) return
 
-  try { await memberStore.reactivateMember(member.id) } catch(error) {actionError.value=error.message}
+  try {
+    await memberStore.reactivateMember(member.id)
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 </script>
 
@@ -298,9 +306,13 @@ const reactivate = async (member) => {
               <p>Inscripción: {{ member.startDate }}</p>
               <p v-if="member.nextPaymentDate">
                 Próximo pago: {{ member.nextPaymentDate }}
-                <template v-if="member.paymentModality"> ({{ member.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})</template>
+                <template v-if="member.paymentModality">
+                  ({{ member.paymentModality === 'yearly' ? 'Anual' : 'Mensual' }})</template
+                >
               </p>
-              <p v-else-if="memberStore.memberPaymentState(member) === 'no_payment'">Sin pago registrado</p>
+              <p v-else-if="memberStore.memberPaymentState(member) === 'no_payment'">
+                Sin pago registrado
+              </p>
               <p v-else>Próximo pago: por confirmar</p>
             </div>
 
@@ -331,7 +343,11 @@ const reactivate = async (member) => {
     <!-- New member tab -->
     <div v-else-if="activeTab === 'new' && canManage">
       <BaseCard>
-        <MemberRegistrationForm :key="altasKey" @saved="onCreated" @cancel="activeTab = 'members'" />
+        <MemberRegistrationForm
+          :key="altasKey"
+          @saved="onCreated"
+          @cancel="activeTab = 'members'"
+        />
       </BaseCard>
     </div>
 
@@ -360,7 +376,9 @@ const reactivate = async (member) => {
                   {{ member.code }} · {{ member.email }}
                 </p>
 
-                <span class="inline-block mt-2 rounded-full bg-red-500/15 px-2 py-1 text-xs font-semibold text-red-400">
+                <span
+                  class="inline-block mt-2 rounded-full bg-red-500/15 px-2 py-1 text-xs font-semibold text-red-400"
+                >
                   Inactivo
                 </span>
               </div>
@@ -406,7 +424,9 @@ const reactivate = async (member) => {
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-lg font-bold">
-              {{ memberStore.findById(payment.memberId)?.name || payment.memberId }} · ${{ payment.amount }}
+              {{ memberStore.findById(payment.memberId)?.name || payment.memberId }} · ${{
+                payment.amount
+              }}
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
@@ -428,7 +448,10 @@ const reactivate = async (member) => {
 
     <!-- Additional info tab -->
     <div v-else-if="activeTab === 'additional'" class="space-y-6">
-      <BaseInput v-model="search" placeholder="Buscar miembro por nombre, correo, código o teléfono" />
+      <BaseInput
+        v-model="search"
+        placeholder="Buscar miembro por nombre, correo, código o teléfono"
+      />
 
       <p v-if="!additionalMembersList.length" class="text-[var(--color-text-secondary)]">
         No hay miembros que coincidan con la búsqueda.
@@ -491,22 +514,14 @@ const reactivate = async (member) => {
     </div>
 
     <!-- Detail modal -->
-    <MemberDetailModal
-      :open="detailOpen"
-      :member="selectedMember"
-      @close="closeDetail"
-    />
+    <MemberDetailModal :open="detailOpen" :member="selectedMember" @close="closeDetail" />
 
     <!-- Edit modal -->
     <BaseModal :open="formOpen" @close="closeForm">
       <div class="space-y-6">
         <h2 class="text-3xl font-black">Editar miembro</h2>
 
-        <MemberRegistrationForm
-          :member="editingMember"
-          @saved="onEdited"
-          @cancel="closeForm"
-        />
+        <MemberRegistrationForm :member="editingMember" @saved="onEdited" @cancel="closeForm" />
       </div>
     </BaseModal>
 

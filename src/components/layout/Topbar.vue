@@ -29,7 +29,7 @@ const isStaff = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.
 const availableGyms = computed(() => {
   if (authStore.user?.platformAdmin) return gymsStore.gyms
 
-  const allowedIds = authStore.gymAccess.map(g => g.id)
+  const allowedIds = authStore.gymAccess.map((g) => g.id)
 
   if (!allowedIds?.length) {
     return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
@@ -194,11 +194,7 @@ const openNotification = (notification) => {
           </span>
         </button>
 
-        <div
-          v-if="notificationOpen"
-          class="fixed inset-0 z-40"
-          @click="notificationOpen = false"
-        />
+        <div v-if="notificationOpen" class="fixed inset-0 z-40" @click="notificationOpen = false" />
 
         <div
           v-if="notificationOpen"
@@ -228,7 +224,9 @@ const openNotification = (notification) => {
                 {{ notification.title }}
               </p>
 
-              <span class="rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-xs text-[var(--color-primary)]">
+              <span
+                class="rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-xs text-[var(--color-primary)]"
+              >
                 {{ notification.type }}
               </span>
             </div>

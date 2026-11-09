@@ -35,10 +35,11 @@ export function hydrateActiveGym() {
     const staff = ['admin', 'owner', 'trainer'].includes(auth.role)
     const owner = ['admin', 'owner'].includes(auth.role)
     await Promise.allSettled([useModuleStore().load(gym)])
-    const modules=useModuleStore()
+    const modules = useModuleStore()
     const tasks = [usePlanStore().load(gym)]
     if (modules.isModuleEnabled('routines')) tasks.push(useRoutineStore().load(gym))
-    if (modules.isModuleEnabled('calendar')) tasks.push(useClassScheduleStore().load(gym), useClassTemplateStore().load(gym))
+    if (modules.isModuleEnabled('calendar'))
+      tasks.push(useClassScheduleStore().load(gym), useClassTemplateStore().load(gym))
     if (staff) tasks.push(useMemberStore().load(gym))
     if (owner) tasks.push(useUserStore().load(gym))
     if (auth.role === 'member') {
@@ -48,14 +49,22 @@ export function hydrateActiveGym() {
     }
     if (staff && modules.isModuleEnabled('pos')) tasks.push(usePosStore().load(gym))
     if (staff && modules.isModuleEnabled('checkin')) tasks.push(useCheckinStore().load(gym))
-    if (owner) tasks.push(useMemberStore().loadPayments(gym), useLandingStore().load(gym),
-      useMediaStore().load(gym), useThemeStore().load(gym),
-      useLandingPublicationStore().load(gym), useDashboardSummaryStore().load(gym))
+    if (owner)
+      tasks.push(
+        useMemberStore().loadPayments(gym),
+        useLandingStore().load(gym),
+        useMediaStore().load(gym),
+        useThemeStore().load(gym),
+        useLandingPublicationStore().load(gym),
+        useDashboardSummaryStore().load(gym),
+      )
     if (admin) tasks.push(useGymsStore().load())
     await Promise.allSettled(tasks)
   })()
-  lastPending = {gym, promise}
-  promise.finally(() => { if(lastPending?.promise===promise) lastPending=null })
+  lastPending = { gym, promise }
+  promise.finally(() => {
+    if (lastPending?.promise === promise) lastPending = null
+  })
   return promise
 }
 
@@ -84,7 +93,7 @@ export function clearGymData() {
   modules.modules = { calendar: false, routines: false, checkin: false, pos: false }
   modules.loaded = false
   useBookingStore().bookings = []
-  useBookingStore().settings = {allowMultipleNormalPerDay: false}
+  useBookingStore().settings = { allowMultipleNormalPerDay: false }
   useNotificationStore().reset()
   useIntegrationStore().reset()
 }

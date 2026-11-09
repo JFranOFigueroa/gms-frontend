@@ -32,14 +32,32 @@ const gymClass = computed(() => {
 const availability = computed(() => scheduleStore.availabilityByClass[gymClass.value?.id])
 const alreadyBooked = computed(() => Boolean(availability.value?.myReservationStatus))
 const spotsLeft = computed(() => availability.value?.available ?? null)
-watch(() => [props.open,props.classId,gymClass.value?.id], async () => {
-  if(props.open && gymClass.value) {error.value='';try{await scheduleStore.loadAvailability(gymClass.value.id)}catch(e){error.value=e.message}}
-}, {immediate:true})
+watch(
+  () => [props.open, props.classId, gymClass.value?.id],
+  async () => {
+    if (props.open && gymClass.value) {
+      error.value = ''
+      try {
+        await scheduleStore.loadAvailability(gymClass.value.id)
+      } catch (e) {
+        error.value = e.message
+      }
+    }
+  },
+  { immediate: true },
+)
 const bookClass = async () => {
-  if(!gymClass.value || !availability.value?.bookable || busy.value)return
-  busy.value=true;error.value=''
-  try{await scheduleStore.bookClass(gymClass.value.id);await mine.load();}
-  catch(e){error.value=e.message}finally{busy.value=false}
+  if (!gymClass.value || !availability.value?.bookable || busy.value) return
+  busy.value = true
+  error.value = ''
+  try {
+    await scheduleStore.bookClass(gymClass.value.id)
+    await mine.load()
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
@@ -93,7 +111,15 @@ const bookClass = async () => {
 
       <!-- ACTION -->
       <BaseButton class="w-full" :disabled="busy || !availability?.bookable" @click="bookClass">
-        {{ alreadyBooked ? 'Ya reservado' : spotsLeft === 0 ? 'Clase llena' : availability ? 'Reservar clase' : 'Consultando…' }}
+        {{
+          alreadyBooked
+            ? 'Ya reservado'
+            : spotsLeft === 0
+              ? 'Clase llena'
+              : availability
+                ? 'Reservar clase'
+                : 'Consultando…'
+        }}
       </BaseButton>
     </div>
   </BaseModal>

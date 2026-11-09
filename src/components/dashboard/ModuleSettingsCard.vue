@@ -33,14 +33,22 @@ const activePreset = computed(() => {
 
 const toggleModule = async (moduleId) => {
   if (!canManage.value) return
-  try { await moduleStore.toggleModule(moduleId); actionError.value='' }
-  catch(e){ actionError.value=e.message }
+  try {
+    await moduleStore.toggleModule(moduleId)
+    actionError.value = ''
+  } catch (e) {
+    actionError.value = e.message
+  }
 }
 
 const applyPreset = async (presetId) => {
   if (!canManage.value) return
-  try { await moduleStore.applyPreset(presetId); actionError.value='' }
-  catch(e){ actionError.value=e.message }
+  try {
+    await moduleStore.applyPreset(presetId)
+    actionError.value = ''
+  } catch (e) {
+    actionError.value = e.message
+  }
 }
 </script>
 
@@ -55,7 +63,9 @@ const applyPreset = async (presetId) => {
         </p>
       </div>
 
-      <p v-if="!canManage" class="text-sm text-[var(--color-text-secondary)]">Solo el administrador del sistema puede cambiar estas opciones.</p>
+      <p v-if="!canManage" class="text-sm text-[var(--color-text-secondary)]">
+        Solo el administrador del sistema puede cambiar estas opciones.
+      </p>
       <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
       <div class="space-y-4">
         <div

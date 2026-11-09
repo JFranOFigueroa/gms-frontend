@@ -8,7 +8,11 @@ import ThemePreviewCard from './theme/ThemePreviewCard.vue'
 const themeStore = useThemeStore()
 
 const selectPreset = async (preset) => {
-  try { await themeStore.applyPreset(preset) } catch (e) { alert(e.message) }
+  try {
+    await themeStore.applyPreset(preset)
+  } catch (e) {
+    alert(e.message)
+  }
 }
 </script>
 

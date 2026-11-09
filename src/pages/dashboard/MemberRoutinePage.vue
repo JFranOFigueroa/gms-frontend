@@ -12,7 +12,10 @@ const search = ref('')
 
 const routines = computed(() => routineStore.publishedRoutines)
 
-const normalize = (value) => String(value ?? '').toLowerCase().trim()
+const normalize = (value) =>
+  String(value ?? '')
+    .toLowerCase()
+    .trim()
 
 const filteredRoutines = computed(() => {
   const query = normalize(search.value)
@@ -83,7 +86,10 @@ const levelLabel = {
       Aún no hay rutinas disponibles
     </div>
 
-    <div v-else-if="!filteredRoutines.length" class="text-center py-16 text-[var(--color-text-secondary)]">
+    <div
+      v-else-if="!filteredRoutines.length"
+      class="text-center py-16 text-[var(--color-text-secondary)]"
+    >
       No se encontraron rutinas para esta búsqueda
     </div>
 
@@ -127,7 +133,11 @@ const levelLabel = {
               Sin ejercicios registrados
             </div>
 
-            <div v-for="exercise in day.exercises" :key="exercise.name" class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div
+              v-for="exercise in day.exercises"
+              :key="exercise.name"
+              class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+            >
               <div>
                 <p class="font-semibold">
                   {{ exercise.name }}

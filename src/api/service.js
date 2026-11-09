@@ -1,18 +1,21 @@
-import { endpoints as e, itemUrl } from './endpoints';
-import { http, request, getAll } from './http';
+import { endpoints as e, itemUrl } from './endpoints'
+import { http, request, getAll } from './http'
 const resource = (resolve) => ({
   list: (gym) => getAll(resolve(gym)),
   one: (gym, id) => http.get(itemUrl(resolve(gym), id)),
   create: (gym, value) => http.post(resolve(gym), value),
   update: (gym, id, value) => http.patch(itemUrl(resolve(gym), id), value),
   remove: (gym, id) => http.delete(itemUrl(resolve(gym), id)),
-});
+})
 export const api = {
   auth: {
-    login: (email, password) => request(e.auth.login, { method: 'POST', body: { email, password }, auth: false }),
+    login: (email, password) =>
+      request(e.auth.login, { method: 'POST', body: { email, password }, auth: false }),
     me: () => http.get(e.auth.me),
-    refresh: (refreshToken) => request(e.auth.refresh, { method: 'POST', body: { refreshToken }, auth: false }),
-    logout: (refreshToken) => request(e.auth.logout, { method: 'POST', body: { refreshToken }, auth: false }),
+    refresh: (refreshToken) =>
+      request(e.auth.refresh, { method: 'POST', body: { refreshToken }, auth: false }),
+    logout: (refreshToken) =>
+      request(e.auth.logout, { method: 'POST', body: { refreshToken }, auth: false }),
   },
   gyms: { ...resource(() => e.gyms) },
   staff: {
@@ -60,8 +63,12 @@ export const api = {
     list: (gym) => http.get(e.checkins(gym), { limit: 100 }),
     manual: (gym, memberId) => http.post(e.checkins(gym), { memberId }),
     mine: (gym, params = {}) => http.get(e.checkinsMe(gym), params),
-    scanGymQr: (gym, kioskToken, idempotencyKey) => http.post(
-      e.checkinScanGymQr(gym), { kioskToken }, { extraHeaders: { 'Idempotency-Key': idempotencyKey } }),
+    scanGymQr: (gym, kioskToken, idempotencyKey) =>
+      http.post(
+        e.checkinScanGymQr(gym),
+        { kioskToken },
+        { extraHeaders: { 'Idempotency-Key': idempotencyKey } },
+      ),
     issueMyQr: (gym) => http.post(e.checkinMyQr(gym)),
     issueMyCode: (gym) => http.post(e.checkinMyCode(gym)),
     stats: (gym, params) => http.get(e.checkinStats(gym), params),
@@ -70,20 +77,46 @@ export const api = {
   kiosk: {
     publicConfig: (slug) => http.get(e.publicCheckinConfig(slug), undefined, { auth: false }),
     session: () => http.get(e.kioskSession, undefined, { auth: false, credentials: 'include' }),
-    activate: (slug, activationCode) => http.post(e.kioskActivate, { slug, activationCode },
-      { auth: false, credentials: 'include' }),
-    issueGymQr: (csrfToken) => http.post(e.kioskGymQr, undefined,
-      { auth: false, credentials: 'include', extraHeaders: { 'X-CSRF-Token': csrfToken } }),
-    scanMemberQr: (memberQr, idempotencyKey, csrfToken) => http.post(e.kioskScanMemberQr,
-      { memberQr }, { auth: false, credentials: 'include', extraHeaders: {
-        'X-CSRF-Token': csrfToken, 'Idempotency-Key': idempotencyKey,
-      } }),
-    validateCode: (accessCode, idempotencyKey, csrfToken) => http.post(e.kioskValidateCode,
-      { accessCode }, { auth: false, credentials: 'include', extraHeaders: {
-        'X-CSRF-Token': csrfToken, 'Idempotency-Key': idempotencyKey,
-      } }),
-    logout: (csrfToken) => http.post(e.kioskLogout, undefined,
-      { auth: false, credentials: 'include', extraHeaders: { 'X-CSRF-Token': csrfToken } }),
+    activate: (slug, activationCode) =>
+      http.post(e.kioskActivate, { slug, activationCode }, { auth: false, credentials: 'include' }),
+    issueGymQr: (csrfToken) =>
+      http.post(e.kioskGymQr, undefined, {
+        auth: false,
+        credentials: 'include',
+        extraHeaders: { 'X-CSRF-Token': csrfToken },
+      }),
+    scanMemberQr: (memberQr, idempotencyKey, csrfToken) =>
+      http.post(
+        e.kioskScanMemberQr,
+        { memberQr },
+        {
+          auth: false,
+          credentials: 'include',
+          extraHeaders: {
+            'X-CSRF-Token': csrfToken,
+            'Idempotency-Key': idempotencyKey,
+          },
+        },
+      ),
+    validateCode: (accessCode, idempotencyKey, csrfToken) =>
+      http.post(
+        e.kioskValidateCode,
+        { accessCode },
+        {
+          auth: false,
+          credentials: 'include',
+          extraHeaders: {
+            'X-CSRF-Token': csrfToken,
+            'Idempotency-Key': idempotencyKey,
+          },
+        },
+      ),
+    logout: (csrfToken) =>
+      http.post(e.kioskLogout, undefined, {
+        auth: false,
+        credentials: 'include',
+        extraHeaders: { 'X-CSRF-Token': csrfToken },
+      }),
   },
   checkinDevices: {
     list: (gym) => http.get(e.checkinDevices(gym)),
@@ -103,7 +136,8 @@ export const api = {
     link: (gym) => http.get(e.landingLink(gym)),
     changeSlug: (gym, slug) => http.patch(e.landingSlug(gym), { slug }),
     changeLogo: (gym, imageAssetId) => http.patch(e.landingLogo(gym), { imageAssetId }),
-    publicPage: (slug, { signal } = {}) => http.get(e.publicLanding(slug), undefined, { auth: false, signal }),
+    publicPage: (slug, { signal } = {}) =>
+      http.get(e.publicLanding(slug), undefined, { auth: false, signal }),
   },
   dashboard: {
     summary: (gym, params = {}) => http.get(e.dashboardSummary(gym), params),
@@ -111,11 +145,12 @@ export const api = {
   media: {
     ...resource(e.media), // Se conserva el registro de imágenes HTTPS.
     upload: (gym, file, name = '') => {
-      const body = new FormData();
-      body.append('file', file);
-      if (name) body.append('name', name);
-      return http.post(e.mediaUpload(gym), body);
+      const body = new FormData()
+      body.append('file', file)
+      if (name) body.append('name', name)
+      return http.post(e.mediaUpload(gym), body)
     },
-    content: (gym, assetId) => http.get(e.mediaContent(gym, assetId), undefined, { responseType: 'blob' }),
+    content: (gym, assetId) =>
+      http.get(e.mediaContent(gym, assetId), undefined, { responseType: 'blob' }),
   },
-};
+}

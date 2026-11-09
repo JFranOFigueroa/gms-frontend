@@ -46,7 +46,10 @@ const openEdit = (routine) => {
   days.value = routine.days.map((day) => ({
     day: day.day,
     exercisesText: day.exercises
-      .map((exercise) => `${exercise.name} | ${exercise.sets} | ${exercise.reps} | ${exercise.rest} | ${exercise.notes}`)
+      .map(
+        (exercise) =>
+          `${exercise.name} | ${exercise.sets} | ${exercise.reps} | ${exercise.rest} | ${exercise.notes}`,
+      )
       .join('\n'),
   }))
 
@@ -100,14 +103,19 @@ const saveRoutine = async () => {
     modalOpen.value = false
     resetForm()
     actionError.value = ''
-  } catch(error) { actionError.value = error.message }
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 
 const deleteRoutine = async (id) => {
   if (!confirm('¿Eliminar esta rutina?')) return
 
-  try { await routineStore.removeRoutine(id) }
-  catch(error) { actionError.value = error.message }
+  try {
+    await routineStore.removeRoutine(id)
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 </script>
 
@@ -150,7 +158,9 @@ const deleteRoutine = async (id) => {
           <div class="flex gap-3">
             <BaseButton variant="secondary" @click="openEdit(routine)"> Editar </BaseButton>
 
-            <BaseButton variant="secondary" @click="deleteRoutine(routine.id)"> Eliminar </BaseButton>
+            <BaseButton variant="secondary" @click="deleteRoutine(routine.id)">
+              Eliminar
+            </BaseButton>
           </div>
         </div>
       </BaseCard>
@@ -172,7 +182,10 @@ const deleteRoutine = async (id) => {
         />
 
         <div class="grid md:grid-cols-2 gap-4">
-          <select v-model="level" class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+          <select
+            v-model="level"
+            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+          >
             <option value="beginner">Principiante</option>
             <option value="intermediate">Intermedio</option>
             <option value="advanced">Avanzado</option>
@@ -181,7 +194,9 @@ const deleteRoutine = async (id) => {
           <BaseInput v-model="goal" placeholder="Objetivo" />
         </div>
 
-        <label class="flex items-center gap-3 text-sm"><input v-model="published" type="checkbox" /> Publicar para miembros</label>
+        <label class="flex items-center gap-3 text-sm"
+          ><input v-model="published" type="checkbox" /> Publicar para miembros</label
+        >
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-bold">Días</h3>

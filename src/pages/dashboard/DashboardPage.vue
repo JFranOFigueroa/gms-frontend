@@ -29,11 +29,19 @@ const posStore = usePosStore()
 const moduleStore = useModuleStore()
 const summary = useDashboardSummaryStore()
 const gyms = useGymsStore()
-watch(() => [gyms.activeGymId,authStore.role], async ([gym,role]) => {
-  if (gym && ['admin','owner'].includes(role)) await summary.load(gym).catch(() => {})
-}, { immediate: true })
-const daily = computed(() => summary.gymId === gyms.activeGymId ? summary.data : null)
-const money = (value) => new Intl.NumberFormat('es-MX', {style:'currency',currency:daily.value?.currency || 'MXN'}).format(Number(value ?? 0))
+watch(
+  () => [gyms.activeGymId, authStore.role],
+  async ([gym, role]) => {
+    if (gym && ['admin', 'owner'].includes(role)) await summary.load(gym).catch(() => {})
+  },
+  { immediate: true },
+)
+const daily = computed(() => (summary.gymId === gyms.activeGymId ? summary.data : null))
+const money = (value) =>
+  new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: daily.value?.currency || 'MXN',
+  }).format(Number(value ?? 0))
 
 const isAdmin = computed(() => authStore.role === 'admin')
 const isOwner = computed(() => authStore.role === 'owner')
@@ -75,8 +83,7 @@ const adminActivity = computed(() => {
       checkin.allowed === false
         ? `Acceso denegado: ${checkin.userName}`
         : `${checkin.userName} hizo check-in`,
-    description:
-      checkin.allowed === false ? checkin.reason : `${checkin.method} · ${checkin.role}`,
+    description: checkin.allowed === false ? checkin.reason : `${checkin.method} · ${checkin.role}`,
     timestamp: checkin.timestamp,
     type: checkin.allowed === false ? 'Acceso' : 'Check-in',
   }))
@@ -95,9 +102,7 @@ const adminActivity = computed(() => {
 })
 
 const trainerSales = computed(() => {
-  return posStore.sales
-    .filter((sale) => sale.createdBy === authStore.user?.id)
-    .slice(0, 10)
+  return posStore.sales.filter((sale) => sale.createdBy === authStore.user?.id).slice(0, 10)
 })
 
 const detailOpen = ref(false)
@@ -227,16 +232,45 @@ const detailTitle = computed(() => {
     <BaseCard v-if="isManager && gyms.activeGymId">
       <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div><h2 class="text-2xl font-bold">Resumen del día</h2><p class="text-sm text-[var(--color-text-secondary)]">Actividad del {{ daily?.from || todayISO }}. Ventas y pagos de membresías por separado.</p></div>
-          <BaseButton variant="secondary" :disabled="summary.loading" @click="summary.load(gyms.activeGymId).catch(() => {})">Actualizar</BaseButton>
+          <div>
+            <h2 class="text-2xl font-bold">Resumen del día</h2>
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              Actividad del {{ daily?.from || todayISO }}. Ventas y pagos de membresías por
+              separado.
+            </p>
+          </div>
+          <BaseButton
+            variant="secondary"
+            :disabled="summary.loading"
+            @click="summary.load(gyms.activeGymId).catch(() => {})"
+            >Actualizar</BaseButton
+          >
         </div>
         <p v-if="summary.loading">Cargando indicadores…</p>
         <p v-if="summary.error" role="alert" class="text-red-400">{{ summary.error }}</p>
         <div v-if="daily" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div><p class="text-sm text-[var(--color-text-secondary)]">Miembros activos</p><p class="text-2xl font-black">{{ daily.members?.active ?? '—' }}</p></div>
-          <div><p class="text-sm text-[var(--color-text-secondary)]">Accesos concedidos / denegados</p><p class="text-2xl font-black">{{ daily.checkins?.granted ?? '—' }} / {{ daily.checkins?.denied ?? '—' }}</p></div>
-          <div><p class="text-sm text-[var(--color-text-secondary)]">Ventas ({{ daily.sales?.count ?? 0 }})</p><p class="text-2xl font-black">{{ money(daily.sales?.revenue) }}</p></div>
-          <div><p class="text-sm text-[var(--color-text-secondary)]">Pagos membresías ({{ daily.payments?.count ?? 0 }})</p><p class="text-2xl font-black">{{ money(daily.payments?.collected) }}</p></div>
+          <div>
+            <p class="text-sm text-[var(--color-text-secondary)]">Miembros activos</p>
+            <p class="text-2xl font-black">{{ daily.members?.active ?? '—' }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-[var(--color-text-secondary)]">Accesos concedidos / denegados</p>
+            <p class="text-2xl font-black">
+              {{ daily.checkins?.granted ?? '—' }} / {{ daily.checkins?.denied ?? '—' }}
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              Ventas ({{ daily.sales?.count ?? 0 }})
+            </p>
+            <p class="text-2xl font-black">{{ money(daily.sales?.revenue) }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              Pagos membresías ({{ daily.payments?.count ?? 0 }})
+            </p>
+            <p class="text-2xl font-black">{{ money(daily.payments?.collected) }}</p>
+          </div>
         </div>
       </div>
     </BaseCard>
@@ -268,7 +302,9 @@ const detailTitle = computed(() => {
     <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard class="cursor-pointer" @click="openDetail('occupancy')">
         <p class="text-[var(--color-text-secondary)]">Ocupación de clases</p>
-        <h3 class="text-5xl font-black mt-4">{{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}</h3>
+        <h3 class="text-5xl font-black mt-4">
+          {{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}
+        </h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('sales')">
@@ -355,10 +391,7 @@ const detailTitle = computed(() => {
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-2xl font-bold">Actividad reciente</h2>
 
-            <RouterLink
-              v-if="moduleStore.isModuleEnabled('checkin')"
-              to="/dashboard/checkin-audit"
-            >
+            <RouterLink v-if="moduleStore.isModuleEnabled('checkin')" to="/dashboard/checkin-audit">
               <BaseButton variant="secondary"> Auditoría </BaseButton>
             </RouterLink>
           </div>
@@ -383,7 +416,9 @@ const detailTitle = computed(() => {
             </div>
 
             <div class="text-right">
-              <p class="text-xs rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-[var(--color-primary)]">
+              <p
+                class="text-xs rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-[var(--color-primary)]"
+              >
                 {{ activity.type }}
               </p>
 
@@ -416,9 +451,7 @@ const detailTitle = computed(() => {
             class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between"
           >
             <div>
-              <p class="font-semibold">
-                Venta #{{ sale.id }}
-              </p>
+              <p class="font-semibold">Venta #{{ sale.id }}</p>
 
               <p class="text-sm text-[var(--color-text-secondary)]">
                 {{ sale.items.map((item) => `${item.name} x${item.qty}`).join(', ') }}
@@ -426,9 +459,7 @@ const detailTitle = computed(() => {
             </div>
 
             <div class="text-right">
-              <p class="font-bold">
-                ${{ sale.total }}
-              </p>
+              <p class="font-bold">${{ sale.total }}</p>
 
               <p class="text-xs text-[var(--color-text-secondary)] mt-1">
                 {{ new Date(sale.createdAt).toLocaleString() }}
@@ -478,7 +509,10 @@ const detailTitle = computed(() => {
                       :title="`${hour}:00 - ${count} check-ins`"
                     />
 
-                    <span v-if="hour % 3 === 0" class="text-[10px] text-[var(--color-text-secondary)]">
+                    <span
+                      v-if="hour % 3 === 0"
+                      class="text-[10px] text-[var(--color-text-secondary)]"
+                    >
                       {{ hour }}h
                     </span>
                   </div>
@@ -516,9 +550,7 @@ const detailTitle = computed(() => {
                     {{ product.qty }} unidades vendidas
                   </p>
                 </div>
-                <p class="font-bold">
-                  ${{ product.revenue }}
-                </p>
+                <p class="font-bold">${{ product.revenue }}</p>
               </div>
             </BaseCard>
           </div>
@@ -528,12 +560,12 @@ const detailTitle = computed(() => {
             <BaseCard>
               <div class="space-y-2">
                 <p class="text-[var(--color-text-secondary)]">Ingresos de hoy</p>
-                <h3 class="text-5xl font-black">
-                  ${{ posRevenueToday }}
-                </h3>
+                <h3 class="text-5xl font-black">${{ posRevenueToday }}</h3>
 
                 <p v-if="topRevenueProduct" class="text-[var(--color-text-secondary)]">
-                  Producto con más ingresos: {{ topRevenueProduct.name }} (${{ topRevenueProduct.revenue }})
+                  Producto con más ingresos: {{ topRevenueProduct.name }} (${{
+                    topRevenueProduct.revenue
+                  }})
                 </p>
               </div>
             </BaseCard>
@@ -552,16 +584,17 @@ const detailTitle = computed(() => {
                     {{ product.qty }} unidades
                   </p>
                 </div>
-                <p class="font-bold">
-                  ${{ product.revenue }}
-                </p>
+                <p class="font-bold">${{ product.revenue }}</p>
               </div>
             </BaseCard>
           </div>
 
           <!-- Stock detail -->
           <div v-if="detailMetric === 'stock'" class="space-y-4">
-            <div v-if="!posStore.lowStockProducts.length" class="text-[var(--color-text-secondary)]">
+            <div
+              v-if="!posStore.lowStockProducts.length"
+              class="text-[var(--color-text-secondary)]"
+            >
               No hay productos con stock bajo
             </div>
 
@@ -575,9 +608,7 @@ const detailTitle = computed(() => {
                     {{ product.category }} · SKU {{ product.sku }}
                   </p>
                 </div>
-                <p class="font-bold text-red-400">
-                  Stock: {{ product.stock }}
-                </p>
+                <p class="font-bold text-red-400">Stock: {{ product.stock }}</p>
               </div>
             </BaseCard>
           </div>

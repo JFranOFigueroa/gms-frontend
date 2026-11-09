@@ -24,8 +24,12 @@ const previewModal = ref(false)
 const showModuleSettings = computed(() => canManageModules(authStore.role))
 
 const handleAddBlock = async (config) => {
-  try { await landingStore.addBlock(config); addBlockModal.value=false }
-  catch(e) { alert(e.message) }
+  try {
+    await landingStore.addBlock(config)
+    addBlockModal.value = false
+  } catch (e) {
+    alert(e.message)
+  }
 }
 
 const landingStore = useLandingStore()
@@ -46,11 +50,7 @@ const landingStore = useLandingStore()
       <BaseButton @click="previewModal = true"> Vista previa </BaseButton>
     </div>
 
-    <AddBlockModal
-      :open="addBlockModal"
-      @close="addBlockModal = false"
-      @select="handleAddBlock"
-    />
+    <AddBlockModal :open="addBlockModal" @close="addBlockModal = false" @select="handleAddBlock" />
 
     <PreviewModal :open="previewModal" @close="previewModal = false" />
 

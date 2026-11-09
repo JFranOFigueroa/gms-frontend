@@ -17,7 +17,7 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 // Mantener los accesos visibles tanto en / como en /g/:slug.
 // Las pantallas de destino conservan sus validaciones y límites del backend.
 const selectedSlug = computed(() => props.publicGym?.slug || null)
-const publicQuery = computed(() => selectedSlug.value ? { gym: selectedSlug.value } : {} )
+const publicQuery = computed(() => (selectedSlug.value ? { gym: selectedSlug.value } : {}))
 
 const tenantStore = useTenantStore()
 const logoSrc = computed(() => resolveApiUrl(props.publicGym?.logoUrl || props.publicGym?.logo_url))
@@ -32,8 +32,15 @@ const logoSrc = computed(() => resolveApiUrl(props.publicGym?.logoUrl || props.p
         class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full"
       >
         <span class="inline-flex items-center gap-3">
-          <img v-if="logoSrc" :src="logoSrc" alt="Logo del gimnasio" class="h-10 w-10 object-contain" />
-          <span>{{ props.publicGym?.shortName || props.publicGym?.name || tenantStore.gym.shortName }}</span>
+          <img
+            v-if="logoSrc"
+            :src="logoSrc"
+            alt="Logo del gimnasio"
+            class="h-10 w-10 object-contain"
+          />
+          <span>{{
+            props.publicGym?.shortName || props.publicGym?.name || tenantStore.gym.shortName
+          }}</span>
         </span>
       </RouterLink>
 

@@ -193,8 +193,12 @@ router.beforeEach((to) => {
   }
 
   // El kiosco público no requiere haber cargado módulos de una sesión privada.
-  if (to.name === 'standalone-checkin' && authStore.isAuthenticated &&
-      moduleStore.loaded && !moduleStore.isModuleEnabled('checkin')) {
+  if (
+    to.name === 'standalone-checkin' &&
+    authStore.isAuthenticated &&
+    moduleStore.loaded &&
+    !moduleStore.isModuleEnabled('checkin')
+  ) {
     return '/'
   }
 

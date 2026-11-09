@@ -16,7 +16,10 @@ export async function createQrCameraReader() {
           async detect(video) {
             if (!video || video.readyState < 2) return null
             const values = await detector.detect(video)
-            return values.find(item => typeof item.rawValue === 'string' && item.rawValue.length)?.rawValue || null
+            return (
+              values.find((item) => typeof item.rawValue === 'string' && item.rawValue.length)
+                ?.rawValue || null
+            )
           },
         }
       }
@@ -25,7 +28,8 @@ export async function createQrCameraReader() {
     }
   }
 
-  if (typeof document === 'undefined') throw new Error('El escáner necesita un navegador con cámara.')
+  if (typeof document === 'undefined')
+    throw new Error('El escáner necesita un navegador con cámara.')
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) throw new Error('Este navegador no permite leer los fotogramas de la cámara.')

@@ -49,7 +49,7 @@ const openEdit = (gym) => {
 
 const saveGym = async () => {
   if (!name.value.trim()) return
-  saveError.value = '' 
+  saveError.value = ''
 
   const payload = {
     name: name.value.trim(),
@@ -63,18 +63,25 @@ const saveGym = async () => {
     else await gymsStore.addGym(payload)
     modalOpen.value = false
     resetForm()
-  } catch(error) { saveError.value = error.message }
+  } catch (error) {
+    saveError.value = error.message
+  }
 }
 
-const selectGym = (id) => { useAuthStore().selectGym(id) }
+const selectGym = (id) => {
+  useAuthStore().selectGym(id)
+}
 
 const removeGym = async (id) => {
   if (gymsStore.gyms.length <= 1) return
 
   if (!confirm('¿Eliminar este gimnasio y toda su información asociada?')) return
 
-  try { await gymsStore.removeGym(id) }
-  catch(error) { saveError.value = error.message }
+  try {
+    await gymsStore.removeGym(id)
+  } catch (error) {
+    saveError.value = error.message
+  }
 }
 </script>
 

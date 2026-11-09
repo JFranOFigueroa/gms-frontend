@@ -124,11 +124,14 @@ const goNext = async () => {
     } catch (e) {
       form.userId = ''
       verifiedEmail.value = ''
-      error.value = e.status === 404 || e.status === 403
-        ? 'No se encontró una cuenta disponible para vincular. Puedes darla de alta como nueva o solicitar ayuda al administrador.'
-        : e.message
+      error.value =
+        e.status === 404 || e.status === 403
+          ? 'No se encontró una cuenta disponible para vincular. Puedes darla de alta como nueva o solicitar ayuda al administrador.'
+          : e.message
       return
-    } finally { searchingAccount.value = false }
+    } finally {
+      searchingAccount.value = false
+    }
   }
   step.value = 2
 }
@@ -149,7 +152,9 @@ const goBack = () => {
   step.value = 1
 }
 
-const triggerPhotoInput = () => { photoInput.value?.click() }
+const triggerPhotoInput = () => {
+  photoInput.value?.click()
+}
 const onPhotoSelected = (event) => {
   const file = event.target.files?.[0]
   photoError.value = ''
@@ -160,7 +165,9 @@ const onPhotoSelected = (event) => {
     selectedPhoto.value = file
     localPhotoUrl = URL.createObjectURL(file)
     form.photo = localPhotoUrl
-  } catch (error) { photoError.value = error.message }
+  } catch (error) {
+    photoError.value = error.message
+  }
 }
 const removePhoto = () => {
   selectedPhoto.value = null
@@ -206,12 +213,19 @@ const submit = async () => {
     if (isEdit.value) saved = await memberStore.updateMember(props.member.id, payload)
     else if (creationMode.value === 'new') saved = await memberStore.registerNewMember(payload)
     else {
-      if (!form.userId || form.email.trim().toLowerCase() !== verifiedEmail.value) { error.value = 'Verifica nuevamente la cuenta por correo.'; step.value = 1; return }
+      if (!form.userId || form.email.trim().toLowerCase() !== verifiedEmail.value) {
+        error.value = 'Verifica nuevamente la cuenta por correo.'
+        step.value = 1
+        return
+      }
       saved = await memberStore.addMember(payload)
     }
     if (selectedPhoto.value) {
-      const memberId = saved?.member?.id || saved?.id ||
-        memberStore.members.find(m => m.email?.toLowerCase() === form.email.trim().toLowerCase())?.id
+      const memberId =
+        saved?.member?.id ||
+        saved?.id ||
+        memberStore.members.find((m) => m.email?.toLowerCase() === form.email.trim().toLowerCase())
+          ?.id
       try {
         if (!memberId) throw new Error('No se encontró el miembro registrado.')
         await memberStore.updateMemberPhoto(memberId, selectedPhoto.value)
@@ -222,8 +236,11 @@ const submit = async () => {
     }
     removePhoto()
     emit('saved')
-  } catch(e) { error.value=e.message }
-  finally { submitting.value = false }
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    submitting.value = false
+  }
 }
 
 const cancel = () => {
@@ -274,19 +291,51 @@ const cancel = () => {
     <!-- Paso 1 conserva el orden y la distribución original de los datos personales. -->
     <div v-if="step === 1" class="grid gap-4 md:grid-cols-2">
       <div v-if="!isEdit" class="md:col-span-2 flex justify-end">
-        <button type="button" class="text-sm underline text-[var(--color-text-secondary)] hover:text-[var(--color-text)]" @click="changeMode(creationMode === 'new' ? 'existing' : 'new')">
-          {{ creationMode === 'new' ? '¿Ya tiene una cuenta? Vincular por correo' : 'Registrar persona nueva' }}
+        <button
+          type="button"
+          class="text-sm underline text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+          @click="changeMode(creationMode === 'new' ? 'existing' : 'new')"
+        >
+          {{
+            creationMode === 'new'
+              ? '¿Ya tiene una cuenta? Vincular por correo'
+              : 'Registrar persona nueva'
+          }}
         </button>
       </div>
-      <BaseInput v-model="form.name" :placeholder="creationMode === 'existing' && !isEdit ? 'Nombre (se obtiene al buscar la cuenta)' : 'Nombre completo *'" :disabled="isEdit || creationMode === 'existing'" />
-      <BaseInput v-model="form.email" type="email" placeholder="Correo electrónico *" :disabled="isEdit" />
-      <BaseInput v-if="!isEdit && creationMode === 'new'" v-model="form.password" type="password" placeholder="Contraseña *" />
-      <div v-else class="flex items-center text-sm text-[var(--color-text-secondary)]">{{ creationMode === 'existing' ? 'El acceso se mantiene en la cuenta original.' : '' }}</div>
+      <BaseInput
+        v-model="form.name"
+        :placeholder="
+          creationMode === 'existing' && !isEdit
+            ? 'Nombre (se obtiene al buscar la cuenta)'
+            : 'Nombre completo *'
+        "
+        :disabled="isEdit || creationMode === 'existing'"
+      />
+      <BaseInput
+        v-model="form.email"
+        type="email"
+        placeholder="Correo electrónico *"
+        :disabled="isEdit"
+      />
+      <BaseInput
+        v-if="!isEdit && creationMode === 'new'"
+        v-model="form.password"
+        type="password"
+        placeholder="Contraseña *"
+      />
+      <div v-else class="flex items-center text-sm text-[var(--color-text-secondary)]">
+        {{ creationMode === 'existing' ? 'El acceso se mantiene en la cuenta original.' : '' }}
+      </div>
       <div>
         <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Fecha de nacimiento</p>
         <BaseInput v-model="form.birthDate" type="date" />
       </div>
-      <BaseInput v-model="form.phone" placeholder="Teléfono" :disabled="isEdit || creationMode === 'existing'" />
+      <BaseInput
+        v-model="form.phone"
+        placeholder="Teléfono"
+        :disabled="isEdit || creationMode === 'existing'"
+      />
       <BaseInput v-model="form.address" placeholder="Dirección" />
       <BaseInput v-model="form.emergencyContactName" placeholder="Contacto de emergencia" />
       <BaseInput v-model="form.emergencyContactPhone" placeholder="Teléfono de emergencia" />
@@ -331,12 +380,7 @@ const cancel = () => {
               Subir foto
             </BaseButton>
 
-            <BaseButton
-              v-if="selectedPhoto"
-              type="button"
-              variant="secondary"
-              @click="removePhoto"
-            >
+            <BaseButton v-if="selectedPhoto" type="button" variant="secondary" @click="removePhoto">
               Quitar foto
             </BaseButton>
           </div>
@@ -359,7 +403,9 @@ const cancel = () => {
         </div>
 
         <div>
-          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Modalidad actual (se asigna mediante pagos y planes)</p>
+          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">
+            Modalidad actual (se asigna mediante pagos y planes)
+          </p>
 
           <select
             v-model="form.paymentModality"
@@ -376,16 +422,18 @@ const cancel = () => {
         <p class="text-sm text-[var(--color-text-secondary)]">Próximo pago estimado</p>
         <p class="text-2xl font-black mt-1">{{ previewNextPayment }}</p>
 
-        <p v-if="isEdit && member?.nextPaymentDate" class="text-sm text-[var(--color-text-secondary)] mt-2">
-          Próximo pago actual: {{ member.nextPaymentDate }}. Se conserva salvo que registres un pago.
+        <p
+          v-if="isEdit && member?.nextPaymentDate"
+          class="text-sm text-[var(--color-text-secondary)] mt-2"
+        >
+          Próximo pago actual: {{ member.nextPaymentDate }}. Se conserva salvo que registres un
+          pago.
         </p>
       </div>
     </div>
 
     <div class="flex flex-wrap justify-between gap-3 pt-2">
-      <BaseButton type="button" variant="secondary" @click="cancel">
-        Cancelar
-      </BaseButton>
+      <BaseButton type="button" variant="secondary" @click="cancel"> Cancelar </BaseButton>
 
       <div class="flex flex-wrap gap-3">
         <BaseButton v-if="step === 2" type="button" variant="secondary" @click="goBack">

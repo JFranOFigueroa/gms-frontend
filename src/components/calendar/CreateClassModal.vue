@@ -34,7 +34,9 @@ const endTime = ref('07:00')
 const category = ref('normal')
 
 const createClass = async () => {
-  const template = templateStore.templates.find((t) => String(t.id) === String(selectedTemplate.value))
+  const template = templateStore.templates.find(
+    (t) => String(t.id) === String(selectedTemplate.value),
+  )
 
   if (!template) {
     alert('Selecciona una plantilla antes de continuar')
@@ -66,27 +68,30 @@ const createClass = async () => {
     return
   }
 
-  try { await scheduleStore.addClass({
-    templateId: template.id,
+  try {
+    await scheduleStore.addClass({
+      templateId: template.id,
 
-    name: template.name,
+      name: template.name,
 
-    color: template.color,
+      color: template.color,
 
-    capacity: template.capacity,
+      capacity: template.capacity,
 
-    date: props.selectedDate,
+      date: props.selectedDate,
 
-    startTime: startTime.value,
+      startTime: startTime.value,
 
-    endTime: endTime.value,
+      endTime: endTime.value,
 
-    category: category.value,
+      category: category.value,
 
-    attendees: [],
-  })
+      attendees: [],
+    })
     emit('close')
-  } catch (error) { alert(error.message) }
+  } catch (error) {
+    alert(error.message)
+  }
 }
 </script>
 

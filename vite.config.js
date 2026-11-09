@@ -13,7 +13,7 @@ export default defineConfig({
     allowedHosts: [
       'trycloudflare.com',
       '*.trycloudflare.com',
-      'shakira-graham-shanghai-complement.trycloudflare.com',
+      'answered-moving-correlation-variable.trycloudflare.com',
     ],
   },
   resolve: {

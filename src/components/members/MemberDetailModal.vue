@@ -107,7 +107,11 @@ watch(
           </div>
 
           <div v-if="qrDataUrl" class="rounded-2xl bg-white p-2">
-            <img :src="qrDataUrl" alt="QR administrativo de expediente, no válido para Check-in" class="h-36 w-36" />
+            <img
+              :src="qrDataUrl"
+              alt="QR administrativo de expediente, no válido para Check-in"
+              class="h-36 w-36"
+            />
           </div>
         </div>
 
@@ -177,7 +181,9 @@ watch(
           class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
         >
           <div>
-            <p class="font-semibold">${{ payment.amount }} · {{ methodLabels[payment.method] || payment.method }}</p>
+            <p class="font-semibold">
+              ${{ payment.amount }} · {{ methodLabels[payment.method] || payment.method }}
+            </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
               Pagado el {{ payment.paidAt }} · Próximo pago {{ payment.nextPaymentDate }}

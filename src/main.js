@@ -37,12 +37,15 @@ tenantStore.restoreTenant()
 
 // En cambios de gimnasio se limpian datos anteriores antes de consultar el servidor.
 const gymsStore = useGymsStore()
-watch(() => gymsStore.activeGymId, async (newId, oldId) => {
-  if (newId !== oldId) {
-    clearGymData()
-    if (authStore.isAuthenticated && newId) await hydrateActiveGym()
-  }
-})
+watch(
+  () => gymsStore.activeGymId,
+  async (newId, oldId) => {
+    if (newId !== oldId) {
+      clearGymData()
+      if (authStore.isAuthenticated && newId) await hydrateActiveGym()
+    }
+  },
+)
 if (authStore.isAuthenticated && gymsStore.activeGymId) void hydrateActiveGym()
 
 app.use(router)

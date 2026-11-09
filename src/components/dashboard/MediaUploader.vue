@@ -29,7 +29,9 @@ const handleUpload = (event) => {
     localObjectUrl = URL.createObjectURL(file)
     preview.value = localObjectUrl
     name.value = name.value.trim() || file.name
-  } catch (error) { notice.value = error.message }
+  } catch (error) {
+    notice.value = error.message
+  }
 }
 onBeforeUnmount(clearPreview)
 const saveUpload = async () => {
@@ -41,8 +43,11 @@ const saveUpload = async () => {
     clearPreview()
     name.value = ''
     notice.value = 'Imagen guardada correctamente.'
-  } catch (error) { notice.value = error.message || 'No fue posible subir la imagen.' }
-  finally { saving.value = false }
+  } catch (error) {
+    notice.value = error.message || 'No fue posible subir la imagen.'
+  } finally {
+    saving.value = false
+  }
 }
 const saveUrl = async () => {
   notice.value = ''
@@ -57,28 +62,72 @@ const saveUrl = async () => {
     url.value = ''
     clearPreview()
     notice.value = 'Imagen guardada correctamente.'
-  } catch (error) { notice.value = error.message || 'No fue posible guardar la imagen.' }
-  finally { saving.value = false }
+  } catch (error) {
+    notice.value = error.message || 'No fue posible guardar la imagen.'
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
 <template>
   <div class="space-y-4">
-    <label class="flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-3xl p-10 cursor-pointer hover:border-[var(--color-primary)] transition-all">
+    <label
+      class="flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-3xl p-10 cursor-pointer hover:border-[var(--color-primary)] transition-all"
+    >
       <div class="text-center">
         <p class="text-2xl font-bold">Subir Imagen</p>
         <p class="text-[var(--color-text-secondary)] mt-2">PNG, JPG o WEBP · máximo 8 MB</p>
       </div>
-      <input ref="uploadInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" :disabled="saving" @change="handleUpload" />
+      <input
+        ref="uploadInput"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        class="hidden"
+        :disabled="saving"
+        @change="handleUpload"
+      />
     </label>
-    <img v-if="preview" :src="preview" alt="Vista previa de imagen" class="w-full max-h-64 object-contain rounded-2xl border border-[var(--color-border)]" />
+    <img
+      v-if="preview"
+      :src="preview"
+      alt="Vista previa de imagen"
+      class="w-full max-h-64 object-contain rounded-2xl border border-[var(--color-border)]"
+    />
     <div class="space-y-3 rounded-2xl border border-[var(--color-border)] p-4">
-      <input v-model="name" placeholder="Nombre de imagen" class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3" />
-      <button v-if="selectedFile" type="button" :disabled="saving" class="rounded-xl border border-[var(--color-border)] px-5 py-3" @click="saveUpload">{{ saving ? 'Subiendo…' : 'Guardar imagen' }}</button>
-      <p class="text-sm text-[var(--color-text-secondary)]">También puedes registrar una imagen con su URL HTTPS.</p>
-      <input v-model="url" placeholder="https://..." class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3" />
-      <button type="button" :disabled="saving" class="rounded-xl border border-[var(--color-border)] px-5 py-3" @click="saveUrl">{{ saving ? 'Guardando…' : 'Registrar imagen por URL' }}</button>
-      <p v-if="notice" role="status" class="text-sm text-[var(--color-text-secondary)]">{{ notice }}</p>
+      <input
+        v-model="name"
+        placeholder="Nombre de imagen"
+        class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+      />
+      <button
+        v-if="selectedFile"
+        type="button"
+        :disabled="saving"
+        class="rounded-xl border border-[var(--color-border)] px-5 py-3"
+        @click="saveUpload"
+      >
+        {{ saving ? 'Subiendo…' : 'Guardar imagen' }}
+      </button>
+      <p class="text-sm text-[var(--color-text-secondary)]">
+        También puedes registrar una imagen con su URL HTTPS.
+      </p>
+      <input
+        v-model="url"
+        placeholder="https://..."
+        class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+      />
+      <button
+        type="button"
+        :disabled="saving"
+        class="rounded-xl border border-[var(--color-border)] px-5 py-3"
+        @click="saveUrl"
+      >
+        {{ saving ? 'Guardando…' : 'Registrar imagen por URL' }}
+      </button>
+      <p v-if="notice" role="status" class="text-sm text-[var(--color-text-secondary)]">
+        {{ notice }}
+      </p>
     </div>
   </div>
 </template>

@@ -46,7 +46,11 @@ defineProps({
           </p>
 
           <ul class="mt-8 space-y-4">
-            <li v-for="benefit in plan.benefits" :key="benefit" class="text-[var(--color-text-secondary)]">
+            <li
+              v-for="benefit in plan.benefits"
+              :key="benefit"
+              class="text-[var(--color-text-secondary)]"
+            >
               ✓ {{ benefit }}
             </li>
           </ul>

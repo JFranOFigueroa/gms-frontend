@@ -104,16 +104,20 @@ const productStock = ref('')
 const addProduct = async () => {
   if (!productName.value.trim()) return
 
-  try { await posStore.addProduct({
-    name: productName.value.trim(),
-    category: productCategory.value.trim() || 'General',
-    sku: productSku.value.trim(),
-    barcode: productBarcode.value.trim(),
-    price: Number(productPrice.value) || 0,
-    stock: Number(productStock.value) || 0,
-  })
-  actionError.value = ''
-  } catch(error) {actionError.value = error.message; return}
+  try {
+    await posStore.addProduct({
+      name: productName.value.trim(),
+      category: productCategory.value.trim() || 'General',
+      sku: productSku.value.trim(),
+      barcode: productBarcode.value.trim(),
+      price: Number(productPrice.value) || 0,
+      stock: Number(productStock.value) || 0,
+    })
+    actionError.value = ''
+  } catch (error) {
+    actionError.value = error.message
+    return
+  }
 
   productName.value = ''
   productCategory.value = ''
@@ -128,8 +132,11 @@ const updateProductField = async (product, field, value) => {
     [field]: field === 'price' || field === 'stock' ? Number(value) || 0 : value,
   }
 
-  try { await posStore.updateProduct(product.id, payload) }
-  catch(error) { actionError.value = error.message }
+  try {
+    await posStore.updateProduct(product.id, payload)
+  } catch (error) {
+    actionError.value = error.message
+  }
 }
 </script>
 
@@ -190,9 +197,7 @@ const updateProductField = async (product, field, value) => {
                     {{ item.name }}
                   </p>
 
-                  <p class="text-sm text-[var(--color-text-secondary)]">
-                    ${{ item.price }} c/u
-                  </p>
+                  <p class="text-sm text-[var(--color-text-secondary)]">${{ item.price }} c/u</p>
                 </div>
 
                 <BaseButton variant="secondary" @click="posStore.removeFromCart(item.productId)">
@@ -207,13 +212,13 @@ const updateProductField = async (product, field, value) => {
                   @update:modelValue="posStore.updateCartItemQty(item.productId, $event)"
                 />
 
-                <p class="font-semibold">
-                  ${{ item.price * item.qty }}
-                </p>
+                <p class="font-semibold">${{ item.price * item.qty }}</p>
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-2xl font-black pt-4 border-t border-[var(--color-border)]">
+            <div
+              class="flex items-center justify-between text-2xl font-black pt-4 border-t border-[var(--color-border)]"
+            >
               <span>Total</span>
 
               <span>${{ posStore.cartTotal }}</span>
@@ -308,16 +313,41 @@ const updateProductField = async (product, field, value) => {
               </p>
             </div>
 
-            <BaseInput :model-value="product.name" @update:modelValue="updateProductField(product, 'name', $event)" />
+            <BaseInput
+              :model-value="product.name"
+              @update:modelValue="updateProductField(product, 'name', $event)"
+            />
 
-            <BaseInput :model-value="product.sku" @update:modelValue="updateProductField(product, 'sku', $event)" />
+            <BaseInput
+              :model-value="product.sku"
+              @update:modelValue="updateProductField(product, 'sku', $event)"
+            />
 
-            <BaseInput :model-value="product.price" type="number" @update:modelValue="updateProductField(product, 'price', $event)" />
+            <BaseInput
+              :model-value="product.price"
+              type="number"
+              @update:modelValue="updateProductField(product, 'price', $event)"
+            />
 
-            <BaseInput :model-value="product.stock" type="number" @update:modelValue="updateProductField(product, 'stock', $event)" />
+            <BaseInput
+              :model-value="product.stock"
+              type="number"
+              @update:modelValue="updateProductField(product, 'stock', $event)"
+            />
 
             <div class="flex gap-3">
-              <BaseButton variant="secondary" @click="async () => { try { await posStore.removeProduct(product.id) } catch(e) { actionError=e.message } }">
+              <BaseButton
+                variant="secondary"
+                @click="
+                  async () => {
+                    try {
+                      await posStore.removeProduct(product.id)
+                    } catch (e) {
+                      actionError = e.message
+                    }
+                  }
+                "
+              >
                 Eliminar
               </BaseButton>
             </div>
@@ -340,9 +370,7 @@ const updateProductField = async (product, field, value) => {
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Ingresos</p>
 
-          <h3 class="text-4xl font-black mt-3">
-            ${{ posStore.totalRevenue }}
-          </h3>
+          <h3 class="text-4xl font-black mt-3">${{ posStore.totalRevenue }}</h3>
         </BaseCard>
 
         <BaseCard>
@@ -380,14 +408,10 @@ const updateProductField = async (product, field, value) => {
                 {{ product.name }}
               </p>
 
-              <p class="text-sm text-[var(--color-text-secondary)]">
-                {{ product.qty }} unidades
-              </p>
+              <p class="text-sm text-[var(--color-text-secondary)]">{{ product.qty }} unidades</p>
             </div>
 
-            <p class="font-bold">
-              ${{ product.revenue }}
-            </p>
+            <p class="font-bold">${{ product.revenue }}</p>
           </div>
         </div>
       </BaseCard>
@@ -417,9 +441,7 @@ const updateProductField = async (product, field, value) => {
               {{ sale.items.map((item) => `${item.name} x${item.qty}`).join(', ') }}
             </p>
 
-            <p class="font-bold">
-              Total: ${{ sale.total }}
-            </p>
+            <p class="font-bold">Total: ${{ sale.total }}</p>
           </div>
         </div>
       </BaseCard>
@@ -440,9 +462,7 @@ const updateProductField = async (product, field, value) => {
           <div class="space-y-2">
             <p class="text-[var(--color-text-secondary)]">Saldo a cobrar</p>
 
-            <h3 class="text-5xl font-black">
-              ${{ posStore.cartTotal }}
-            </h3>
+            <h3 class="text-5xl font-black">${{ posStore.cartTotal }}</h3>
           </div>
         </BaseCard>
 
@@ -458,7 +478,10 @@ const updateProductField = async (product, field, value) => {
           </div>
         </BaseCard>
 
-        <p v-if="Number(cashAmount || 0) > 0 && Number(cashAmount || 0) < posStore.cartTotal" class="text-red-400">
+        <p
+          v-if="Number(cashAmount || 0) > 0 && Number(cashAmount || 0) < posStore.cartTotal"
+          class="text-red-400"
+        >
           El monto es insuficiente
         </p>
 

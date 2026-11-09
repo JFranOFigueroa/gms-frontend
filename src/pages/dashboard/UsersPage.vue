@@ -13,11 +13,7 @@ import { useMemberStore } from '@/stores/useMemberStore'
 import { useGymsStore } from '@/stores/useGymsStore'
 import { api } from '@/api/service'
 
-import {
-  ROLE_LABELS,
-  assignableRoles,
-  canEditStaffRole,
-} from '@/config/permissions'
+import { ROLE_LABELS, assignableRoles, canEditStaffRole } from '@/config/permissions'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
@@ -34,7 +30,6 @@ const lookingUp = ref(false)
 const foundAccount = ref(null)
 const pendingOwnerLink = ref(null) // {userId, gymId} solo en memoria.
 
-
 const search = ref('')
 const roleFilter = ref('all')
 
@@ -48,8 +43,11 @@ const selectedGymIds = ref([])
 const defaultGymId = ref(null)
 
 const actorRole = computed(() => authStore.role)
-const availableRoles = computed(() => assignableRoles(actorRole.value)
-  .filter((value) => value !== 'owner' || authStore.user?.platformAdmin === true))
+const availableRoles = computed(() =>
+  assignableRoles(actorRole.value).filter(
+    (value) => value !== 'owner' || authStore.user?.platformAdmin === true,
+  ),
+)
 const canCreate = computed(() => availableRoles.value.length > 0)
 
 const isGymScopedForm = computed(() => ['owner', 'trainer'].includes(role.value))
@@ -59,7 +57,8 @@ const selectedGyms = computed(() => {
 })
 
 const assignableGyms = computed(() => {
-  if (authStore.role === 'admin') return gymsStore.gyms.filter(g => g.id === gymsStore.activeGymId)
+  if (authStore.role === 'admin')
+    return gymsStore.gyms.filter((g) => g.id === gymsStore.activeGymId)
 
   const allowedIds = authStore.user?.gymIds
 
@@ -67,14 +66,19 @@ const assignableGyms = computed(() => {
     return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
   }
 
-  return gymsStore.gyms.filter((gym) => allowedIds.includes(gym.id) && gym.id === gymsStore.activeGymId)
+  return gymsStore.gyms.filter(
+    (gym) => allowedIds.includes(gym.id) && gym.id === gymsStore.activeGymId,
+  )
 })
 
 const gymName = (id) => gymsStore.getGymById(id)?.name || 'Gimnasio'
 
-const canEditUser = (user) => (user.roles?.length ? user.roles : [user.role])
-  .every((assignedRole) => canEditStaffRole(actorRole.value, assignedRole) &&
-    (assignedRole !== 'owner' || authStore.user?.platformAdmin === true))
+const canEditUser = (user) =>
+  (user.roles?.length ? user.roles : [user.role]).every(
+    (assignedRole) =>
+      canEditStaffRole(actorRole.value, assignedRole) &&
+      (assignedRole !== 'owner' || authStore.user?.platformAdmin === true),
+  )
 
 const toggleGymAccess = (gymId) => {
   if (selectedGymIds.value.includes(gymId)) {
@@ -120,7 +124,8 @@ const filteredUsers = computed(() => {
   return userStore.users.filter((user) => {
     if (actorRole.value === 'owner' && (user.roles || [user.role]).includes('admin')) return false
 
-    const matchesRole = roleFilter.value === 'all' || (user.roles || [user.role]).includes(roleFilter.value)
+    const matchesRole =
+      roleFilter.value === 'all' || (user.roles || [user.role]).includes(roleFilter.value)
 
     const matchesQuery =
       !query ||
@@ -162,8 +167,10 @@ const setMode = (next) => {
 }
 
 const userError = (error) => {
-  if (error?.status === 409) return 'El correo ya tiene una cuenta o existe un vínculo. Usa “Vincular cuenta existente” si corresponde.'
-  if (error?.status === 403) return 'No tienes permiso para esta operación o el registro de cuentas no está habilitado en el servidor.'
+  if (error?.status === 409)
+    return 'El correo ya tiene una cuenta o existe un vínculo. Usa “Vincular cuenta existente” si corresponde.'
+  if (error?.status === 403)
+    return 'No tienes permiso para esta operación o el registro de cuentas no está habilitado en el servidor.'
   if (error?.status === 404) return 'No se encontró una cuenta con ese correo.'
   if (error?.status === 400) return 'Revisa los datos ingresados y vuelve a intentarlo.'
   return error?.message || 'No se pudo completar la operación.'
@@ -188,7 +195,9 @@ const findExistingAccount = async () => {
     foundAccount.value = result
   } catch (error) {
     formError.value = userError(error)
-  } finally { lookingUp.value = false }
+  } finally {
+    lookingUp.value = false
+  }
 }
 
 const openCreate = () => {
@@ -212,11 +221,7 @@ const openEdit = (user) => {
   role.value = user.role
 
   if (user.role === 'owner' || user.role === 'trainer') {
-    selectedGymIds.value = user.gymIds?.length
-      ? [...user.gymIds]
-      : user.gymId
-        ? [user.gymId]
-        : []
+    selectedGymIds.value = user.gymIds?.length ? [...user.gymIds] : user.gymId ? [user.gymId] : []
     defaultGymId.value = user.defaultGymId || selectedGymIds.value[0] || null
   } else {
     selectedGymIds.value = []
@@ -232,7 +237,7 @@ const saveUser = async () => {
   submitting.value = true
   try {
     if (editingId.value) {
-      await userStore.updateUser(editingId.value, {role: role.value})
+      await userStore.updateUser(editingId.value, { role: role.value })
     } else {
       const gym = gymsStore.activeGymId
       if (!gym || !selectedGymIds.value.includes(gym))
@@ -245,35 +250,50 @@ const saveUser = async () => {
         await userStore.linkStaff(pendingOwnerLink.value.userId, 'owner', gym)
         pendingOwnerLink.value = null
       } else if (mode.value === 'link') {
-        if (!foundAccount.value || foundAccount.value.email?.toLowerCase() !== email.value.trim().toLowerCase())
+        if (
+          !foundAccount.value ||
+          foundAccount.value.email?.toLowerCase() !== email.value.trim().toLowerCase()
+        )
           throw new Error('Busca y confirma primero la cuenta que deseas vincular.')
         if (foundAccount.value.status !== 'active') throw new Error('Esta cuenta no está activa.')
         await userStore.linkStaff(foundAccount.value.id, role.value, gym)
       } else {
-        if (!name.value.trim() || name.value.trim().length > 250 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
+        if (
+          !name.value.trim() ||
+          name.value.trim().length > 250 ||
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())
+        )
           throw new Error('Nombre (máximo 250 caracteres) y correo válido son obligatorios.')
         if (password.value.length < 10 || password.value.length > 200)
           throw new Error('La contraseña debe tener entre 10 y 200 caracteres.')
-        const data = {name:name.value.trim(),email:email.value.trim().toLowerCase(),
-          phone:phone.value.trim(),password:password.value}
-        if (role.value === 'trainer') await userStore.registerTrainer(data,gym)
+        const data = {
+          name: name.value.trim(),
+          email: email.value.trim().toLowerCase(),
+          phone: phone.value.trim(),
+          password: password.value,
+        }
+        if (role.value === 'trainer') await userStore.registerTrainer(data, gym)
         else if (role.value === 'owner' && authStore.user?.platformAdmin === true)
-          await userStore.registerOwner(data,gym)
+          await userStore.registerOwner(data, gym)
         else throw new Error('No tienes permiso para registrar este rol.')
       }
     }
-    notice.value = editingId.value ? 'Usuario actualizado correctamente.' : 'Usuario agregado correctamente.'
+    notice.value = editingId.value
+      ? 'Usuario actualizado correctamente.'
+      : 'Usuario agregado correctamente.'
     modalOpen.value = false
     resetForm()
-  } catch(error) {
+  } catch (error) {
     if (error instanceof OwnerLinkPendingError) {
-      pendingOwnerLink.value = {userId:error.userId,gymId:error.gymId}
+      pendingOwnerLink.value = { userId: error.userId, gymId: error.gymId }
       password.value = ''
       formError.value = error.message
     } else {
       formError.value = userError(error)
     }
-  } finally { submitting.value = false }
+  } finally {
+    submitting.value = false
+  }
 }
 
 const deleteUser = async (user) => {
@@ -281,8 +301,12 @@ const deleteUser = async (user) => {
 
   if (!confirm(`¿Eliminar a ${user.name}?`)) return
 
-  try { await userStore.removeUser(user.id) }
-  catch(error) { formError.value = error.message; alert(error.message) }
+  try {
+    await userStore.removeUser(user.id)
+  } catch (error) {
+    formError.value = error.message
+    alert(error.message)
+  }
 }
 
 const toggleActive = (user) => {
@@ -332,7 +356,11 @@ const toggleActive = (user) => {
             </h2>
 
             <p class="text-[var(--color-text-secondary)] mt-1">
-              {{ (user.roles?.length ? user.roles : [user.role]).map(r => ROLE_LABELS[r] || r).join(', ') }}
+              {{
+                (user.roles?.length ? user.roles : [user.role])
+                  .map((r) => ROLE_LABELS[r] || r)
+                  .join(', ')
+              }}
             </p>
           </div>
 
@@ -355,7 +383,12 @@ const toggleActive = (user) => {
           <div v-if="canEditUser(user)" class="flex flex-wrap gap-3">
             <BaseButton variant="secondary" @click="openEdit(user)"> Editar </BaseButton>
 
-            <BaseButton variant="secondary" disabled title="Activación global pendiente de definir" @click="toggleActive(user)">
+            <BaseButton
+              variant="secondary"
+              disabled
+              title="Activación global pendiente de definir"
+              @click="toggleActive(user)"
+            >
               {{ user.active ? 'Desactivar' : 'Activar' }}
             </BaseButton>
 
@@ -380,19 +413,76 @@ const toggleActive = (user) => {
         </h2>
 
         <div v-if="!editingId" class="flex flex-wrap gap-3">
-          <BaseButton type="button" :variant="mode === 'create' ? 'primary' : 'secondary'" :disabled="!!pendingOwnerLink || submitting" @click="setMode('create')">Crear nuevo usuario</BaseButton>
-          <BaseButton type="button" :variant="mode === 'link' ? 'primary' : 'secondary'" :disabled="!!pendingOwnerLink || submitting" @click="setMode('link')">Vincular cuenta existente</BaseButton>
+          <BaseButton
+            type="button"
+            :variant="mode === 'create' ? 'primary' : 'secondary'"
+            :disabled="!!pendingOwnerLink || submitting"
+            @click="setMode('create')"
+            >Crear nuevo usuario</BaseButton
+          >
+          <BaseButton
+            type="button"
+            :variant="mode === 'link' ? 'primary' : 'secondary'"
+            :disabled="!!pendingOwnerLink || submitting"
+            @click="setMode('link')"
+            >Vincular cuenta existente</BaseButton
+          >
         </div>
 
-        <BaseInput v-if="editingId || mode === 'create'" v-model="name" name="gym_staff_full_name" autocomplete="off" placeholder="Nombre completo" :disabled="!!editingId || submitting || !!pendingOwnerLink" />
+        <BaseInput
+          v-if="editingId || mode === 'create'"
+          v-model="name"
+          name="gym_staff_full_name"
+          autocomplete="off"
+          placeholder="Nombre completo"
+          :disabled="!!editingId || submitting || !!pendingOwnerLink"
+        />
 
-        <BaseInput v-model="email" name="gym_staff_contact_email" type="email" autocomplete="off" placeholder="Correo" :disabled="!!editingId || submitting || !!pendingOwnerLink" @update:modelValue="foundAccount = null" />
+        <BaseInput
+          v-model="email"
+          name="gym_staff_contact_email"
+          type="email"
+          autocomplete="off"
+          placeholder="Correo"
+          :disabled="!!editingId || submitting || !!pendingOwnerLink"
+          @update:modelValue="foundAccount = null"
+        />
 
-        <BaseInput v-if="editingId || mode === 'create'" v-model="phone" name="gym_staff_contact_phone" type="tel" inputmode="tel" autocomplete="off" placeholder="Teléfono" :disabled="!!editingId || submitting || !!pendingOwnerLink" />
-        <BaseInput v-if="!editingId && mode === 'create' && !pendingOwnerLink" v-model="password" name="gym_staff_new_password" autocomplete="new-password" type="password" placeholder="Contraseña (mín. 10 caracteres)" :disabled="submitting" />
+        <BaseInput
+          v-if="editingId || mode === 'create'"
+          v-model="phone"
+          name="gym_staff_contact_phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="off"
+          placeholder="Teléfono"
+          :disabled="!!editingId || submitting || !!pendingOwnerLink"
+        />
+        <BaseInput
+          v-if="!editingId && mode === 'create' && !pendingOwnerLink"
+          v-model="password"
+          name="gym_staff_new_password"
+          autocomplete="new-password"
+          type="password"
+          placeholder="Contraseña (mín. 10 caracteres)"
+          :disabled="submitting"
+        />
         <div v-if="!editingId && mode === 'link'" class="space-y-2">
-          <BaseButton type="button" variant="secondary" :disabled="lookingUp || submitting" @click="findExistingAccount">{{ lookingUp ? 'Buscando…' : 'Buscar cuenta por correo' }}</BaseButton>
-          <p v-if="foundAccount" class="rounded-2xl border border-[var(--color-border)] p-3 text-sm">Cuenta encontrada: <strong>{{ foundAccount.fullName || foundAccount.name || foundAccount.email }}</strong> · {{ foundAccount.email }}</p>
+          <BaseButton
+            type="button"
+            variant="secondary"
+            :disabled="lookingUp || submitting"
+            @click="findExistingAccount"
+            >{{ lookingUp ? 'Buscando…' : 'Buscar cuenta por correo' }}</BaseButton
+          >
+          <p
+            v-if="foundAccount"
+            class="rounded-2xl border border-[var(--color-border)] p-3 text-sm"
+          >
+            Cuenta encontrada:
+            <strong>{{ foundAccount.fullName || foundAccount.name || foundAccount.email }}</strong>
+            · {{ foundAccount.email }}
+          </p>
         </div>
 
         <select
@@ -405,11 +495,24 @@ const toggleActive = (user) => {
           </option>
         </select>
 
-        <p class="text-sm text-[var(--color-text-secondary)]" v-if="!editingId && mode === 'create'">Los entrenadores y propietarios nuevos se registran en el gimnasio seleccionado. Para vincular una cuenta ya creada, usa “Vincular cuenta existente”.</p>
-        <p class="text-sm text-[var(--color-text-secondary)]" v-else-if="!editingId">Confirma la cuenta encontrada antes de asignarle acceso al gimnasio seleccionado.</p>
-        <p class="text-sm text-[var(--color-text-secondary)]" v-else>Los cambios de permisos se aplican al gimnasio seleccionado.</p>
+        <p
+          class="text-sm text-[var(--color-text-secondary)]"
+          v-if="!editingId && mode === 'create'"
+        >
+          Los entrenadores y propietarios nuevos se registran en el gimnasio seleccionado. Para
+          vincular una cuenta ya creada, usa “Vincular cuenta existente”.
+        </p>
+        <p class="text-sm text-[var(--color-text-secondary)]" v-else-if="!editingId">
+          Confirma la cuenta encontrada antes de asignarle acceso al gimnasio seleccionado.
+        </p>
+        <p class="text-sm text-[var(--color-text-secondary)]" v-else>
+          Los cambios de permisos se aplican al gimnasio seleccionado.
+        </p>
         <div v-if="!editingId && isGymScopedForm" class="grid gap-4">
-          <p class="text-xs text-[var(--color-text-secondary)]">Esta operación afecta únicamente al gimnasio seleccionado; los otros gimnasios se administran por separado.</p>
+          <p class="text-xs text-[var(--color-text-secondary)]">
+            Esta operación afecta únicamente al gimnasio seleccionado; los otros gimnasios se
+            administran por separado.
+          </p>
           <div>
             <p class="mb-2 text-[var(--color-text-secondary)]">Gimnasios con acceso</p>
 
@@ -456,8 +559,22 @@ const toggleActive = (user) => {
           {{ formError }}
         </p>
 
-        <BaseButton class="w-full" :disabled="submitting || lookingUp || (!editingId && mode === 'link' && !foundAccount && !pendingOwnerLink)" @click="saveUser">
-          {{ submitting ? 'Guardando…' : pendingOwnerLink ? 'Reintentar asignación al gimnasio' : 'Guardar usuario' }}
+        <BaseButton
+          class="w-full"
+          :disabled="
+            submitting ||
+            lookingUp ||
+            (!editingId && mode === 'link' && !foundAccount && !pendingOwnerLink)
+          "
+          @click="saveUser"
+        >
+          {{
+            submitting
+              ? 'Guardando…'
+              : pendingOwnerLink
+                ? 'Reintentar asignación al gimnasio'
+                : 'Guardar usuario'
+          }}
         </BaseButton>
       </div>
     </BaseModal>

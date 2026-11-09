@@ -43,7 +43,5 @@ export const addYears = (dateString, years) => {
 export const calculateNextPaymentDate = (startDate, paymentModality, periods = 1) => {
   if (!startDate || !paymentModality) return null
 
-  return paymentModality === 'yearly'
-    ? addYears(startDate, periods)
-    : addMonths(startDate, periods)
+  return paymentModality === 'yearly' ? addYears(startDate, periods) : addMonths(startDate, periods)
 }

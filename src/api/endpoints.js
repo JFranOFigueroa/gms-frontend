@@ -2,10 +2,10 @@
 // La API base se configura exclusivamente en VITE_API_BASE_URL.
 const gym = (gymId) => {
   if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(gymId || ''))) {
-    throw new Error('Selecciona un gimnasio válido para consultar sus datos.');
+    throw new Error('Selecciona un gimnasio válido para consultar sus datos.')
   }
-  return `/gyms/${encodeURIComponent(gymId)}`;
-};
+  return `/gyms/${encodeURIComponent(gymId)}`
+}
 export const endpoints = Object.freeze({
   auth: { login: '/auth/login', me: '/auth/me', refresh: '/auth/refresh', logout: '/auth/logout' },
   gyms: '/gyms',
@@ -35,7 +35,8 @@ export const endpoints = Object.freeze({
   memberRegister: (id) => `${gym(id)}/members/register`,
   memberMe: (id) => `${gym(id)}/members/me`,
   reservationsMe: (id) => `${gym(id)}/reservations/me`,
-  classAvailability: (id, classId) => `${gym(id)}/classes/${encodeURIComponent(classId)}/availability`,
+  classAvailability: (id, classId) =>
+    `${gym(id)}/classes/${encodeURIComponent(classId)}/availability`,
   checkinsMe: (id) => `${gym(id)}/checkins/me`,
   // Check-in QR y dispositivos: contratos adicionales, sin reemplazar check-ins anteriores.
   publicCheckinConfig: (slug) => `/public/gyms/${encodeURIComponent(slug)}/checkin-config`,
@@ -52,11 +53,12 @@ export const endpoints = Object.freeze({
   checkinStats: (id) => `${gym(id)}/checkins/stats`,
   checkinDevices: (id) => `${gym(id)}/checkin-devices`,
   checkinDevice: (id, deviceId) => `${gym(id)}/checkin-devices/${encodeURIComponent(deviceId)}`,
-  checkinDeviceReissue: (id, deviceId) => `${gym(id)}/checkin-devices/${encodeURIComponent(deviceId)}/reissue-activation`,
+  checkinDeviceReissue: (id, deviceId) =>
+    `${gym(id)}/checkin-devices/${encodeURIComponent(deviceId)}/reissue-activation`,
   landingLink: (id) => `${gym(id)}/landing/link`,
   landingSlug: (id) => `${gym(id)}/landing/slug`,
   publicLanding: (slug) => `/public/gyms/${encodeURIComponent(slug)}/landing`,
-  publicMedia: (assetId) => `/public/media/${encodeURIComponent(assetId)}`, 
+  publicMedia: (assetId) => `/public/media/${encodeURIComponent(assetId)}`,
   dashboardSummary: (id) => `${gym(id)}/dashboard/summary`,
-});
-export const itemUrl = (collection, id) => `${collection}/${encodeURIComponent(id)}`;
+})
+export const itemUrl = (collection, id) => `${collection}/${encodeURIComponent(id)}`

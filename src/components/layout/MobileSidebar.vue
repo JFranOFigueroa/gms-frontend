@@ -36,7 +36,11 @@ defineProps({
 
 <template>
   <Transition name="fade">
-    <div v-if="open" class="fixed inset-0 z-50 bg-[var(--color-background)]/60 lg:hidden" @click="$emit('close')">
+    <div
+      v-if="open"
+      class="fixed inset-0 z-50 bg-[var(--color-background)]/60 lg:hidden"
+      @click="$emit('close')"
+    >
       <aside
         class="w-72 h-full bg-[var(--color-surface)] border-r border-[var(--color-border)] p-6"
         @click.stop

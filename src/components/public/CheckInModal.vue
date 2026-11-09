@@ -14,11 +14,18 @@ const qrImage = ref('') // QR no disponible hasta que el backend firme y valide 
 const tokenText = ref('No disponible')
 const remainingSeconds = ref('—')
 function submitCredentials() {
-  credentialStatus.value = 'El registro de acceso todavía no está disponible. Solicita ayuda en recepción.'
+  credentialStatus.value =
+    'El registro de acceso todavía no está disponible. Solicita ayuda en recepción.'
 }
-watch(() => props.open, opened => {
-  if (opened) { activeTab.value = 'credentials'; credentialStatus.value = '' }
-})
+watch(
+  () => props.open,
+  (opened) => {
+    if (opened) {
+      activeTab.value = 'credentials'
+      credentialStatus.value = ''
+    }
+  },
+)
 </script>
 
 <template>
@@ -27,9 +34,7 @@ watch(() => props.open, opened => {
       <div>
         <h2 class="text-3xl font-black">Check-in</h2>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
-          Registra tu llegada al gimnasio
-        </p>
+        <p class="text-[var(--color-text-secondary)] mt-2">Registra tu llegada al gimnasio</p>
       </div>
 
       <div class="flex gap-3">
@@ -55,9 +60,7 @@ watch(() => props.open, opened => {
 
         <BaseInput v-model="password" type="password" placeholder="Contraseña" />
 
-        <BaseButton class="w-full" @click="submitCredentials">
-          Hacer check-in
-        </BaseButton>
+        <BaseButton class="w-full" @click="submitCredentials"> Hacer check-in </BaseButton>
 
         <p v-if="credentialStatus" class="text-[var(--color-text-secondary)]">
           {{ credentialStatus }}
@@ -81,8 +84,6 @@ watch(() => props.open, opened => {
         <p class="text-sm text-[var(--color-text-secondary)]">
           El código QR todavía no está disponible.
         </p>
-
-
       </div>
     </div>
   </BaseModal>
