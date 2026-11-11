@@ -23,6 +23,7 @@ const activeTab = ref('sales')
 const search = ref('')
 const checkoutStatus = ref('')
 const actionError = ref('')
+const paymentError = ref('')
 
 const filteredProducts = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -41,6 +42,7 @@ const filteredProducts = computed(() => {
 
 const paymentOpen = ref(false)
 const cashAmount = ref('')
+const submittingPayment = ref(false)
 
 const changeAmount = computed(() => {
   return Number(cashAmount.value || 0) - posStore.cartTotal
@@ -55,26 +57,34 @@ const openPayment = () => {
 
   cashAmount.value = ''
   checkoutStatus.value = ''
+  paymentError.value = ''
   paymentOpen.value = true
 }
 
 const closePayment = () => {
+  if (submittingPayment.value) return
   paymentOpen.value = false
   cashAmount.value = ''
 }
 
 const confirmPayment = async () => {
-  if (!canPay.value) return
-
-  const result = await posStore.checkout({
-    soldBy: authStore.user?.name || 'Trainer',
-  })
-
-  if (result.ok) {
-    checkoutStatus.value = `Venta registrada. Cambio: $${changeAmount.value.toFixed(2)}`
-    closePayment()
-  } else {
-    checkoutStatus.value = result.reason
+  if (!canPay.value || submittingPayment.value) return
+  // Guardar el total ANTES del POST: el store vacía el carrito al registrar la venta.
+  const totalToCollect = posStore.cartTotal
+  const amountReceived = Number(cashAmount.value)
+  paymentError.value = ''
+  submittingPayment.value = true
+  try {
+    const result = await posStore.checkout()
+    if (result.ok) {
+      checkoutStatus.value = `Venta registrada. Cambio: $${(amountReceived - totalToCollect).toFixed(2)}`
+      paymentOpen.value = false
+      cashAmount.value = ''
+    } else {
+      paymentError.value = result.reason
+    }
+  } finally {
+    submittingPayment.value = false
   }
 }
 
@@ -200,7 +210,7 @@ const updateProductField = async (product, field, value) => {
                   <p class="text-sm text-[var(--color-text-secondary)]">${{ item.price }} c/u</p>
                 </div>
 
-                <BaseButton variant="secondary" @click="posStore.removeFromCart(item.productId)">
+                <BaseButton variant="secondary" :disabled="submittingPayment" @click="posStore.removeFromCart(item.productId)">
                   ✕
                 </BaseButton>
               </div>
@@ -209,6 +219,7 @@ const updateProductField = async (product, field, value) => {
                 <BaseInput
                   :model-value="item.qty"
                   type="number"
+                  :disabled="submittingPayment"
                   @update:modelValue="posStore.updateCartItemQty(item.productId, $event)"
                 />
 
@@ -224,7 +235,7 @@ const updateProductField = async (product, field, value) => {
               <span>${{ posStore.cartTotal }}</span>
             </div>
 
-            <BaseButton class="w-full" @click="openPayment" :disabled="!posStore.cart.length">
+            <BaseButton class="w-full" @click="openPayment" :disabled="!posStore.cart.length || submittingPayment">
               Cobrar
             </BaseButton>
 
@@ -466,7 +477,7 @@ const updateProductField = async (product, field, value) => {
           </div>
         </BaseCard>
 
-        <BaseInput v-model="cashAmount" type="number" placeholder="Monto recibido" />
+        <BaseInput v-model="cashAmount" type="number" placeholder="Monto recibido" :disabled="submittingPayment" />
 
         <BaseCard>
           <div class="flex items-center justify-between">
@@ -485,8 +496,12 @@ const updateProductField = async (product, field, value) => {
           El monto es insuficiente
         </p>
 
-        <BaseButton class="w-full" @click="confirmPayment" :disabled="!canPay">
-          Confirmar pago
+        <p v-if="paymentError" role="alert" class="text-sm text-red-400">
+          {{ paymentError }}
+        </p>
+
+        <BaseButton class="w-full" @click="confirmPayment" :disabled="!canPay || submittingPayment">
+          {{ submittingPayment ? 'Procesando pago…' : 'Confirmar pago' }}
         </BaseButton>
       </div>
     </BaseModal>

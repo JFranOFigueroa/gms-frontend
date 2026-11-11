@@ -19,7 +19,9 @@ const loading = ref(false)
 const pending = ref(null)
 const selectedGym = ref('')
 const gyms = computed(() => pending.value?.gyms || [])
-const chooseGym = computed(() => Boolean(pending.value) && gyms.value.length > 0)
+// Mostrar siempre el paso de selección, incluso con un solo gimnasio.
+// Un administrador sin gimnasios también debe poder iniciar sesión y crear el primero.
+const chooseGym = computed(() => Boolean(pending.value))
 
 async function credentialsLogin() {
   loginError.value = ''
@@ -40,7 +42,6 @@ async function credentialsLogin() {
       session.gyms?.find((g) => g.id === session.user.defaultGymId)?.id ||
       session.gyms?.[0]?.id ||
       ''
-    if (session.gyms?.length <= 1) await completeLogin()
   } catch (error) {
     loginError.value = error.message
   } finally {
@@ -63,7 +64,13 @@ async function completeLogin() {
     await hydrateActiveGym()
     const role = authStore.role
     const destination =
-      role === 'member'
+      role === 'trainer'
+        ? moduleStore.isModuleEnabled('pos')
+          ? '/dashboard/pos'
+          : moduleStore.isModuleEnabled('routines')
+            ? '/dashboard/routines'
+            : '/dashboard/disponibilidad'
+        : role === 'member'
         ? moduleStore.isModuleEnabled('checkin')
           ? '/dashboard/checkin'
           : moduleStore.isModuleEnabled('routines')
@@ -99,14 +106,15 @@ const resetGymSelection = () => {
         </template>
         <template v-else>
           <p class="text-[var(--color-text-secondary)]">
-            Selecciona el gimnasio al que deseas ingresar.
+            {{ gyms.length ? 'Selecciona el gimnasio al que deseas ingresar.' : 'Todavía no hay gimnasios disponibles. Ingresa para configurar el primero.' }}
           </p>
           <select
+            v-if="gyms.length"
             v-model="selectedGym"
             class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
           >
             <option v-for="gym in gyms" :key="gym.id" :value="gym.id">
-              {{ gym.name }} · {{ (gym.roles || []).join(', ') }}
+              {{ gym.name }}
             </option>
           </select>
         </template>
@@ -122,7 +130,7 @@ const resetGymSelection = () => {
           :disabled="loading"
           @click="chooseGym ? completeLogin() : credentialsLogin()"
         >
-          {{ loading ? 'Verificando…' : chooseGym ? 'Ingresar al gimnasio' : 'Entrar' }}
+          {{ loading ? 'Verificando…' : chooseGym ? gyms.length ? 'Ingresar al gimnasio' : 'Ingresar a administración' : 'Entrar' }}
         </BaseButton>
         <button
           v-if="chooseGym"

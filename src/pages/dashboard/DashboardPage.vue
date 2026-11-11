@@ -19,6 +19,7 @@ import { useGymsStore } from '@/stores/useGymsStore'
 
 import { isManager as isManagerRole } from '@/config/permissions'
 import { toDateOnly, todayISO as getTodayISO } from '@/utils/date'
+import { formatCheckinReason, formatCheckinMethod, formatCheckinRole } from '@/utils/checkinLabels'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
@@ -83,7 +84,9 @@ const adminActivity = computed(() => {
       checkin.allowed === false
         ? `Acceso denegado: ${checkin.userName}`
         : `${checkin.userName} hizo check-in`,
-    description: checkin.allowed === false ? checkin.reason : `${checkin.method} · ${checkin.role}`,
+    description: checkin.allowed === false
+      ? formatCheckinReason(checkin.reason)
+      : `${formatCheckinMethod(checkin.method)} · ${formatCheckinRole(checkin.role)}`,
     timestamp: checkin.timestamp,
     type: checkin.allowed === false ? 'Acceso' : 'Check-in',
   }))

@@ -91,6 +91,7 @@ const totalAmount = computed(() =>
 )
 
 const submit = async () => {
+  if (saving.value) return
   error.value = ''
   if (!selectedMemberId.value) {
     error.value = 'Selecciona un miembro'
@@ -121,6 +122,7 @@ const submit = async () => {
 }
 
 const close = () => {
+  if (saving.value) return
   emit('close')
 }
 </script>
@@ -223,7 +225,7 @@ const close = () => {
       </div>
 
       <div class="flex flex-wrap justify-end gap-3">
-        <BaseButton variant="secondary" @click="close"> Cancelar </BaseButton>
+        <BaseButton variant="secondary" :disabled="saving" @click="close"> Cancelar </BaseButton>
 
         <BaseButton :disabled="saving || !selectedPlan" @click="submit">
           {{ saving ? 'Registrando…' : 'Registrar pago' }}

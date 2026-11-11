@@ -10,6 +10,7 @@ import { useCheckinStore } from '@/stores/useCheckinStore'
 import { useGymsStore } from '@/stores/useGymsStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import { usePosStore } from '@/stores/usePosStore'
+import { formatCheckinReason, formatCheckinMethod, formatCheckinRole } from '@/utils/checkinLabels'
 
 defineEmits(['toggle-sidebar'])
 
@@ -21,8 +22,6 @@ const posStore = usePosStore()
 const router = useRouter()
 
 const notificationOpen = ref(false)
-
-const canSwitchGym = computed(() => availableGyms.value.length > 1)
 
 const isStaff = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
 
@@ -39,6 +38,7 @@ const availableGyms = computed(() => {
 })
 
 const changeGym = (event) => {
+  if (posStore.checkoutSubmitting) return
   const gymId = event.target.value
 
   if (!availableGyms.value.some((gym) => gym.id === gymId)) return
@@ -51,7 +51,7 @@ const changeGym = (event) => {
 watch(
   availableGyms,
   (gyms) => {
-    if (!canSwitchGym.value || !gyms.length) return
+    if (!gyms.length) return
 
     if (!gyms.some((gym) => gym.id === gymsStore.activeGymId)) {
       authStore.selectGym(gyms[0].id)
@@ -74,7 +74,9 @@ const syncNotifications = () => {
       id: `checkin-${checkin.id}`,
       type: denied ? 'acceso' : 'check-in',
       title: denied ? `Acceso denegado: ${checkin.userName}` : `${checkin.userName} hizo check-in`,
-      description: denied ? checkin.reason : `${checkin.method} · ${checkin.role}`,
+      description: denied
+        ? formatCheckinReason(checkin.reason)
+        : `${formatCheckinMethod(checkin.method)} · ${formatCheckinRole(checkin.role)}`,
       timestamp: checkin.timestamp,
       target: '/dashboard/checkin-audit',
     })
@@ -166,10 +168,12 @@ const openNotification = (notification) => {
     <!-- RIGHT -->
     <div class="flex items-center gap-4">
       <!-- Gym selector -->
-      <div v-if="canSwitchGym" class="hidden sm:block">
+      <div v-if="availableGyms.length" class="block">
         <select
+          aria-label="Seleccionar gimnasio"
+          :disabled="posStore.checkoutSubmitting"
           :value="gymsStore.activeGymId"
-          class="h-12 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-sm"
+          class="h-12 w-32 sm:w-auto max-w-52 px-2 sm:px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-sm"
           @change="changeGym"
         >
           <option v-for="gym in availableGyms" :key="gym.id" :value="gym.id">

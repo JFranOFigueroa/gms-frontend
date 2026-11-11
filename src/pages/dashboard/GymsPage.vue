@@ -60,7 +60,10 @@ const saveGym = async () => {
 
   try {
     if (editingId.value) await gymsStore.updateGym(editingId.value, payload)
-    else await gymsStore.addGym(payload)
+    else {
+      const created = await gymsStore.addGym(payload)
+      if (!gymsStore.activeGymId) useAuthStore().selectGym(created.id)
+    }
     modalOpen.value = false
     resetForm()
   } catch (error) {
@@ -79,6 +82,8 @@ const removeGym = async (id) => {
 
   try {
     await gymsStore.removeGym(id)
+    if (!gymsStore.activeGymId && gymsStore.gyms.length)
+      useAuthStore().selectGym(gymsStore.gyms[0].id)
   } catch (error) {
     saveError.value = error.message
   }

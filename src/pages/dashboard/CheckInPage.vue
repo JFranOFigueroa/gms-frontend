@@ -1,4 +1,5 @@
 <script setup>
+import { formatCheckinReason, formatCheckinMethod } from '@/utils/checkinLabels'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import QRCode from 'qrcode'
 import { createQrCameraReader } from '@/utils/qrCameraReader'
@@ -163,8 +164,9 @@ async function submitGymQr(kioskToken) {
     const decision = await checkinStore.scanGymQr(gym, kioskToken, crypto.randomUUID())
     if (epoch !== currentPageEpoch) return
     scanDecision.value = decision
-    scannerStatus.value =
-      decision?.message || (decision?.allowed === true ? 'Acceso registrado.' : 'Acceso denegado.')
+    scannerStatus.value = decision?.allowed === true
+      ? 'Acceso registrado.'
+      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
     // El historial es la fuente real, incluso para intentos rechazados.
     await checkinStore.loadMine(gym)
   } catch (error) {
@@ -442,8 +444,8 @@ onUnmounted(() => {
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
-              Método: {{ checkin.method }} ·
-              {{ checkin.allowed === false ? `Denegado: ${checkin.reason}` : 'Concedido' }}
+              Método: {{ formatCheckinMethod(checkin.method) }} ·
+              {{ checkin.allowed === false ? `Denegado: ${formatCheckinReason(checkin.reason)}` : 'Concedido' }}
             </p>
           </div>
         </div>

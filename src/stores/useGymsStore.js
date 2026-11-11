@@ -52,6 +52,13 @@ export const useGymsStore = defineStore('gyms', {
       )
       const gym = mapGym(row)
       this.gyms.push(gym)
+      // Sincronizar la lista del servidor para que el selector incluya de inmediato
+      // todos los gimnasios, conservando el nuevo incluso si falla la recarga.
+      try {
+        await this.load()
+      } catch {
+        // El POST ya fue confirmado: no simular un fallo y provocar otra alta.
+      }
       return gym
     },
     async updateGym(id, payload) {
@@ -60,12 +67,19 @@ export const useGymsStore = defineStore('gyms', {
       )
       const updated = mapGym(row)
       this.gyms = this.gyms.map((g) => (g.id === id ? updated : g))
+      try {
+        await this.load()
+      } catch {
+        // Conservar el dato confirmado por PATCH.
+      }
       return updated
     },
     async removeGym(id) {
       await useIntegrationStore().track('gimnasios', () => api.gyms.remove(null, id))
       this.gyms = this.gyms.filter((g) => g.id !== id)
-      if (this.activeGymId === id) this.activeGymId = this.gyms[0]?.id || null
+      // La selección siguiente pasa por auth.selectGym para actualizar también
+      // rol, sesión y datos del gimnasio, no solo el identificador reactivo.
+      if (this.activeGymId === id) this.activeGymId = null
     },
   },
 })

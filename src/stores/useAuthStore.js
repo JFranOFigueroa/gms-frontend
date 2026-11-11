@@ -71,8 +71,8 @@ export const useAuthStore = defineStore('auth', {
       if (id) sessionStorage.setItem(SELECTED_GYM, id)
       else sessionStorage.removeItem(SELECTED_GYM)
       const roles = chosen?.roles || []
-      const role =
-        roleOrder.find((r) => roles.includes(r)) || (this.user?.platformAdmin ? 'admin' : null)
+      // Los permisos de administrador global no dependen de la lista de acceso de un gimnasio.
+      const role = this.user?.platformAdmin ? 'admin' : roleOrder.find((r) => roles.includes(r)) || null
       if (this.user)
         this.user = {
           ...this.user,

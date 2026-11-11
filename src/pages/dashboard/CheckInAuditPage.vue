@@ -6,6 +6,7 @@ import CheckinDevicesPanel from '@/components/dashboard/CheckinDevicesPanel.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
 import { useGymsStore } from '@/stores/useGymsStore'
+import { formatCheckinReason, formatCheckinMethod } from '@/utils/checkinLabels'
 
 const checkinStore = useCheckinStore()
 const gyms = useGymsStore()
@@ -54,17 +55,6 @@ watch(
   { immediate: true },
 )
 const recent = computed(() => checkinStore.checkins.slice(0, 30))
-const methodLabel = (method) =>
-  ({ manual: 'En recepción', kiosk_qr: 'Código QR', kiosk_code: 'Código personal' })[method] ||
-  'Registro de acceso'
-const reasonLabel = (reason) =>
-  ({
-    granted: 'Acceso permitido',
-    expired: 'Membresía vencida',
-    no_payment: 'Pago pendiente',
-    inactive: 'Membresía inactiva',
-    duplicate: 'Acceso ya registrado',
-  })[reason] || ''
 </script>
 
 <template>
@@ -164,8 +154,8 @@ const reasonLabel = (reason) =>
             </p>
 
             <p class="text-sm text-[var(--color-text-secondary)]">
-              {{ methodLabel(checkin.method)
-              }}<span v-if="reasonLabel(checkin.reason)"> · {{ reasonLabel(checkin.reason) }}</span>
+              {{ formatCheckinMethod(checkin.method)
+              }}<span v-if="checkin.reason"> · {{ formatCheckinReason(checkin.reason) }}</span>
             </p>
           </div>
 

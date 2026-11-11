@@ -14,10 +14,16 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useRouter } from 'vue-router'
 
 import { useTenantStore } from '@/stores/useTenantStore'
+import { useGymsStore } from '@/stores/useGymsStore'
 
 const tenantStore = useTenantStore()
-
+const gyms = useGymsStore()
 const authStore = useAuthStore()
+const publicHome = computed(() =>
+  authStore.role === 'owner' && gyms.activeGym?.slug
+    ? `/g/${encodeURIComponent(gyms.activeGym.slug)}`
+    : '/',
+)
 
 const moduleStore = useModuleStore()
 
@@ -43,7 +49,7 @@ const logout = async () => {
     <!-- HEADER -->
     <div class="p-6 border-b border-[var(--color-border)]">
       <RouterLink
-        to="/"
+        :to="publicHome"
         class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full"
       >
         {{ tenantStore.gym.shortName }}

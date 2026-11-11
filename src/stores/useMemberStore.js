@@ -6,7 +6,7 @@ import { useIntegrationStore } from './useIntegrationStore'
 import { todayISO } from '@/utils/date'
 import { validateImageFile } from './useMediaStore'
 export const useMemberStore = defineStore('members', {
-  state: () => ({ allMembers: [], allPayments: [], ownMember: null }),
+  state: () => ({ allMembers: [], allPayments: [], ownMember: null, pendingPayment: null, paymentSubmitting: false }),
   getters: {
     members: (s) => s.allMembers.filter((m) => m.gymId === useGymsStore().activeGymId),
     payments: (s) => s.allPayments.filter((p) => p.gymId === useGymsStore().activeGymId),
@@ -197,20 +197,32 @@ export const useMemberStore = defineStore('members', {
     async registerPayment(id, payload) {
       const gym = useGymsStore().activeGymId
       if (!payload.planId) return { ok: false, reason: 'Selecciona un plan de membresía válido.' }
+      if (this.paymentSubmitting) return { ok: false, reason: 'El pago ya se está procesando.' }
+      const body = {
+        memberId: id,
+        planId: payload.planId,
+        method: payload.method,
+        periods: Number(payload.periods) || 1,
+        notes: payload.notes || null,
+      }
+      const signature = JSON.stringify({ gym, body })
+      if (!this.pendingPayment || this.pendingPayment.signature !== signature)
+        this.pendingPayment = { signature, key: crypto.randomUUID() }
+      const key = this.pendingPayment.key
+      this.paymentSubmitting = true
       try {
         const payment = await useIntegrationStore().track('pagos', () =>
-          api.payments.create(gym, {
-            memberId: id,
-            planId: payload.planId,
-            method: payload.method,
-            periods: Number(payload.periods) || 1,
-            notes: payload.notes || null,
-          }),
+          api.payments.create(gym, body, key),
         )
-        await Promise.all([this.load(gym), this.loadPayments(gym)])
+        this.pendingPayment = null
+        // El POST fue exitoso; el refresco no debe convertirlo en un cobro fallido.
+        await Promise.allSettled([this.load(gym), this.loadPayments(gym)])
         return { ok: true, payment }
       } catch (error) {
+        if (error.status === 409) this.pendingPayment = null
         return { ok: false, reason: error.message }
+      } finally {
+        this.paymentSubmitting = false
       }
     },
   },

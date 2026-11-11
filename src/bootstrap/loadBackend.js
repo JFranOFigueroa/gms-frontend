@@ -36,11 +36,12 @@ export function hydrateActiveGym() {
     const owner = ['admin', 'owner'].includes(auth.role)
     await Promise.allSettled([useModuleStore().load(gym)])
     const modules = useModuleStore()
-    const tasks = [usePlanStore().load(gym)]
+    const tasks = []
+    if (auth.role !== 'trainer') tasks.push(usePlanStore().load(gym))
     if (modules.isModuleEnabled('routines')) tasks.push(useRoutineStore().load(gym))
-    if (modules.isModuleEnabled('calendar'))
+    if (auth.role !== 'trainer' && modules.isModuleEnabled('calendar'))
       tasks.push(useClassScheduleStore().load(gym), useClassTemplateStore().load(gym))
-    if (staff) tasks.push(useMemberStore().load(gym))
+    if (owner) tasks.push(useMemberStore().load(gym))
     if (owner) tasks.push(useUserStore().load(gym))
     if (auth.role === 'member') {
       tasks.push(useMemberStore().loadMine(gym))
@@ -48,16 +49,16 @@ export function hydrateActiveGym() {
       if (modules.isModuleEnabled('calendar')) tasks.push(useMyReservationsStore().load(gym))
     }
     if (staff && modules.isModuleEnabled('pos')) tasks.push(usePosStore().load(gym))
-    if (staff && modules.isModuleEnabled('checkin')) tasks.push(useCheckinStore().load(gym))
+    if (owner && modules.isModuleEnabled('checkin')) tasks.push(useCheckinStore().load(gym))
     if (owner)
       tasks.push(
         useMemberStore().loadPayments(gym),
         useLandingStore().load(gym),
         useMediaStore().load(gym),
         useThemeStore().load(gym),
-        useLandingPublicationStore().load(gym),
         useDashboardSummaryStore().load(gym),
       )
+    if (auth.role === 'owner') tasks.push(useLandingPublicationStore().load(gym))
     if (admin) tasks.push(useGymsStore().load())
     await Promise.allSettled(tasks)
   })()
@@ -76,6 +77,9 @@ export function clearGymData() {
   usePosStore().allProducts = []
   usePosStore().allSales = []
   usePosStore().clearCart()
+  usePosStore().checkoutSubmitting = false
+  useMemberStore().pendingPayment = null
+  useMemberStore().paymentSubmitting = false
   useRoutineStore().allRoutines = []
   useClassScheduleStore().allClasses = []
   useClassTemplateStore().allTemplates = []

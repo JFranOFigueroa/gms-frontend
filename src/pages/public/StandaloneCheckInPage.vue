@@ -7,6 +7,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import { useCheckinStore } from '@/stores/useCheckinStore'
+import { formatCheckinReason } from '@/utils/checkinLabels'
 
 const route = useRoute()
 const checkins = useCheckinStore()
@@ -275,8 +276,9 @@ async function submitCode() {
     const decision = await checkins.validateManualCode(attempt.accessCode, attempt.key)
     if (epoch !== pageEpoch) return
     result.value = decision
-    scannerStatus.value =
-      decision?.message || (decision?.allowed === true ? 'Acceso registrado.' : 'Acceso denegado.')
+    scannerStatus.value = decision?.allowed === true
+      ? 'Acceso registrado.'
+      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
     pendingManualAttempt = null
     manualCode.value = ''
   } catch (error) {
@@ -308,8 +310,9 @@ async function submitMemberQr(memberQr) {
     const decision = await checkins.scanMemberQr(memberQr, crypto.randomUUID())
     if (epoch !== pageEpoch) return
     result.value = decision
-    scannerStatus.value =
-      decision?.allowed === true ? 'Acceso registrado.' : decision?.message || 'Acceso denegado.'
+    scannerStatus.value = decision?.allowed === true
+      ? 'Acceso registrado.'
+      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
   } catch (error) {
     if (epoch !== pageEpoch) return
     scannerStatus.value = error.message || 'No fue posible validar el acceso.'
@@ -474,10 +477,9 @@ onUnmounted(() => {
               </p>
 
               <p class="text-lg mt-1">
-                {{
-                  result.message ||
-                  (result.allowed ? 'Acceso registrado correctamente.' : 'Acceso no autorizado.')
-                }}
+                {{ result.allowed
+                  ? 'Acceso registrado correctamente.'
+                  : formatCheckinReason(result.reasonCode || result.reason || result.message) }}
               </p>
 
               <p class="text-[var(--color-text-secondary)] mt-1">

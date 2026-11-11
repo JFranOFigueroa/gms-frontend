@@ -12,6 +12,7 @@ import GymSettingsCard from '@/components/dashboard/GymSettingsCard.vue'
 import ModuleSettingsCard from '@/components/dashboard/ModuleSettingsCard.vue'
 import AddBlockModal from '@/components/dashboard/AddBlockModal.vue'
 import PreviewModal from '@/components/dashboard/PreviewModal.vue'
+import LandingPublicationCard from '@/components/dashboard/LandingPublicationCard.vue'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 
@@ -56,6 +57,9 @@ const landingStore = useLandingStore()
 
     <div class="max-w-5xl space-y-6">
       <GymSettingsCard />
+
+      <!-- /landing/link está reservado al propietario; no alterar los bloques del editor. -->
+      <LandingPublicationCard v-if="authStore.role === 'owner'" />
 
       <ModuleSettingsCard v-if="showModuleSettings" />
 

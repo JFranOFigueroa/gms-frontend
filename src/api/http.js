@@ -1,4 +1,5 @@
 /** Cliente fetch central: JSON, multipart, binarios y renovación única de sesión. */
+import { formatCheckinReason } from '@/utils/checkinLabels'
 const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim()
 const baseUrl = configuredBase?.replace(/\/+$/, '')
 const TOKEN_KEY = 'gymback:access-token'
@@ -67,10 +68,17 @@ function safeErrorMessage(response, data) {
     409: 'Este valor ya está en uso. Intenta con otro.',
     413: 'El archivo supera el tamaño permitido.',
   }
+  if (response.status === 409 && /idempotency/i.test(String(supplied ?? '')))
+    return 'La operación ya se intentó con datos distintos. Revisa el cobro antes de repetirlo.'
   const message =
     typeof supplied === 'string'
       ? supplied
       : defaults[response.status] || 'No se pudo completar la operación.'
+  if (/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/i.test(message)) {
+    if (/subscription|membership|checkin|no_payment|access_denied/i.test(message))
+      return formatCheckinReason(message)
+    return defaults[response.status] || 'No se pudo completar la operación.'
+  }
   if (
     /\b(?:UUID|userId|gymId|USER_API_ENABLED|SQL|JDBC|constraint|stacktrace|org\.springframework|java\.|endpoint|\/api\/v1)\b/i.test(
       message,

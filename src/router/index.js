@@ -5,6 +5,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
 import HomePage from '@/pages/public/HomePage.vue'
+import GlobalHomePage from '@/pages/public/GlobalHomePage.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
 
@@ -19,7 +20,7 @@ const routes = [
       {
         path: '',
         name: 'home',
-        component: HomePage,
+        component: GlobalHomePage,
       },
     ],
   },
@@ -66,11 +67,17 @@ const routes = [
         component: DashboardPage,
       },
       {
+        path: 'disponibilidad',
+        component: () => import('@/pages/dashboard/TrainerUnavailablePage.vue'),
+        meta: { roles: ['trainer'] },
+      },
+      {
         path: 'calendar',
         component: () => import('@/pages/dashboard/CalendarPage.vue'),
         meta: {
           requiresAuth: true,
           module: 'calendar',
+          roles: ['admin', 'owner', 'member', 'guest'],
         },
       },
       {
@@ -97,7 +104,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'calendar',
-          roles: ['admin', 'owner', 'trainer'],
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -127,6 +134,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'routines',
+          roles: ['member'],
         },
       },
       {
@@ -136,6 +144,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'checkin',
+          roles: ['member', 'guest'],
         },
       },
       {
@@ -145,7 +154,7 @@ const routes = [
         meta: {
           requiresAuth: true,
           module: 'checkin',
-          roles: ['admin', 'owner', 'trainer'],
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -154,7 +163,7 @@ const routes = [
         component: () => import('@/pages/dashboard/MembersPage.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['admin', 'owner', 'trainer'],
+          roles: ['admin', 'owner'],
         },
       },
       {
@@ -192,6 +201,12 @@ router.beforeEach((to) => {
     return '/auth/login'
   }
 
+  if (to.name === 'dashboard' && authStore.role === 'trainer') {
+    if (moduleStore.isModuleEnabled('pos')) return '/dashboard/pos'
+    if (moduleStore.isModuleEnabled('routines')) return '/dashboard/routines'
+    return '/dashboard/disponibilidad'
+  }
+
   // El kiosco público no requiere haber cargado módulos de una sesión privada.
   if (
     to.name === 'standalone-checkin' &&
@@ -203,6 +218,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
+    if (authStore.role === 'trainer') return '/dashboard'
     if (['member', 'guest'].includes(authStore.role)) {
       if (moduleStore.isModuleEnabled('checkin')) return '/dashboard/checkin'
       if (moduleStore.isModuleEnabled('routines')) return '/dashboard/routine'

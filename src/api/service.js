@@ -39,7 +39,10 @@ export const api = {
   plans: resource(e.plans),
   payments: {
     list: (gym, memberId) => http.get(e.payments(gym), { limit: 100, memberId }),
-    create: (gym, data) => http.post(e.payments(gym), data),
+    create: (gym, data, idempotencyKey) =>
+      http.post(e.payments(gym), data, {
+        extraHeaders: { 'Idempotency-Key': idempotencyKey },
+      }),
   },
   classes: {
     ...resource(e.classes),
@@ -57,7 +60,10 @@ export const api = {
   products: resource(e.products),
   sales: {
     list: (gym) => http.get(e.sales(gym), { limit: 100 }),
-    checkout: (gym, items) => http.post(e.sales(gym), { items }),
+    checkout: (gym, items, idempotencyKey) =>
+      http.post(e.sales(gym), { items }, {
+        extraHeaders: { 'Idempotency-Key': idempotencyKey },
+      }),
   },
   checkins: {
     list: (gym) => http.get(e.checkins(gym), { limit: 100 }),

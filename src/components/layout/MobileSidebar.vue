@@ -6,10 +6,17 @@ import { sidebarNavigation } from '@/config/sidebarNavigation'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useModuleStore } from '@/stores/useModuleStore'
 import { useRouter } from 'vue-router'
+import { useGymsStore } from '@/stores/useGymsStore'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const tenantStore = useTenantStore()
+const gyms = useGymsStore()
 const authStore = useAuthStore()
+const publicHome = computed(() =>
+  authStore.role === 'owner' && gyms.activeGym?.slug
+    ? `/g/${encodeURIComponent(gyms.activeGym.slug)}`
+    : '/',
+)
 const moduleStore = useModuleStore()
 const router = useRouter()
 
@@ -46,7 +53,7 @@ defineProps({
         @click.stop
       >
         <div class="flex items-center justify-between mb-8">
-          <RouterLink to="/" class="font-black leading-tight break-words text-xl max-w-full">
+          <RouterLink :to="publicHome" class="font-black leading-tight break-words text-xl max-w-full">
             {{ tenantStore.gym.shortName }}
           </RouterLink>
 

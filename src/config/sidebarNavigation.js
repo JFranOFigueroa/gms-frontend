@@ -101,37 +101,14 @@ export const sidebarNavigation = {
 
   trainer: [
     {
-      label: 'Dashboard',
-      path: '/dashboard',
-    },
-    {
       label: 'POS',
       path: '/dashboard/pos',
       module: 'pos',
     },
     {
-      label: 'Calendario',
-      path: '/dashboard/calendar',
-      module: 'calendar',
-    },
-    {
-      label: 'Plantillas',
-      path: '/dashboard/class-templates',
-      module: 'calendar',
-    },
-    {
       label: 'Rutinas',
       path: '/dashboard/routines',
       module: 'routines',
-    },
-    {
-      label: 'Miembros',
-      path: '/dashboard/members',
-    },
-    {
-      label: 'Check-in',
-      path: '/dashboard/checkin-audit',
-      module: 'checkin',
     },
   ],
 
