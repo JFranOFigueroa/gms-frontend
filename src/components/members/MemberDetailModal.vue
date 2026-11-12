@@ -85,15 +85,18 @@ watch(
   <BaseModal :open="open" @close="emit('close')">
     <div v-if="member" class="space-y-8">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-3xl font-black">{{ member.name }}</h2>
+        <div class="min-w-0">
+          <h2 class="break-words text-2xl font-black sm:text-3xl">{{ member.name }}</h2>
 
-          <p class="text-[var(--color-text-secondary)] mt-1">
+          <p class="mt-1 break-all text-sm text-[var(--color-text-secondary)] sm:text-base">
             Código {{ member.code }} · {{ member.email }}
           </p>
         </div>
 
-        <span class="rounded-full px-3 py-1 text-sm font-semibold" :class="status.class">
+        <span
+          class="self-start rounded-full px-3 py-1 text-sm font-semibold"
+          :class="status.class"
+        >
           {{ status.label }}
         </span>
       </div>
@@ -169,7 +172,7 @@ watch(
       </div>
 
       <div class="space-y-3">
-        <h3 class="text-2xl font-bold">Historial de pagos</h3>
+        <h3 class="text-xl font-bold sm:text-2xl">Historial de pagos</h3>
 
         <p v-if="!payments.length" class="text-[var(--color-text-secondary)]">
           Este miembro aún no tiene pagos registrados.

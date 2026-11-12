@@ -122,11 +122,11 @@ const deleteRoutine = async (id) => {
 <template>
   <div class="space-y-8">
     <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Rutinas</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Rutinas</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Gestiona la biblioteca de rutinas generales
         </p>
       </div>
@@ -134,7 +134,7 @@ const deleteRoutine = async (id) => {
       <BaseButton @click="openCreate"> Nueva rutina </BaseButton>
     </div>
 
-    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="routine in routineStore.routines" :key="routine.id">
         <div class="space-y-4">
           <div>
@@ -168,7 +168,7 @@ const deleteRoutine = async (id) => {
 
     <BaseModal :open="modalOpen" @close="modalOpen = false">
       <div class="space-y-6">
-        <h2 class="text-3xl font-black">
+        <h2 class="text-2xl font-black sm:text-3xl">
           {{ editingId ? 'Editar rutina' : 'Nueva rutina' }}
         </h2>
 
@@ -177,11 +177,11 @@ const deleteRoutine = async (id) => {
         <textarea
           v-model="description"
           rows="3"
-          class="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-[var(--color-primary)] transition-all"
+          class="w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-base outline-none transition-all focus:border-[var(--color-primary)] sm:px-5 sm:py-4"
           placeholder="Descripción"
         />
 
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
           <select
             v-model="level"
             class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
@@ -209,7 +209,7 @@ const deleteRoutine = async (id) => {
             :key="index"
             class="p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 space-y-3"
           >
-            <div class="flex items-center gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
               <BaseInput v-model="day.day" placeholder="Nombre del día" />
 
               <BaseButton variant="secondary" @click="removeDay(index)"> ✕ </BaseButton>
@@ -218,7 +218,7 @@ const deleteRoutine = async (id) => {
             <textarea
               v-model="day.exercisesText"
               rows="5"
-              class="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-[var(--color-primary)] transition-all"
+              class="w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-base outline-none transition-all focus:border-[var(--color-primary)] sm:px-5 sm:py-4"
               placeholder="Un ejercicio por línea: Nombre | series | reps | descanso | notas"
             />
           </div>

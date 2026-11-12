@@ -91,7 +91,7 @@ const saveLogo = async () => {
 <template>
   <BaseCard
     ><div class="space-y-4">
-      <h2 class="text-2xl font-black">Configuración del gimnasio</h2>
+      <h2 class="text-xl font-black sm:text-2xl">Configuración del gimnasio</h2>
       <p class="text-sm text-[var(--color-text-secondary)]">Nombre y abreviatura del gimnasio.</p>
       <label class="block text-sm">Nombre del gimnasio</label>
       <BaseInput v-model="name" :disabled="!auth.user?.platformAdmin" />

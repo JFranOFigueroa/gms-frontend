@@ -9,7 +9,6 @@ import GlobalAccountsPanel from '@/components/dashboard/GlobalAccountsPanel.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useUserStore, OwnerLinkPendingError } from '@/stores/useUserStore'
-import { useMemberStore } from '@/stores/useMemberStore'
 import { useGymsStore } from '@/stores/useGymsStore'
 import { api } from '@/api/service'
 
@@ -17,7 +16,6 @@ import { ROLE_LABELS, assignableRoles, canEditStaffRole } from '@/config/permiss
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
-const memberStore = useMemberStore()
 const gymsStore = useGymsStore()
 
 const modalOpen = ref(false)
@@ -320,9 +318,9 @@ const toggleActive = (user) => {
   <div class="space-y-8">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Usuarios</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Usuarios</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Gestiona propietarios y entrenadores. Los miembros se administran en su módulo propio.
         </p>
       </div>
@@ -333,7 +331,7 @@ const toggleActive = (user) => {
     <p v-if="notice" role="status" class="text-sm text-emerald-400">{{ notice }}</p>
     <GlobalAccountsPanel v-if="authStore.user?.platformAdmin" />
 
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
       <BaseInput v-model="search" placeholder="Buscar por nombre, correo o teléfono" />
 
       <select
@@ -347,7 +345,7 @@ const toggleActive = (user) => {
       </select>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="user in filteredUsers" :key="user.id">
         <div class="space-y-4">
           <div>
@@ -365,7 +363,7 @@ const toggleActive = (user) => {
           </div>
 
           <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
-            <p>{{ user.email }}</p>
+            <p class="break-all">{{ user.email }}</p>
 
             <p v-if="user.phone">{{ user.phone }}</p>
 
@@ -408,7 +406,7 @@ const toggleActive = (user) => {
 
     <BaseModal :open="modalOpen" @close="closeUserModal">
       <div class="space-y-6">
-        <h2 class="text-3xl font-black">
+        <h2 class="text-2xl font-black sm:text-3xl">
           {{ editingId ? 'Editar usuario' : 'Nuevo usuario' }}
         </h2>
 

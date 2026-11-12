@@ -7,7 +7,6 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 
-import { useAuthStore } from '@/stores/useAuthStore'
 import { useMyReservationsStore } from '@/stores/useMyReservationsStore'
 
 const props = defineProps({
@@ -20,7 +19,6 @@ const emit = defineEmits(['close'])
 
 const scheduleStore = useClassScheduleStore()
 
-const authStore = useAuthStore()
 const mine = useMyReservationsStore()
 const busy = ref(false)
 const error = ref('')
@@ -66,15 +64,15 @@ const bookClass = async () => {
     <div v-if="gymClass" class="space-y-6">
       <p v-if="error" role="alert" class="text-red-400">{{ error }}</p>
       <div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 sm:gap-4">
           <div
-            class="w-5 h-5 rounded-full"
+            class="h-5 w-5 shrink-0 rounded-full"
             :style="{
               background: gymClass.color,
             }"
           />
 
-          <h2 class="text-4xl font-black">
+          <h2 class="break-words text-2xl font-black sm:text-4xl">
             {{ gymClass.name }}
           </h2>
         </div>

@@ -23,6 +23,7 @@ const publicGym = computed(() => publicStore.page?.gym || null)
 const blocks = computed(() =>
   slug.value ? publicStore.page?.blocks || [] : landingStore.sortedBlocks,
 )
+const hasHero = computed(() => blocks.value[0]?.type === 'hero')
 const publicStyles = computed(() => {
   if (!slug.value || !publicStore.page?.theme) return {}
   const theme = publicStore.page.theme
@@ -31,7 +32,7 @@ const publicStyles = computed(() => {
   )
   const entries = {}
   // Lista blanca tanto para colores del tema como para sus ajustes personalizados.
-  const colors = { ...(preset?.colors || {}), ...(theme.colors || {}), ...(theme.overrides || {}) }
+  const colors = { ...preset?.colors, ...theme.colors, ...theme.overrides }
   for (const [key, value] of Object.entries(colors)) {
     if (
       /^[a-zA-Z-]{1,40}$/.test(key) &&
@@ -52,7 +53,7 @@ const publicStyles = computed(() => {
 <template>
   <div
     :style="publicStyles"
-    class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]"
+    class="min-h-dvh bg-[var(--color-background)] text-[var(--color-text)]"
   >
     <template v-if="slug">
       <div v-if="publicStore.loading" role="status" class="mx-auto max-w-3xl p-12 text-center">
@@ -70,26 +71,31 @@ const publicStyles = computed(() => {
       </div>
       <template v-else>
         <PublicTopbar :public-gym="publicGym" />
-        <div v-if="!blocks.length" class="mx-auto max-w-3xl p-12 text-center">
+        <div v-if="!blocks.length" class="mx-auto max-w-3xl px-4 pb-12 pt-24 text-center sm:p-12">
           Este gimnasio todavía no ha agregado contenido a su página.
         </div>
-        <BlockRenderer
-          v-else
-          :blocks="blocks"
-          :public-gym="publicGym"
-          :media-assets="publicStore.page?.mediaAssets || []"
-        />
+        <template v-else>
+          <div v-if="!hasHero" class="h-16 sm:h-20" aria-hidden="true" />
+          <BlockRenderer
+            :blocks="blocks"
+            :public-gym="publicGym"
+            :media-assets="publicStore.page?.mediaAssets || []"
+          />
+        </template>
       </template>
     </template>
     <template v-else>
       <PublicTopbar />
       <div
         v-if="!blocks.length"
-        class="mx-auto max-w-3xl p-12 text-center text-[var(--color-text-secondary)]"
+        class="mx-auto max-w-3xl px-4 pb-12 pt-24 text-center text-[var(--color-text-secondary)] sm:p-12"
       >
         Visita el enlace de tu gimnasio para conocer sus instalaciones y servicios.
       </div>
-      <BlockRenderer v-else :blocks="blocks" />
+      <template v-else>
+        <div v-if="!hasHero" class="h-16 sm:h-20" aria-hidden="true" />
+        <BlockRenderer :blocks="blocks" />
+      </template>
     </template>
   </div>
 </template>

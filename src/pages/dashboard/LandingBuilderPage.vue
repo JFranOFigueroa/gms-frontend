@@ -41,9 +41,9 @@ const landingStore = useLandingStore()
     <!-- Header -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Landing Builder</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Landing Builder</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Administra la estructura visual del sitio
         </p>
       </div>
@@ -55,7 +55,7 @@ const landingStore = useLandingStore()
 
     <PreviewModal :open="previewModal" @close="previewModal = false" />
 
-    <div class="max-w-5xl space-y-6">
+    <div class="w-full max-w-5xl space-y-6">
       <GymSettingsCard />
 
       <!-- /landing/link está reservado al propietario; no alterar los bloques del editor. -->

@@ -73,11 +73,13 @@ const saveUrl = async () => {
 <template>
   <div class="space-y-4">
     <label
-      class="flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-3xl p-10 cursor-pointer hover:border-[var(--color-primary)] transition-all"
+      class="flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[var(--color-border)] p-6 transition-all hover:border-[var(--color-primary)] sm:p-10"
     >
       <div class="text-center">
-        <p class="text-2xl font-bold">Subir Imagen</p>
-        <p class="text-[var(--color-text-secondary)] mt-2">PNG, JPG o WEBP · máximo 8 MB</p>
+        <p class="text-xl font-bold sm:text-2xl">Subir Imagen</p>
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
+          PNG, JPG o WEBP · máximo 8 MB
+        </p>
       </div>
       <input
         ref="uploadInput"
@@ -92,13 +94,13 @@ const saveUrl = async () => {
       v-if="preview"
       :src="preview"
       alt="Vista previa de imagen"
-      class="w-full max-h-64 object-contain rounded-2xl border border-[var(--color-border)]"
+      class="max-h-64 w-full rounded-2xl border border-[var(--color-border)] object-contain"
     />
     <div class="space-y-3 rounded-2xl border border-[var(--color-border)] p-4">
       <input
         v-model="name"
         placeholder="Nombre de imagen"
-        class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+        class="w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-base"
       />
       <button
         v-if="selectedFile"
@@ -115,7 +117,7 @@ const saveUrl = async () => {
       <input
         v-model="url"
         placeholder="https://..."
-        class="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+        class="w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-base"
       />
       <button
         type="button"

@@ -22,8 +22,10 @@ const currentMonth = ref(today.getMonth())
 
 const selectedDay = ref(null)
 const dayScheduleOpen = ref(false)
+const viewMode = ref('grid')
 
 const weekdayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const weekdayFormatter = new Intl.DateTimeFormat('es-MX', { weekday: 'long' })
 
 const monthLabel = computed(() => {
   return new Intl.DateTimeFormat('es-MX', {
@@ -95,6 +97,7 @@ const calendarCells = computed(() => {
     cells.push({
       key: `${currentYear.value}-${currentMonth.value}-${index}`,
       dayNumber: inMonth ? dayNumber : '',
+      weekday: date ? weekdayFormatter.format(date) : '',
       inMonth,
       isToday: dateISO === todayISO,
       dateISO,
@@ -141,9 +144,11 @@ const openDaySchedule = (date) => {
     <!-- HEADER -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Calendario</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Calendario</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">Gestión de clases y eventos</p>
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
+          Gestión de clases y eventos
+        </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
@@ -159,73 +164,150 @@ const openDaySchedule = (date) => {
 
     <!-- CALENDAR -->
     <BaseCard class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-black capitalize">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-xl font-black capitalize sm:text-2xl">
           {{ monthLabel }}
         </h2>
 
-        <p class="text-sm text-[var(--color-text-secondary)]">
-          Selecciona un día para ver su agenda
-        </p>
-      </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <p class="hidden text-sm text-[var(--color-text-secondary)] sm:block">
+            Selecciona un día para ver su agenda
+          </p>
 
-      <!-- WEEK HEADER -->
-      <div class="grid grid-cols-7 gap-2">
-        <div
-          v-for="day in weekdayLabels"
-          :key="day"
-          class="px-2 py-2 text-center text-xs font-bold uppercase tracking-wide text-[var(--color-text-secondary)]"
-        >
-          {{ day }}
+          <div class="inline-flex w-fit rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)]/40 p-1">
+            <button
+              type="button"
+              class="rounded-xl px-3 py-1.5 text-xs font-semibold transition"
+              :class="
+                viewMode === 'grid'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
+                  : 'text-[var(--color-text-secondary)]'
+              "
+              @click="viewMode = 'grid'"
+            >
+              Mes
+            </button>
+
+            <button
+              type="button"
+              class="rounded-xl px-3 py-1.5 text-xs font-semibold transition"
+              :class="
+                viewMode === 'list'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
+                  : 'text-[var(--color-text-secondary)]'
+              "
+              @click="viewMode = 'list'"
+            >
+              Lista
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- DAYS -->
-      <div class="grid grid-cols-7 gap-2">
+      <template v-if="viewMode === 'grid'">
+        <!-- WEEK HEADER -->
+        <div class="grid grid-cols-7 gap-1 sm:gap-2">
+          <div
+            v-for="day in weekdayLabels"
+            :key="day"
+            class="px-1 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)] sm:px-2 sm:py-2 sm:text-xs"
+          >
+            {{ day }}
+          </div>
+        </div>
+
+        <!-- DAYS -->
+        <div class="grid grid-cols-7 gap-1 sm:gap-2">
+          <button
+            v-for="cell in calendarCells"
+            :key="cell.key"
+            type="button"
+            class="min-h-[56px] rounded-xl border p-1.5 text-left transition-all duration-200 sm:min-h-[96px] sm:rounded-2xl sm:p-3 lg:min-h-[112px]"
+            :class="
+              cell.inMonth
+                ? 'border-[var(--color-border)] bg-[var(--color-surface)]/40 hover:border-[var(--color-primary)] hover:bg-[var(--color-surface)]'
+                : 'cursor-default border-transparent bg-transparent'
+            "
+            :disabled="!cell.inMonth"
+            @click="openDaySchedule(cell.dateISO)"
+          >
+            <div v-if="cell.inMonth" class="flex h-full flex-col justify-between">
+              <div class="flex items-center justify-between gap-1">
+                <span
+                  class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm"
+                  :class="
+                    cell.isToday
+                      ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
+                      : 'text-[var(--color-text)]'
+                  "
+                >
+                  {{ cell.dayNumber }}
+                </span>
+
+                <span
+                  v-if="cell.summary"
+                  class="rounded-full bg-[var(--color-primary)]/15 px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-primary)] sm:px-2 sm:py-1 sm:text-xs"
+                >
+                  {{ cell.summary.total }}
+                </span>
+              </div>
+
+              <div v-if="cell.summary" class="hidden space-y-1 sm:block">
+                <p class="text-xs text-[var(--color-text-secondary)]">
+                  {{ cell.summary.total }} clase{{ cell.summary.total === 1 ? '' : 's' }}
+                </p>
+
+                <p v-if="cell.summary.special" class="text-xs text-[var(--color-text-secondary)]">
+                  {{ cell.summary.special }} especial{{ cell.summary.special === 1 ? '' : 'es' }}
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </template>
+
+      <!-- AGENDA LIST -->
+      <div v-else class="space-y-2">
         <button
-          v-for="cell in calendarCells"
+          v-for="cell in calendarCells.filter((item) => item.inMonth)"
           :key="cell.key"
           type="button"
-          class="min-h-[112px] rounded-2xl border p-3 text-left transition-all duration-200"
-          :class="
-            cell.inMonth
-              ? 'border-[var(--color-border)] bg-[var(--color-surface)]/40 hover:border-[var(--color-primary)] hover:bg-[var(--color-surface)]'
-              : 'border-transparent bg-transparent cursor-default'
-          "
-          :disabled="!cell.inMonth"
+          class="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/40 p-3 text-left transition hover:border-[var(--color-primary)]"
           @click="openDaySchedule(cell.dateISO)"
         >
-          <div v-if="cell.inMonth" class="flex h-full flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span
-                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
-                :class="
-                  cell.isToday
-                    ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
-                    : 'text-[var(--color-text)]'
-                "
-              >
-                {{ cell.dayNumber }}
+          <span class="flex min-w-0 items-center gap-3">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+              :class="
+                cell.isToday
+                  ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
+                  : 'bg-[var(--color-surface-hover)] text-[var(--color-text)]'
+              "
+            >
+              {{ cell.dayNumber }}
+            </span>
+
+            <span class="min-w-0">
+              <span class="block truncate text-sm font-semibold capitalize">
+                {{ cell.weekday }}
               </span>
 
-              <span
-                v-if="cell.summary"
-                class="rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-xs font-bold text-[var(--color-primary)]"
-              >
-                {{ cell.summary.total }}
+              <span class="block text-xs text-[var(--color-text-secondary)]">
+                {{ cell.isToday ? 'Hoy' : 'Ver agenda' }}
               </span>
-            </div>
+            </span>
+          </span>
 
-            <div v-if="cell.summary" class="space-y-1">
-              <p class="text-xs text-[var(--color-text-secondary)]">
-                {{ cell.summary.total }} clase{{ cell.summary.total === 1 ? '' : 's' }}
-              </p>
+          <span
+            v-if="cell.summary"
+            class="shrink-0 rounded-full bg-[var(--color-primary)]/15 px-2 py-1 text-xs font-bold text-[var(--color-primary)]"
+          >
+            {{ cell.summary.total }} clase{{ cell.summary.total === 1 ? '' : 's' }}
+          </span>
 
-              <p v-if="cell.summary.special" class="text-xs text-[var(--color-text-secondary)]">
-                {{ cell.summary.special }} especial{{ cell.summary.special === 1 ? '' : 'es' }}
-              </p>
-            </div>
-          </div>
+          <span v-else class="shrink-0 text-xs text-[var(--color-text-secondary)]">
+            Sin clases
+          </span>
         </button>
       </div>
     </BaseCard>

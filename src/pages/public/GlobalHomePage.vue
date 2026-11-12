@@ -52,7 +52,7 @@ const imageStyle = { backgroundImage: `url(${landingBackground})` }
 
 <style scoped>
 .global-landing {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: #05070a;
   color: #fff;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -60,7 +60,7 @@ const imageStyle = { backgroundImage: `url(${landingBackground})` }
 .global-scene {
   position: relative;
   width: 100%;
-  min-height: min(100vh, 56.28vw);
+  min-height: min(100svh, 56.28vw);
   aspect-ratio: 1672 / 941;
   background-position: center top;
   background-size: 100% 100%;
@@ -182,7 +182,7 @@ const imageStyle = { backgroundImage: `url(${landingBackground})` }
 @media (max-width: 900px) {
   .global-scene {
     height: min(760px, 100svh);
-    min-height: 640px;
+    min-height: min(640px, 100svh);
     aspect-ratio: auto;
     background-size: cover;
     background-position: 56% center;
@@ -220,8 +220,9 @@ const imageStyle = { backgroundImage: `url(${landingBackground})` }
 @media (max-width: 550px) {
   .global-header { align-items: flex-start; }
   .global-navigation { width: 100%; justify-content: space-between; }
-  .global-nav-button { font-size: 11px; padding: 0 8px; }
+  .global-nav-button { min-width: 0; height: 38px; padding: 0 7px; font-size: 10px; }
   .global-intro { top: 30%; }
+  .global-intro h1 { font-size: clamp(34px, 10vw, 60px); }
   .global-desktop-break { display: none; }
   .global-mobile-features { grid-template-columns: 1fr; }
   .global-mobile-feature { min-height: 220px; background-size: 300% auto; font-size: 24px; }

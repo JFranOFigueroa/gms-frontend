@@ -29,22 +29,24 @@ const previewWidth = computed(() => {
     class="h-full rounded-3xl border border-[var(--color-border)] bg-[var(--color-background)] overflow-hidden flex flex-col"
   >
     <!-- TOPBAR -->
-    <div class="h-14 border-b border-[var(--color-border)] px-6 flex items-center justify-between">
+    <div
+      class="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4 sm:px-6"
+    >
       <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full bg-red-500" />
+        <div class="h-3 w-3 rounded-full bg-red-500" />
 
-        <div class="w-3 h-3 rounded-full bg-yellow-500" />
+        <div class="h-3 w-3 rounded-full bg-yellow-500" />
 
-        <div class="w-3 h-3 rounded-full bg-green-500" />
+        <div class="h-3 w-3 rounded-full bg-green-500" />
       </div>
 
       <div class="text-sm text-[var(--color-text-secondary)]">Preview</div>
     </div>
 
     <!-- VIEWPORT -->
-    <div class="flex-1 overflow-auto bg-[var(--color-surface)] p-6 flex justify-center">
+    <div class="flex flex-1 justify-start overflow-auto bg-[var(--color-surface)] p-3 sm:p-6">
       <div
-        class="transition-all duration-500 bg-[var(--color-background)] rounded-3xl overflow-hidden shadow-2xl min-h-full"
+        class="mx-auto min-h-full shrink-0 overflow-hidden rounded-3xl bg-[var(--color-background)] shadow-2xl transition-all duration-500"
         :class="previewWidth"
       >
         <BlockRenderer :blocks="landingStore.sortedBlocks" />

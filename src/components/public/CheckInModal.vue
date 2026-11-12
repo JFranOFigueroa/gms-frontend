@@ -11,8 +11,6 @@ const username = ref('')
 const password = ref('')
 const credentialStatus = ref('')
 const qrImage = ref('') // QR no disponible hasta que el backend firme y valide tokens
-const tokenText = ref('No disponible')
-const remainingSeconds = ref('—')
 function submitCredentials() {
   credentialStatus.value =
     'El registro de acceso todavía no está disponible. Solicita ayuda en recepción.'
@@ -32,12 +30,14 @@ watch(
   <BaseModal :open="open" @close="emit('close')">
     <div class="space-y-6">
       <div>
-        <h2 class="text-3xl font-black">Check-in</h2>
+        <h2 class="text-2xl font-black sm:text-3xl">Check-in</h2>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">Registra tu llegada al gimnasio</p>
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
+          Registra tu llegada al gimnasio
+        </p>
       </div>
 
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <BaseButton
           variant="secondary"
           @click="activeTab = 'credentials'"
@@ -77,7 +77,7 @@ watch(
             v-if="qrImage"
             :src="qrImage"
             alt="Código QR de check-in"
-            class="rounded-3xl border border-[var(--color-border)] bg-white p-3"
+            class="h-auto w-full max-w-[224px] rounded-3xl border border-[var(--color-border)] bg-white p-3"
           />
         </div>
 

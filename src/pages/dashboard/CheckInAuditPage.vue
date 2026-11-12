@@ -60,19 +60,19 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-4xl font-black">Auditoría de Check-in</h1>
+      <h1 class="text-3xl font-black sm:text-4xl">Auditoría de Check-in</h1>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
         Registro de accesos concedidos y denegados para control operativo
       </p>
     </div>
 
     <p v-if="auditError" role="alert" class="text-sm text-red-400">{{ auditError }}</p>
-    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Intentos hoy</p>
 
-        <h3 class="text-5xl font-black mt-4">
+        <h3 class="mt-4 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
           {{ stats.today }}
         </h3>
       </BaseCard>
@@ -80,7 +80,7 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Concedidos hoy</p>
 
-        <h3 class="text-5xl font-black mt-4 text-emerald-400">
+        <h3 class="mt-4 break-all text-3xl font-black text-emerald-400 sm:text-4xl lg:text-5xl">
           {{ stats.granted }}
         </h3>
       </BaseCard>
@@ -88,7 +88,7 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Denegados hoy</p>
 
-        <h3 class="text-5xl font-black mt-4 text-red-400">
+        <h3 class="mt-4 break-all text-3xl font-black text-red-400 sm:text-4xl lg:text-5xl">
           {{ stats.denied }}
         </h3>
       </BaseCard>
@@ -96,7 +96,7 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Registros de hoy</p>
 
-        <h3 class="text-5xl font-black mt-4">
+        <h3 class="mt-4 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
           {{ stats.total }}
         </h3>
       </BaseCard>

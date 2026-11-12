@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 
-import Sidebar from '@/components/layout/Sidebar.vue'
-import Topbar from '@/components/layout/Topbar.vue'
+import AppSidebar from '@/components/layout/AppSidebar.vue'
+import AppTopbar from '@/components/layout/AppTopbar.vue'
 import ApiStatusBanner from '@/components/layout/ApiStatusBanner.vue'
 import MobileSidebar from '@/components/layout/MobileSidebar.vue'
 
@@ -10,19 +10,19 @@ const sidebarOpen = ref(false)
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-    <Sidebar />
+  <div class="min-h-dvh bg-[var(--color-background)] text-[var(--color-text)]">
+    <AppSidebar />
 
     <MobileSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
-    <div class="flex flex-col lg:ml-72">
+    <div class="flex min-h-dvh min-w-0 flex-col lg:ml-72">
       <header
-        class="sticky top-0 z-40 bg-[var(--color-background)] border-b border-[var(--color-border)]"
+        class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]"
       >
-        <Topbar @toggle-sidebar="sidebarOpen = true" />
+        <AppTopbar @toggle-sidebar="sidebarOpen = true" />
       </header>
 
-      <main class="flex-1 overflow-auto p-6">
+      <main class="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
         <ApiStatusBanner />
         <RouterView />
       </main>

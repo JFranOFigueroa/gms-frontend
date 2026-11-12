@@ -5,6 +5,8 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BlockRenderer from '@/components/landing/BlockRenderer.vue'
 import PreviewToolbar from '@/components/dashboard/PreviewToolbar.vue'
 
+import { useScrollLock } from '@/composables/useScrollLock'
+
 import { useLandingStore } from '@/stores/useLandingStore'
 import { useBuilderStore } from '@/stores/useBuilderStore'
 
@@ -17,6 +19,8 @@ const emit = defineEmits(['close'])
 const landingStore = useLandingStore()
 const builderStore = useBuilderStore()
 
+const { lock, unlock } = useScrollLock()
+
 const previewWidth = computed(() => {
   const map = {
     desktop: 'w-full',
@@ -27,31 +31,27 @@ const previewWidth = computed(() => {
   return map[builderStore.previewDevice]
 })
 
-const lockScroll = () => {
-  document.documentElement.style.overflow = 'hidden'
-  document.body.style.overflow = 'hidden'
-  const main = document.querySelector('main')
-  if (main) main.style.overflow = 'hidden'
-}
-
-const unlockScroll = () => {
-  document.documentElement.style.overflow = ''
-  document.body.style.overflow = ''
-  const main = document.querySelector('main')
-  if (main) main.style.overflow = ''
+const onKeydown = (event) => {
+  if (event.key === 'Escape') emit('close')
 }
 
 watch(
   () => props.open,
   (isOpen) => {
-    if (isOpen) lockScroll()
-    else unlockScroll()
+    if (isOpen) {
+      lock()
+      window.addEventListener('keydown', onKeydown)
+    } else {
+      unlock()
+      window.removeEventListener('keydown', onKeydown)
+    }
   },
   { immediate: true },
 )
 
 onBeforeUnmount(() => {
-  unlockScroll()
+  unlock()
+  window.removeEventListener('keydown', onKeydown)
 })
 </script>
 
@@ -60,31 +60,37 @@ onBeforeUnmount(() => {
     <Transition name="fade">
       <div
         v-if="open"
-        class="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden"
+        class="fixed inset-0 z-[9999] overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm"
       >
-        <div class="min-h-screen flex items-start justify-center p-4 md:p-6">
+        <div class="flex min-h-dvh items-start justify-center p-3 sm:p-4 md:p-6">
           <div
-            class="w-full max-w-6xl my-4 md:my-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl overflow-hidden"
+            class="my-3 w-full max-w-6xl overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl sm:my-4 md:my-6"
           >
             <div
-              class="sticky top-4 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]"
+              class="sticky top-3 z-10 flex flex-col gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 sm:top-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4"
             >
-              <div>
-                <h2 class="text-2xl font-black">Vista previa</h2>
+              <div class="min-w-0">
+                <h2 class="text-xl font-black sm:text-2xl">Vista previa</h2>
 
-                <p class="text-sm text-[var(--color-text-secondary)]">Modo responsive</p>
+                <p class="text-xs text-[var(--color-text-secondary)] sm:text-sm">
+                  Modo responsive
+                </p>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <PreviewToolbar />
 
-                <BaseButton variant="secondary" @click="emit('close')"> Cerrar </BaseButton>
+                <BaseButton variant="secondary" size="sm" @click="emit('close')">
+                  Cerrar
+                </BaseButton>
               </div>
             </div>
 
-            <div class="bg-[var(--color-background)] p-4 md:p-6 flex justify-center">
+            <div
+              class="flex justify-start overflow-x-auto bg-[var(--color-background)] p-3 sm:p-4 md:p-6"
+            >
               <div
-                class="transition-all duration-500 bg-black rounded-3xl overflow-hidden shadow-2xl"
+                class="mx-auto shrink-0 overflow-hidden rounded-3xl bg-black shadow-2xl transition-all duration-500"
                 :class="previewWidth"
               >
                 <BlockRenderer :blocks="landingStore.sortedBlocks" />

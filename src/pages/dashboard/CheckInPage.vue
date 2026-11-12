@@ -243,9 +243,9 @@ onUnmounted(() => {
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-4xl font-black">Check-in</h1>
+      <h1 class="text-3xl font-black sm:text-4xl">Check-in</h1>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
         Consulta tu membresía y tu historial de accesos.
       </p>
     </div>
@@ -260,7 +260,7 @@ onUnmounted(() => {
             {{ member.name }}
           </p>
 
-          <p class="text-sm text-[var(--color-text-secondary)] mt-1">
+          <p class="mt-1 break-all text-sm text-[var(--color-text-secondary)]">
             Código {{ member.code }} · Próximo pago: {{ member.nextPaymentDate }}
           </p>
         </div>
@@ -372,7 +372,11 @@ onUnmounted(() => {
         </p>
         <div v-if="ownQrImage" class="flex flex-col items-center gap-2">
           <div class="rounded-2xl bg-white p-3">
-            <img :src="ownQrImage" alt="Mi QR temporal" class="h-56 w-56" />
+            <img
+              :src="ownQrImage"
+              alt="Mi QR temporal"
+              class="aspect-square h-auto w-full max-w-[224px]"
+            />
           </div>
           <p class="text-sm text-[var(--color-text-secondary)]">
             Caduca en {{ ownQrSeconds }} segundos.
@@ -386,8 +390,8 @@ onUnmounted(() => {
 
     <BaseCard>
       <div class="space-y-5">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-2xl font-bold">Ocupación en vivo</h2>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <h2 class="text-xl font-bold sm:text-2xl">Ocupación en vivo</h2>
 
           <span class="text-sm text-[var(--color-text-secondary)]">
             Datos de ocupación no disponibles
@@ -411,8 +415,8 @@ onUnmounted(() => {
 
     <BaseCard>
       <div class="space-y-4">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-2xl font-bold">Ocupación por hora</h2>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <h2 class="text-xl font-bold sm:text-2xl">Ocupación por hora</h2>
 
           <p class="text-sm text-[var(--color-text-secondary)]">Registros de hoy</p>
         </div>

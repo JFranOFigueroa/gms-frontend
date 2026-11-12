@@ -99,7 +99,7 @@ const createClass = async () => {
   <BaseModal :open="open" @close="emit('close')">
     <div class="space-y-6">
       <div>
-        <h2 class="text-3xl font-black">Crear clase</h2>
+        <h2 class="text-2xl font-black sm:text-3xl">Crear clase</h2>
 
         <p class="text-[var(--color-text-secondary)] mt-2">
           {{ selectedDate }}
@@ -109,7 +109,7 @@ const createClass = async () => {
       <!-- TEMPLATE -->
       <select
         v-model="selectedTemplate"
-        class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+        class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
       >
         <option :value="null">Selecciona plantilla</option>
 
@@ -119,7 +119,7 @@ const createClass = async () => {
       </select>
 
       <!-- TIMES -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 xs:grid-cols-2">
         <BaseInput v-model="startTime" type="time" />
 
         <BaseInput v-model="endTime" type="time" />
@@ -130,7 +130,7 @@ const createClass = async () => {
 
         <select
           v-model="category"
-          class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+          class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
         >
           <option
             v-for="categoryOption in classCategories"

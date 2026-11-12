@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
   data: Object,
 })
 
@@ -26,22 +26,24 @@ const alignMap = {
 
 <template>
   <section
-    class="py-24 px-6"
+    class="px-4 py-12 sm:px-6 sm:py-24"
     :class="data.background ? 'bg-[var(--color-surface)]' : 'bg-[var(--color-background)]'"
   >
     <div class="mx-auto" :class="[widthMap[data.maxWidth], alignMap[data.align]]">
       <p
         v-if="data.subtitle"
-        class="text-[var(--color-text-secondary)] uppercase tracking-[0.3em] mb-6"
+        class="mb-4 break-words text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)] sm:mb-6 sm:text-sm sm:tracking-[0.3em]"
       >
         {{ data.subtitle }}
       </p>
 
-      <h2 class="text-4xl md:text-6xl font-black leading-tight">
+      <h2 class="break-words text-3xl font-black leading-tight sm:text-4xl md:text-6xl">
         {{ data.title }}
       </h2>
 
-      <p class="text-[var(--color-text-secondary)] text-lg mt-8 leading-relaxed">
+      <p
+        class="mt-6 break-words text-base leading-relaxed text-[var(--color-text-secondary)] sm:mt-8 sm:text-lg"
+      >
         {{ data.text }}
       </p>
     </div>

@@ -35,17 +35,20 @@ const devices = [
 </script>
 
 <template>
-  <div class="flex items-center gap-3">
+  <div class="flex flex-wrap items-center gap-2 sm:gap-3">
     <BaseButton
       v-for="device in devices"
       :key="device.id"
       variant="secondary"
+      size="sm"
+      :aria-label="'Vista ' + device.label"
+      :title="device.label"
       @click="builderStore.setPreviewDevice(device.id)"
       :class="{
         '!border-[var(--color-primary)]': builderStore.previewDevice === device.id,
       }"
     >
-      <component :is="device.icon" class="w-5 h-5" />
+      <component :is="device.icon" class="h-4 w-4 sm:h-5 sm:w-5" />
     </BaseButton>
   </div>
 </template>
