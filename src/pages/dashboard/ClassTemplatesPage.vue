@@ -42,9 +42,11 @@ const addTemplate = async () => {
   <div class="space-y-8">
     <!-- HEADER -->
     <div>
-      <h1 class="text-4xl font-black">Plantillas de clases</h1>
+      <h1 class="text-3xl font-black sm:text-4xl">Plantillas de clases</h1>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">Gestiona los tipos de entrenamiento</p>
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
+        Gestiona los tipos de entrenamiento
+      </p>
     </div>
 
     <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
@@ -53,11 +55,11 @@ const addTemplate = async () => {
       <div class="space-y-4">
         <BaseInput v-model="name" placeholder="Nombre clase" />
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
           <input
             v-model="color"
             type="color"
-            class="h-14 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            class="h-14 w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
           />
 
           <BaseInput v-model="duration" type="number" placeholder="Duración" />
@@ -70,7 +72,7 @@ const addTemplate = async () => {
     </BaseCard>
 
     <!-- LIST -->
-    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="template in templateStore.templates" :key="template.id">
         <div class="space-y-4">
           <div class="flex items-center gap-3">

@@ -144,36 +144,38 @@ const openNotification = (notification) => {
 </script>
 
 <template>
-  <header
-    class="h-20 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center justify-between px-6"
-  >
+  <div class="flex h-16 items-center justify-between gap-3 px-4 sm:h-20 sm:px-6">
     <!-- LEFT -->
-    <div class="flex items-center gap-4">
+    <div class="flex min-w-0 items-center gap-3 sm:gap-4">
       <!-- MOBILE MENU BUTTON -->
       <button
-        class="lg:hidden w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+        type="button"
+        aria-label="Abrir menú de navegación"
+        class="h-10 w-10 shrink-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] sm:h-12 sm:w-12 lg:hidden"
         @click="$emit('toggle-sidebar')"
       >
         ☰
       </button>
 
       <!-- TITLE -->
-      <div>
-        <h2 class="text-2xl font-bold">Dashboard</h2>
+      <div class="min-w-0">
+        <h2 class="truncate text-lg font-bold sm:text-2xl">Dashboard</h2>
 
-        <p class="text-[var(--color-text-secondary)] text-sm">Bienvenido de vuelta</p>
+        <p class="hidden text-sm text-[var(--color-text-secondary)] sm:block">
+          Bienvenido de vuelta
+        </p>
       </div>
     </div>
 
     <!-- RIGHT -->
-    <div class="flex items-center gap-4">
+    <div class="flex shrink-0 items-center gap-1.5 sm:gap-4">
       <!-- Gym selector -->
-      <div v-if="availableGyms.length" class="block">
+      <div v-if="availableGyms.length" class="block min-w-0">
         <select
           aria-label="Seleccionar gimnasio"
           :disabled="posStore.checkoutSubmitting"
           :value="gymsStore.activeGymId"
-          class="h-12 w-32 sm:w-auto max-w-52 px-2 sm:px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-sm"
+          class="h-10 w-auto min-w-0 max-w-[7rem] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-xs sm:h-12 sm:max-w-52 sm:px-4 sm:text-sm"
           @change="changeGym"
         >
           <option v-for="gym in availableGyms" :key="gym.id" :value="gym.id">
@@ -185,7 +187,10 @@ const openNotification = (notification) => {
       <!-- Notifications -->
       <div v-if="isStaff" class="relative">
         <button
-          class="relative w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+          type="button"
+          aria-label="Notificaciones"
+          :aria-expanded="notificationOpen"
+          class="relative h-10 w-10 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] sm:h-12 sm:w-12"
           @click="toggleNotifications"
         >
           🔔
@@ -202,7 +207,7 @@ const openNotification = (notification) => {
 
         <div
           v-if="notificationOpen"
-          class="absolute right-0 top-14 z-50 w-80 max-h-96 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl"
+          class="fixed inset-x-4 top-16 z-50 max-h-[70dvh] overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-14 sm:w-80 sm:max-h-96"
         >
           <div class="mb-3 flex items-center justify-between gap-3">
             <h3 class="text-lg font-bold">Notificaciones</h3>
@@ -248,24 +253,24 @@ const openNotification = (notification) => {
 
       <!-- User -->
       <div
-        class="flex items-center gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-4 py-2"
+        class="flex items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 sm:gap-3 sm:px-4 sm:py-2"
       >
         <div
-          class="w-10 h-10 rounded-xl bg-[var(--color-text)] text-[var(--color-background)] flex items-center justify-center font-bold"
+          class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-text)] font-bold text-[var(--color-background)] sm:h-10 sm:w-10"
         >
           {{ userInitial }}
         </div>
 
-        <div class="hidden md:block">
-          <p class="font-semibold">
+        <div class="hidden min-w-0 md:block">
+          <p class="truncate font-semibold">
             {{ userName }}
           </p>
 
-          <p class="text-xs text-[var(--color-text-secondary)]">
+          <p class="truncate text-xs text-[var(--color-text-secondary)]">
             {{ userRole }}
           </p>
         </div>
       </div>
     </div>
-  </header>
+  </div>
 </template>

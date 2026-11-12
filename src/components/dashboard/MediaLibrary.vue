@@ -11,9 +11,11 @@ const mediaStore = useMediaStore()
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-4xl font-black">Media Library</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Media Library</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">Gestiona imágenes y recursos visuales</p>
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
+          Gestiona imágenes y recursos visuales
+        </p>
       </div>
     </div>
 
@@ -21,7 +23,7 @@ const mediaStore = useMediaStore()
     <MediaUploader />
 
     <!-- Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <MediaCard v-for="asset in mediaStore.assets" :key="asset.id" :asset="asset" />
     </div>
   </div>

@@ -8,11 +8,9 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useGymsStore } from '@/stores/useGymsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useLandingStore } from '@/stores/useLandingStore'
 const saveError = ref('')
 
 const gymsStore = useGymsStore()
-const landingStore = useLandingStore()
 
 const modalOpen = ref(false)
 const editingId = ref(null)
@@ -94,9 +92,9 @@ const removeGym = async (id) => {
   <div class="space-y-8">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Gimnasios</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Gimnasios</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Administra los gimnasios de la plataforma
         </p>
       </div>
@@ -105,7 +103,7 @@ const removeGym = async (id) => {
     </div>
 
     <p v-if="saveError" role="alert" class="text-red-400">{{ saveError }}</p>
-    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="gym in gymsStore.gyms" :key="gym.id">
         <div class="space-y-4">
           <div class="flex items-start justify-between gap-3">
@@ -155,7 +153,7 @@ const removeGym = async (id) => {
 
     <BaseModal :open="modalOpen" @close="modalOpen = false">
       <div class="space-y-6">
-        <h2 class="text-3xl font-black">
+        <h2 class="text-2xl font-black sm:text-3xl">
           {{ editingId ? 'Editar gimnasio' : 'Nuevo gimnasio' }}
         </h2>
 

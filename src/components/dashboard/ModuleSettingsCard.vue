@@ -7,7 +7,6 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useModuleStore } from '@/stores/useModuleStore'
 import { moduleRegistry } from '@/config/moduleRegistry'
-import { canManageModules } from '@/config/permissions'
 
 const authStore = useAuthStore()
 const moduleStore = useModuleStore()
@@ -56,9 +55,9 @@ const applyPreset = async (presetId) => {
   <BaseCard>
     <div class="space-y-6">
       <div>
-        <h2 class="text-2xl font-black">Módulos del gimnasio</h2>
+        <h2 class="text-xl font-black sm:text-2xl">Módulos del gimnasio</h2>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Activa o desactiva funcionalidades según el tipo de gimnasio
         </p>
       </div>
@@ -71,24 +70,25 @@ const applyPreset = async (presetId) => {
         <div
           v-for="module in moduleRegistry"
           :key="module.id"
-          class="flex items-center justify-between gap-4 p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50"
+          class="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
         >
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-3">
               <span class="text-2xl">{{ module.icon }}</span>
 
-              <h3 class="text-xl font-bold">
+              <h3 class="text-lg font-bold sm:text-xl">
                 {{ module.label }}
               </h3>
             </div>
 
-            <p class="text-[var(--color-text-secondary)] text-sm mt-1">
+            <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
               {{ module.description }}
             </p>
           </div>
 
           <BaseButton
             variant="secondary"
+            class="self-start sm:self-auto"
             :disabled="!canManage"
             @click="toggleModule(module.id)"
             :class="{

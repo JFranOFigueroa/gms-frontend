@@ -12,9 +12,14 @@
   --color-text: #ffffff;
 
   --color-text-secondary: #a1a1aa;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {
+  min-height: 100dvh;
+
   background: var(--color-background);
 
   color: var(--color-text);

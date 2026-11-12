@@ -19,14 +19,14 @@ const selectPreset = async (preset) => {
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-2xl font-black">Temas Recomendados</h2>
+      <h2 class="text-xl font-black sm:text-2xl">Temas Recomendados</h2>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
         Selecciona una identidad visual para tu gimnasio
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <ThemePreviewCard
         v-for="preset in themePresets"
         :key="preset.id"

@@ -166,7 +166,7 @@ const detailTitle = computed(() => {
     <!-- Header -->
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">
+        <h1 class="text-3xl font-black sm:text-4xl">
           {{
             isAdmin
               ? 'Dashboard administrativo'
@@ -178,7 +178,7 @@ const detailTitle = computed(() => {
           }}
         </h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           {{
             isAdmin
               ? 'Resumen operativo de la plataforma'
@@ -279,73 +279,73 @@ const detailTitle = computed(() => {
     </BaseCard>
 
     <!-- Manager stats -->
-    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Miembros activos</p>
-        <h3 class="text-5xl font-black mt-4">{{ activeMembers }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ activeMembers }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Entrenadores activos</p>
-        <h3 class="text-5xl font-black mt-4">{{ activeTrainers }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ activeTrainers }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Clases hoy</p>
-        <h3 class="text-5xl font-black mt-4">{{ todayClasses.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ todayClasses.length }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Check-ins hoy (últimos 100)</p>
-        <h3 class="text-5xl font-black mt-4">{{ todayCheckins.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ todayCheckins.length }}</h3>
       </BaseCard>
     </div>
 
     <!-- Manager secondary stats -->
-    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div v-if="isManager" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <BaseCard class="cursor-pointer" @click="openDetail('occupancy')">
         <p class="text-[var(--color-text-secondary)]">Ocupación de clases</p>
-        <h3 class="text-5xl font-black mt-4">
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">
           {{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}
         </h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('sales')">
         <p class="text-[var(--color-text-secondary)]">Ventas POS hoy (últimas 100)</p>
-        <h3 class="text-5xl font-black mt-4">{{ posSalesToday.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ posSalesToday.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('revenue')">
         <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy (últimas 100)</p>
-        <h3 class="text-5xl font-black mt-4">${{ posRevenueToday }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">${{ posRevenueToday }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('stock')">
         <p class="text-[var(--color-text-secondary)]">Stock bajo</p>
-        <h3 class="text-5xl font-black mt-4">{{ lowStockCount }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ lowStockCount }}</h3>
       </BaseCard>
     </div>
 
     <!-- Trainer stats -->
-    <div v-if="isTrainer" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div v-if="isTrainer" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Clases hoy</p>
-        <h3 class="text-5xl font-black mt-4">{{ todayClasses.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ todayClasses.length }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Check-ins hoy (últimos 100)</p>
-        <h3 class="text-5xl font-black mt-4">{{ todayCheckins.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ todayCheckins.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('sales')">
         <p class="text-[var(--color-text-secondary)]">Ventas POS hoy (últimas 100)</p>
-        <h3 class="text-5xl font-black mt-4">{{ posSalesToday.length }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">{{ posSalesToday.length }}</h3>
       </BaseCard>
 
       <BaseCard class="cursor-pointer" @click="openDetail('revenue')">
         <p class="text-[var(--color-text-secondary)]">Ingresos POS hoy (últimas 100)</p>
-        <h3 class="text-5xl font-black mt-4">${{ posRevenueToday }}</h3>
+        <h3 class="text-4xl font-black mt-4 sm:text-5xl">${{ posRevenueToday }}</h3>
       </BaseCard>
     </div>
 
@@ -475,7 +475,7 @@ const detailTitle = computed(() => {
       <BaseModal :open="detailOpen" @close="closeDetail">
         <div class="space-y-6">
           <div class="flex items-center justify-between gap-4">
-            <h2 class="text-3xl font-black">
+            <h2 class="text-2xl font-black sm:text-3xl">
               {{ detailTitle }}
             </h2>
 
@@ -487,7 +487,7 @@ const detailTitle = computed(() => {
             <BaseCard>
               <div class="space-y-2">
                 <p class="text-[var(--color-text-secondary)]">Ocupación de clases no disponible</p>
-                <h3 class="text-5xl font-black">
+                <h3 class="text-4xl font-black sm:text-5xl">
                   {{ occupancy == null ? 'Sin dato' : `${occupancy}%` }}
                 </h3>
                 <p class="text-[var(--color-text-secondary)]">
@@ -500,24 +500,26 @@ const detailTitle = computed(() => {
               <div class="space-y-4">
                 <h3 class="text-2xl font-bold">Ocupación por hora</h3>
 
-                <div class="flex h-56 items-end gap-1">
-                  <div
-                    v-for="(count, hour) in hourlyOccupancy"
-                    :key="hour"
-                    class="flex flex-1 flex-col items-center gap-1"
-                  >
+                <div class="overflow-x-auto pb-1">
+                  <div class="flex h-56 min-w-[520px] items-end gap-1">
                     <div
-                      class="w-full rounded-t-md bg-[var(--color-primary)]/70"
-                      :style="{ height: `${Math.max(4, (count / hourlyMax) * 100)}%` }"
-                      :title="`${hour}:00 - ${count} check-ins`"
-                    />
-
-                    <span
-                      v-if="hour % 3 === 0"
-                      class="text-[10px] text-[var(--color-text-secondary)]"
+                      v-for="(count, hour) in hourlyOccupancy"
+                      :key="hour"
+                      class="flex flex-1 flex-col items-center gap-1"
                     >
-                      {{ hour }}h
-                    </span>
+                      <div
+                        class="w-full rounded-t-md bg-[var(--color-primary)]/70"
+                        :style="{ height: `${Math.max(4, (count / hourlyMax) * 100)}%` }"
+                        :title="`${hour}:00 - ${count} check-ins`"
+                      />
+
+                      <span
+                        v-if="hour % 3 === 0"
+                        class="text-[10px] text-[var(--color-text-secondary)]"
+                      >
+                        {{ hour }}h
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -533,7 +535,7 @@ const detailTitle = computed(() => {
             <BaseCard>
               <div class="space-y-2">
                 <p class="text-[var(--color-text-secondary)]">Ventas de hoy</p>
-                <h3 class="text-5xl font-black">
+                <h3 class="text-4xl font-black sm:text-5xl">
                   {{ posSalesToday.length }}
                 </h3>
               </div>
@@ -563,7 +565,7 @@ const detailTitle = computed(() => {
             <BaseCard>
               <div class="space-y-2">
                 <p class="text-[var(--color-text-secondary)]">Ingresos de hoy</p>
-                <h3 class="text-5xl font-black">${{ posRevenueToday }}</h3>
+                <h3 class="text-4xl font-black sm:text-5xl">${{ posRevenueToday }}</h3>
 
                 <p v-if="topRevenueProduct" class="text-[var(--color-text-secondary)]">
                   Producto con más ingresos: {{ topRevenueProduct.name }} (${{

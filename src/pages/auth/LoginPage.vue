@@ -91,11 +91,13 @@ const resetGymSelection = () => {
 }
 </script>
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-6">
+  <div
+    class="flex min-h-dvh items-center justify-center bg-[var(--color-background)] p-4 sm:p-6"
+  >
     <div
-      class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8"
+      class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8"
     >
-      <h1 class="font-black leading-tight break-words text-xl xl:text-2xl 2xl:text-3xl max-w-full">
+      <h1 class="max-w-full break-words text-xl font-black leading-tight sm:text-2xl 2xl:text-3xl">
         {{ tenantStore.gym.shortName }}
       </h1>
       <p class="text-[var(--color-text-secondary)] mb-8">Iniciar sesión</p>
@@ -111,7 +113,7 @@ const resetGymSelection = () => {
           <select
             v-if="gyms.length"
             v-model="selectedGym"
-            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
             <option v-for="gym in gyms" :key="gym.id" :value="gym.id">
               {{ gym.name }}

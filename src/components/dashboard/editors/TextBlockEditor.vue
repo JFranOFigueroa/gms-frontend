@@ -1,6 +1,4 @@
 <script setup>
-import { computed } from 'vue'
-
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
@@ -53,7 +51,7 @@ const updateField = (field, value) => {
 
       <textarea
         rows="6"
-        class="w-full rounded-3xl bg-[var(--color-surface)] border border-[var(--color-border)] px-5 py-4 outline-none focus:border-[var(--color-primary)] transition-all"
+        class="w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-base outline-none transition-all focus:border-[var(--color-primary)]"
         :value="block.data.text"
         @input="updateField('text', $event.target.value)"
       />
@@ -63,7 +61,7 @@ const updateField = (field, value) => {
     <div>
       <label class="block mb-2 text-[var(--color-text-secondary)]"> Alineación </label>
 
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <BaseButton variant="secondary" @click="updateField('align', 'left')"> Left </BaseButton>
 
         <BaseButton variant="secondary" @click="updateField('align', 'center')">

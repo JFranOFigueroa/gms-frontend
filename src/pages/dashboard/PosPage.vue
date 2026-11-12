@@ -154,9 +154,9 @@ const updateProductField = async (product, field, value) => {
   <div class="space-y-8">
     <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <div>
-      <h1 class="text-4xl font-black">POS</h1>
+      <h1 class="text-3xl font-black sm:text-4xl">POS</h1>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
         {{ isManager ? 'Ventas, inventario y reportes' : 'Punto de venta' }}
       </p>
     </div>
@@ -174,9 +174,9 @@ const updateProductField = async (product, field, value) => {
     </div>
 
     <!-- Sales -->
-    <div v-if="activeTab === 'sales'" class="grid gap-6 xl:grid-cols-[2fr_1fr]">
+    <div v-if="activeTab === 'sales'" class="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <!-- Left: search, cart, charge -->
-      <div class="flex min-h-[650px] flex-col gap-6">
+      <div class="flex min-h-0 flex-col gap-6 lg:min-h-[650px]">
         <BaseCard>
           <div class="space-y-3">
             <h2 class="text-2xl font-bold">Búsqueda</h2>
@@ -251,7 +251,7 @@ const updateProductField = async (product, field, value) => {
         <div class="space-y-4">
           <h2 class="text-2xl font-bold">Catálogo</h2>
 
-          <div class="space-y-3 max-h-[650px] overflow-auto pr-1">
+          <div class="max-h-[60dvh] space-y-3 overflow-auto pr-1 lg:max-h-[650px]">
             <BaseCard
               v-for="product in filteredProducts"
               :key="product.id"
@@ -293,7 +293,7 @@ const updateProductField = async (product, field, value) => {
         <div class="space-y-4">
           <h2 class="text-2xl font-bold">Nuevo producto</h2>
 
-          <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <BaseInput v-model="productName" placeholder="Nombre" />
 
             <BaseInput v-model="productCategory" placeholder="Categoría" />
@@ -313,7 +313,7 @@ const updateProductField = async (product, field, value) => {
 
       <div class="grid gap-4">
         <BaseCard v-for="product in posStore.products" :key="product.id">
-          <div class="grid gap-4 md:grid-cols-6 md:items-center">
+          <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:items-center xl:grid-cols-6">
             <div>
               <p class="font-semibold">
                 {{ product.name }}
@@ -369,11 +369,11 @@ const updateProductField = async (product, field, value) => {
 
     <!-- Reports -->
     <div v-if="activeTab === 'reports' && isManager" class="space-y-6">
-      <div class="grid gap-6 md:grid-cols-4">
+      <div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Ventas</p>
 
-          <h3 class="text-4xl font-black mt-3">
+          <h3 class="mt-3 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
             {{ posStore.totalSales }}
           </h3>
         </BaseCard>
@@ -381,13 +381,15 @@ const updateProductField = async (product, field, value) => {
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Ingresos</p>
 
-          <h3 class="text-4xl font-black mt-3">${{ posStore.totalRevenue }}</h3>
+          <h3 class="mt-3 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
+            ${{ posStore.totalRevenue }}
+          </h3>
         </BaseCard>
 
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Productos</p>
 
-          <h3 class="text-4xl font-black mt-3">
+          <h3 class="mt-3 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
             {{ posStore.products.length }}
           </h3>
         </BaseCard>
@@ -395,7 +397,7 @@ const updateProductField = async (product, field, value) => {
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Stock bajo</p>
 
-          <h3 class="text-4xl font-black mt-3">
+          <h3 class="mt-3 break-all text-3xl font-black sm:text-4xl lg:text-5xl">
             {{ posStore.lowStockProducts.length }}
           </h3>
         </BaseCard>
@@ -462,7 +464,7 @@ const updateProductField = async (product, field, value) => {
     <BaseModal :open="paymentOpen" @close="closePayment">
       <div class="space-y-6">
         <div>
-          <h2 class="text-3xl font-black">Cobro</h2>
+          <h2 class="text-2xl font-black sm:text-3xl">Cobro</h2>
 
           <p class="text-[var(--color-text-secondary)] mt-2">
             Ingresa el monto proporcionado por el cliente
@@ -473,7 +475,7 @@ const updateProductField = async (product, field, value) => {
           <div class="space-y-2">
             <p class="text-[var(--color-text-secondary)]">Saldo a cobrar</p>
 
-            <h3 class="text-5xl font-black">${{ posStore.cartTotal }}</h3>
+            <h3 class="text-4xl font-black sm:text-5xl">${{ posStore.cartTotal }}</h3>
           </div>
         </BaseCard>
 

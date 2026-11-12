@@ -44,7 +44,7 @@ const logout = async () => {
 
 <template>
   <aside
-    class="hidden lg:flex fixed left-0 top-0 w-72 h-screen flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
+    class="fixed left-0 top-0 hidden h-dvh w-72 flex-col overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)] lg:flex"
   >
     <!-- HEADER -->
     <div class="p-6 border-b border-[var(--color-border)]">
@@ -61,7 +61,7 @@ const logout = async () => {
     </div>
 
     <!-- NAV -->
-    <nav class="p-4 space-y-2">
+    <nav class="flex-1 space-y-2 overflow-y-auto p-4">
       <RouterLink
         v-for="item in navigation"
         :key="item.path"
@@ -72,7 +72,7 @@ const logout = async () => {
       </RouterLink>
     </nav>
 
-    <div class="p-4 border-t border-[var(--color-border)] mt-auto">
+    <div class="mt-auto shrink-0 border-t border-[var(--color-border)] p-4">
       <BaseButton class="w-full" variant="secondary" @click="logout"> Cerrar sesión </BaseButton>
     </div>
   </aside>

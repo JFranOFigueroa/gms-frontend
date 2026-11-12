@@ -43,7 +43,7 @@ export function usePrivateMemberPhoto(memberRef) {
         /^(https:\/\/|data:image\/(?:png|jpeg|webp);base64,)/i.test(fallback)
       ) {
         source.value = fallback
-      } else if (typeof fallback === 'string' && /^\/api\/v1\/public\/media\//.test(fallback)) {
+      } else if (typeof fallback === 'string' && fallback.startsWith('/api/v1/public/media/')) {
         source.value = resolveApiUrl(fallback)
       }
     },

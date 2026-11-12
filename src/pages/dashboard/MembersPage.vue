@@ -196,9 +196,9 @@ const reactivate = async (member) => {
     <!-- Header -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-4xl font-black">Miembros</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Miembros</h1>
 
-        <p class="text-[var(--color-text-secondary)] mt-2">
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
           Altas, bajas, pagos y expediente de los miembros del gimnasio.
         </p>
       </div>
@@ -218,22 +218,22 @@ const reactivate = async (member) => {
     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Cuentas activas</p>
-        <h3 class="text-4xl font-black mt-3">{{ memberStore.activeMembers.length }}</h3>
+        <h3 class="text-3xl font-black mt-3 sm:text-4xl">{{ memberStore.activeMembers.length }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Pagos vencidos</p>
-        <h3 class="text-4xl font-black mt-3 text-amber-400">{{ expiredCount }}</h3>
+        <h3 class="text-3xl font-black mt-3 sm:text-4xl text-amber-400">{{ expiredCount }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Miembros inactivos</p>
-        <h3 class="text-4xl font-black mt-3 text-red-400">{{ inactiveCount }}</h3>
+        <h3 class="text-3xl font-black mt-3 sm:text-4xl text-red-400">{{ inactiveCount }}</h3>
       </BaseCard>
 
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Cobrado este mes</p>
-        <h3 class="text-4xl font-black mt-3">${{ collectedThisMonth }}</h3>
+        <h3 class="text-3xl font-black mt-3 sm:text-4xl">${{ collectedThisMonth }}</h3>
       </BaseCard>
     </div>
 
@@ -257,7 +257,7 @@ const reactivate = async (member) => {
 
     <!-- Members tab -->
     <div v-if="activeTab === 'members'" class="space-y-6">
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <BaseInput v-model="search" placeholder="Buscar por nombre, correo, código o teléfono" />
 
         <select
@@ -275,7 +275,7 @@ const reactivate = async (member) => {
         No hay miembros que coincidan con el filtro.
       </p>
 
-      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <BaseCard v-for="member in activeMembersList" :key="member.id">
           <div class="space-y-4">
             <div class="flex items-start gap-4">
@@ -288,7 +288,7 @@ const reactivate = async (member) => {
               <div class="min-w-0">
                 <h2 class="text-xl font-bold truncate">{{ member.name }}</h2>
 
-                <p class="text-sm text-[var(--color-text-secondary)]">
+                <p class="break-all text-sm text-[var(--color-text-secondary)]">
                   {{ member.code }} · {{ member.email }}
                 </p>
 
@@ -359,7 +359,7 @@ const reactivate = async (member) => {
         No hay miembros dados de baja.
       </p>
 
-      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <BaseCard v-for="member in inactiveMembersList" :key="member.id">
           <div class="space-y-4">
             <div class="flex items-start gap-4">
@@ -372,7 +372,7 @@ const reactivate = async (member) => {
               <div class="min-w-0">
                 <h2 class="text-xl font-bold truncate">{{ member.name }}</h2>
 
-                <p class="text-sm text-[var(--color-text-secondary)]">
+                <p class="break-all text-sm text-[var(--color-text-secondary)]">
                   {{ member.code }} · {{ member.email }}
                 </p>
 
@@ -457,14 +457,14 @@ const reactivate = async (member) => {
         No hay miembros que coincidan con la búsqueda.
       </p>
 
-      <div class="grid gap-6 md:grid-cols-2">
+      <div class="grid gap-6 sm:grid-cols-2">
         <BaseCard v-for="member in additionalMembersList" :key="member.id">
           <div class="space-y-4">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <h2 class="text-xl font-bold truncate">{{ member.name }}</h2>
 
-                <p class="text-sm text-[var(--color-text-secondary)]">
+                <p class="break-all text-sm text-[var(--color-text-secondary)]">
                   {{ member.code }} · {{ member.email }}
                 </p>
               </div>
@@ -519,7 +519,7 @@ const reactivate = async (member) => {
     <!-- Edit modal -->
     <BaseModal :open="formOpen" @close="closeForm">
       <div class="space-y-6">
-        <h2 class="text-3xl font-black">Editar miembro</h2>
+        <h2 class="text-2xl font-black sm:text-3xl">Editar miembro</h2>
 
         <MemberRegistrationForm :member="editingMember" @saved="onEdited" @cancel="closeForm" />
       </div>

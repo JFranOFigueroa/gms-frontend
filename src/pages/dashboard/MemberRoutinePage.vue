@@ -71,9 +71,9 @@ const levelLabel = {
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-4xl font-black">Mi Rutina</h1>
+      <h1 class="text-3xl font-black sm:text-4xl">Mi Rutina</h1>
 
-      <p class="text-[var(--color-text-secondary)] mt-2">
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
         Consulta las rutinas generales disponibles para tu entrenamiento
       </p>
     </div>
@@ -82,50 +82,53 @@ const levelLabel = {
       <BaseInput v-model="search" placeholder="Buscar por nombre, ejercicio, días..." />
     </div>
 
-    <div v-if="!routines.length" class="text-center py-16 text-[var(--color-text-secondary)]">
+    <div
+      v-if="!routines.length"
+      class="py-10 text-center text-[var(--color-text-secondary)] sm:py-16"
+    >
       Aún no hay rutinas disponibles
     </div>
 
     <div
       v-else-if="!filteredRoutines.length"
-      class="text-center py-16 text-[var(--color-text-secondary)]"
+      class="py-10 text-center text-[var(--color-text-secondary)] sm:py-16"
     >
       No se encontraron rutinas para esta búsqueda
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <BaseCard v-for="routine in filteredRoutines" :key="routine.id">
         <button
           type="button"
-          class="w-full text-left flex items-start justify-between gap-4"
+          class="flex w-full items-start justify-between gap-3 text-left sm:gap-4"
           @click="toggleRoutine(routine.id)"
         >
-          <div>
-            <h2 class="text-2xl font-bold">
+          <div class="min-w-0">
+            <h2 class="break-words text-xl font-bold sm:text-2xl">
               {{ routine.name }}
             </h2>
 
-            <p class="text-[var(--color-text-secondary)] mt-1">
+            <p class="mt-1 break-words text-sm text-[var(--color-text-secondary)] sm:text-base">
               {{ levelLabel[routine.level] || routine.level }} · {{ routine.goal || 'General' }}
             </p>
           </div>
 
-          <span class="text-2xl text-[var(--color-text-secondary)]">
+          <span class="shrink-0 text-2xl text-[var(--color-text-secondary)]">
             {{ isExpanded(routine.id) ? '▾' : '▸' }}
           </span>
         </button>
 
-        <div v-if="isExpanded(routine.id)" class="space-y-5 mt-5">
-          <p class="text-[var(--color-text-secondary)]">
+        <div v-if="isExpanded(routine.id)" class="mt-5 space-y-5">
+          <p class="break-words text-[var(--color-text-secondary)]">
             {{ routine.description }}
           </p>
 
           <div
             v-for="day in routine.days"
             :key="day.day"
-            class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-5 space-y-3"
+            class="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 sm:p-5"
           >
-            <h3 class="text-xl font-bold">
+            <h3 class="break-words text-lg font-bold sm:text-xl">
               {{ day.day }}
             </h3>
 
@@ -136,14 +139,14 @@ const levelLabel = {
             <div
               v-for="exercise in day.exercises"
               :key="exercise.name"
-              class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+              class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
             >
-              <div>
-                <p class="font-semibold">
+              <div class="min-w-0">
+                <p class="break-words font-semibold">
                   {{ exercise.name }}
                 </p>
 
-                <p v-if="exercise.notes" class="text-sm text-[var(--color-text-secondary)]">
+                <p v-if="exercise.notes" class="break-words text-sm text-[var(--color-text-secondary)]">
                   {{ exercise.notes }}
                 </p>
               </div>

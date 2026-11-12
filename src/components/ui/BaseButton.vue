@@ -41,22 +41,27 @@ const sizes = {
   `,
 
   md: `
-    px-5
+    px-4
     py-3
-    text-base
+    text-sm
+    sm:px-5
+    sm:text-base
   `,
 
   lg: `
-    px-8
-    py-4
-    text-lg
+    px-6
+    py-3
+    text-base
+    sm:px-8
+    sm:py-4
+    sm:text-lg
   `,
 }
 </script>
 
 <template>
   <button
-    class="rounded-2xl transition-all duration-200 font-semibold whitespace-nowrap"
+    class="inline-flex max-w-full items-center justify-center gap-2 rounded-2xl text-center font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
     :class="[variants[variant], sizes[size]]"
   >
     <slot />

@@ -182,11 +182,11 @@ const toggleFeatured = (planId) => {
     </div>
 
     <!-- HEADER -->
-    <div class="flex items-center justify-between">
-      <h3 class="text-xl font-bold">Planes</h3>
+    <div class="flex items-center justify-between gap-3">
+      <h3 class="text-lg font-bold sm:text-xl">Planes</h3>
 
       <BaseButton variant="secondary" @click="addPlan">
-        <Plus class="w-5 h-5" />
+        <Plus class="h-5 w-5" />
       </BaseButton>
     </div>
 
@@ -195,17 +195,18 @@ const toggleFeatured = (planId) => {
       <div
         v-for="plan in block.data.plans"
         :key="plan.id"
-        class="p-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-4"
+        class="space-y-4 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-6"
       >
         <!-- TOP -->
-        <div class="flex items-center justify-between">
-          <h4 class="text-xl font-bold">
+        <div class="flex items-center justify-between gap-3">
+          <h4 class="min-w-0 truncate text-lg font-bold sm:text-xl">
             {{ plan.name }}
           </h4>
 
           <button
             type="button"
-            class="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center"
+            aria-label="Eliminar plan"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400"
             @click="removePlan(plan.id)"
           >
             <Trash2 class="w-5 h-5" />
@@ -233,7 +234,7 @@ const toggleFeatured = (planId) => {
         </div>
 
         <!-- FEATURED -->
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <span> Plan destacado </span>
 
           <BaseButton variant="secondary" @click="toggleFeatured(plan.id)">

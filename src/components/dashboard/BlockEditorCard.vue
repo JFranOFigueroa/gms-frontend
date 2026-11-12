@@ -1,62 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 
+import { GripVertical, Trash2 } from 'lucide-vue-next'
+
 import { useLandingStore } from '@/stores/useLandingStore'
 
 import { editorRegistry } from '@/config/editorRegistry'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import { Trash2 } from 'lucide-vue-next'
-import { GripVertical } from 'lucide-vue-next'
-
-import { ref } from 'vue'
-
-import MediaSelectorModal from './MediaSelectorModal.vue'
-
-const mediaModalOpen = ref(false)
-
-const editorComponent = computed(() => {
-  return editorRegistry[props.block.type]
-})
-
-const updateImage = (imageId) => {
-  landingStore.updateBlock(
-    props.block.id,
-
-    {
-      data: {
-        ...props.block.data,
-        imageId,
-      },
-    },
-  )
-
-  mediaModalOpen.value = false
-}
-
-const addSlide = (imageId) => {
-  const slides = props.block.data.slides || []
-
-  const alreadySelected = slides.includes(imageId)
-
-  const updatedSlides = alreadySelected
-    ? slides.filter((id) => id !== imageId)
-    : [...slides, imageId]
-
-  landingStore.updateBlock(
-    props.block.id,
-
-    {
-      data: {
-        ...props.block.data,
-
-        slides: updatedSlides,
-      },
-    },
-  )
-}
 
 const props = defineProps({
   block: Object,
@@ -64,21 +16,8 @@ const props = defineProps({
 
 const landingStore = useLandingStore()
 
-const title = computed({
-  get: () => props.block.data.title,
-
-  set: (value) => {
-    landingStore.updateBlock(
-      props.block.id,
-
-      {
-        data: {
-          ...props.block.data,
-          title: value,
-        },
-      },
-    )
-  },
+const editorComponent = computed(() => {
+  return editorRegistry[props.block.type]
 })
 </script>
 
@@ -86,8 +25,8 @@ const title = computed({
   <BaseCard>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex items-start justify-between">
-        <div>
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
           <div class="flex items-center gap-3">
             <div
               class="w-3 h-3 rounded-full"
@@ -98,7 +37,7 @@ const title = computed({
             >
               <GripVertical class="w-5 h-5 text-[var(--color-text-secondary)]" />
             </div>
-            <h3 class="text-2xl font-bold capitalize">
+            <h3 class="truncate text-xl font-bold capitalize sm:text-2xl">
               {{ block.type }}
             </h3>
           </div>
@@ -109,10 +48,11 @@ const title = computed({
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            class="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-all"
+            aria-label="Eliminar bloque"
+            class="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400 transition-all hover:bg-red-500/20"
             @click="landingStore.removeBlock(block.id).catch((e) => alert(e.message))"
           >
             <Trash2 class="w-5 h-5" />

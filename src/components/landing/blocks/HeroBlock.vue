@@ -32,7 +32,7 @@ const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name ||
 </script>
 
 <template>
-  <section class="pt-32 relative h-screen overflow-hidden">
+  <section class="relative min-h-[100svh] overflow-hidden">
     <!-- SLIDER BACKGROUND -->
     <div class="absolute inset-0 z-0">
       <Swiper
@@ -42,11 +42,11 @@ const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name ||
         :autoplay="{
           delay: 4000,
         }"
-        class="w-full h-full"
+        class="h-full w-full"
       >
         <SwiperSlide v-for="slide in slides" :key="slide.id">
-          <div class="relative w-full h-screen">
-            <img :src="slide.url" class="absolute inset-0 w-full h-full object-cover" />
+          <div class="relative h-full min-h-[100svh] w-full">
+            <img :src="slide.url" class="absolute inset-0 h-full w-full object-cover" />
 
             <!-- Overlay -->
             <div class="absolute inset-0 bg-[var(--color-background)]/70" />
@@ -56,21 +56,23 @@ const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name ||
     </div>
 
     <!-- CONTENT -->
-    <div class="relative z-10 h-full flex items-center justify-center px-6">
-      <div class="max-w-4xl text-center">
-        <p class="text-[var(--color-text-secondary)] mb-4 break-words">
+    <div
+      class="relative z-10 flex min-h-[100svh] items-center justify-center px-4 pt-24 sm:px-6 sm:pt-32"
+    >
+      <div class="w-full max-w-4xl text-center">
+        <p class="mb-4 break-words text-sm text-[var(--color-text-secondary)] sm:text-base">
           {{ gymName }}
         </p>
 
-        <h1 class="text-5xl md:text-7xl font-black leading-tight">
+        <h1 class="break-words text-4xl font-black leading-tight sm:text-6xl md:text-7xl">
           {{ data.title }}
         </h1>
 
-        <p class="text-[var(--color-text-secondary)] text-lg mt-8">
+        <p class="mt-6 break-words text-base text-[var(--color-text-secondary)] sm:mt-8 sm:text-lg">
           {{ data.subtitle }}
         </p>
 
-        <div class="mt-10 flex justify-center gap-4">
+        <div class="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4">
           <BaseButton> Comenzar </BaseButton>
 
           <BaseButton variant="secondary"> Ver más </BaseButton>

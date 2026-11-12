@@ -289,8 +289,8 @@ const cancel = () => {
     </p>
 
     <!-- Paso 1 conserva el orden y la distribución original de los datos personales. -->
-    <div v-if="step === 1" class="grid gap-4 md:grid-cols-2">
-      <div v-if="!isEdit" class="md:col-span-2 flex justify-end">
+    <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
+      <div v-if="!isEdit" class="flex justify-end sm:col-span-2">
         <button
           type="button"
           class="text-sm underline text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
@@ -339,13 +339,13 @@ const cancel = () => {
       <BaseInput v-model="form.address" placeholder="Dirección" />
       <BaseInput v-model="form.emergencyContactName" placeholder="Contacto de emergencia" />
       <BaseInput v-model="form.emergencyContactPhone" placeholder="Teléfono de emergencia" />
-      <div class="md:col-span-2">
+      <div class="sm:col-span-2">
         <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Información adicional</p>
         <textarea
           v-model="form.notes"
           rows="3"
           placeholder="Notas, condiciones médicas, observaciones..."
-          class="w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] placeholder:text-[var(--color-text-secondary)] outline-none transition-all focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+          class="w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-base text-[var(--color-text)] outline-none transition-all placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
         />
       </div>
     </div>
@@ -395,7 +395,7 @@ const cancel = () => {
         </div>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="grid gap-4 sm:grid-cols-2">
         <BaseInput v-if="!isEdit" v-model="form.code" placeholder="Código de miembro (opcional)" />
         <div>
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Fecha de inscripción *</p>
@@ -410,7 +410,7 @@ const cancel = () => {
           <select
             v-model="form.paymentModality"
             disabled
-            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
             <option value="monthly">Mensual</option>
             <option value="yearly">Anual</option>

@@ -131,7 +131,7 @@ const close = () => {
   <BaseModal :open="open" @close="close">
     <div class="space-y-6">
       <div>
-        <h2 class="text-3xl font-black">Registrar pago</h2>
+        <h2 class="text-2xl font-black sm:text-3xl">Registrar pago</h2>
 
         <p class="text-[var(--color-text-secondary)] mt-2">
           El importe y el próximo vencimiento se determinan según el plan elegido.
@@ -150,7 +150,7 @@ const close = () => {
 
         <select
           v-model="selectedMemberId"
-          class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+          class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
         >
           <option value="">Selecciona un miembro</option>
           <option v-for="option in memberOptions" :key="option.id" :value="String(option.id)">
@@ -180,7 +180,7 @@ const close = () => {
 
           <select
             v-model="form.method"
-            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
             <option value="cash">Efectivo</option>
             <option value="card">Tarjeta</option>
@@ -192,7 +192,7 @@ const close = () => {
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Plan de membresía</p>
           <select
             v-model="selectedPlanId"
-            class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+            class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
             <option value="">Selecciona un plan</option>
             <option v-for="plan in plansStore.activePlans" :key="plan.id" :value="plan.id">
@@ -212,7 +212,7 @@ const close = () => {
             v-model="form.notes"
             rows="3"
             placeholder="Referencia, observaciones..."
-            class="w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] placeholder:text-[var(--color-text-secondary)] outline-none transition-all focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+            class="w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-base text-[var(--color-text)] outline-none transition-all placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
           />
         </div>
       </div>

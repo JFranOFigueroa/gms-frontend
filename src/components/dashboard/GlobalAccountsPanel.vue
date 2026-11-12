@@ -96,7 +96,7 @@ async function findEmail() {
 <template>
   <BaseCard
     ><div class="space-y-4">
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           <h2 class="text-2xl font-bold">Cuentas del sistema</h2>
           <p class="text-sm text-[var(--color-text-secondary)]">
@@ -108,8 +108,8 @@ async function findEmail() {
         }}</BaseButton>
       </div>
       <div v-if="expanded" class="space-y-5">
-        <form class="flex gap-2 flex-wrap" @submit.prevent="load">
-          <div class="flex-1">
+        <form class="flex flex-col gap-2 sm:flex-row" @submit.prevent="load">
+          <div class="min-w-0 flex-1">
             <BaseInput v-model="search" placeholder="Buscar nombre o correo" />
           </div>
           <BaseButton type="submit">Buscar</BaseButton>
@@ -125,7 +125,7 @@ async function findEmail() {
           <div
             v-for="user in accounts.items"
             :key="user.id"
-            class="flex flex-wrap justify-between gap-2 rounded-2xl border border-[var(--color-border)] p-3"
+            class="flex flex-col gap-2 rounded-2xl border border-[var(--color-border)] p-3 sm:flex-row sm:flex-wrap sm:justify-between"
           >
             <div class="min-w-0">
               <p class="font-semibold">{{ user.fullName }}</p>
@@ -133,15 +133,15 @@ async function findEmail() {
                 {{ user.email }} · {{ user.status === 'active' ? 'Activo' : 'Inactivo' }}
               </p>
             </div>
-            <div class="flex gap-2">
-              <BaseButton size="sm" variant="secondary" @click="edit(user.id)">Editar</BaseButton
+            <div class="flex flex-wrap gap-2">
+              <BaseButton size="sm" variant="secondary" @click="edit(user.id)">Editar</BaseButton>
               ><BaseButton size="sm" variant="secondary" @click="changeStatus(user)">{{
                 user.status === 'active' ? 'Desactivar' : 'Activar'
               }}</BaseButton>
             </div>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <BaseButton
             size="sm"
             variant="secondary"

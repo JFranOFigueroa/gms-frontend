@@ -39,11 +39,11 @@ const activeImage = ref(null)
 </script>
 
 <template>
-  <section class="py-24 bg-[var(--color-background)]">
-    <div class="max-w-7xl mx-auto px-6">
+  <section class="bg-[var(--color-background)] py-12 sm:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
       <!-- HEADER -->
-      <div v-if="data.title" class="text-center mb-12">
-        <h2 class="text-5xl font-black">
+      <div v-if="data.title" class="mb-8 text-center sm:mb-12">
+        <h2 class="break-words text-3xl font-black sm:text-4xl md:text-5xl">
           {{ data.title }}
         </h2>
       </div>
@@ -51,23 +51,27 @@ const activeImage = ref(null)
       <!-- SLIDER -->
       <div class="flex" :class="alignmentClass">
         <div
-          class="grid gap-6 w-fit"
+          class="grid w-fit gap-4 sm:gap-6"
           :class="{
             'grid-cols-1': slides.length === 1,
 
-            'grid-cols-1 md:grid-cols-2': slides.length === 2,
+            'grid-cols-1 sm:grid-cols-2': slides.length === 2,
 
-            'grid-cols-1 md:grid-cols-2 xl:grid-cols-3': slides.length >= 3,
+            'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3': slides.length >= 3,
           }"
         >
           <button
             v-for="slide in slides"
             :key="slide.id"
             type="button"
-            class="rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] hover:scale-[1.02] transition-all"
+            class="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] transition-all hover:scale-[1.02]"
             @click="activeImage = slide"
           >
-            <img :src="slide.url" class="w-full aspect-[4/3] object-cover" />
+            <img
+              :src="slide.url"
+              alt=""
+              class="aspect-[4/3] w-full object-cover"
+            />
           </button>
         </div>
       </div>
@@ -76,19 +80,24 @@ const activeImage = ref(null)
   <Transition name="fade">
     <div
       v-if="activeImage"
-      class="fixed inset-0 z-[999] bg-[var(--color-background)]/90 backdrop-blur-sm flex items-center justify-center p-6"
+      class="fixed inset-0 z-[999] flex items-center justify-center bg-[var(--color-background)]/90 p-4 backdrop-blur-sm sm:p-6"
     >
       <!-- CLOSE -->
       <button
         type="button"
-        class="absolute top-6 right-6 w-14 h-14 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-2xl"
+        aria-label="Cerrar imagen"
+        class="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] text-xl sm:right-6 sm:top-6 sm:h-14 sm:w-14 sm:text-2xl"
         @click="activeImage = null"
       >
         ✕
       </button>
 
       <!-- IMAGE -->
-      <img :src="activeImage.url" class="max-w-full max-h-full rounded-3xl shadow-2xl" />
+      <img
+        :src="activeImage.url"
+        alt=""
+        class="max-h-full max-w-full rounded-3xl shadow-2xl"
+      />
     </div>
   </Transition>
 </template>

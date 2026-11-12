@@ -376,13 +376,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-    <div class="mx-auto max-w-7xl px-6 py-8 space-y-8">
+  <div class="min-h-dvh bg-[var(--color-background)] text-[var(--color-text)]">
+    <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
       <!-- Header -->
       <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div class="flex flex-wrap items-center gap-3">
-            <h1 class="text-4xl font-black">{{ gymName }}</h1>
+            <h1 class="break-words text-3xl font-black sm:text-4xl">{{ gymName }}</h1>
 
             <span
               class="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-sm font-semibold text-[var(--color-primary)]"
@@ -440,24 +440,24 @@ onUnmounted(() => {
       <div class="grid gap-4 sm:grid-cols-3">
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Intentos hoy</p>
-          <h2 class="text-4xl font-black mt-2">{{ stats.today }}</h2>
+          <h2 class="mt-2 text-3xl font-black sm:text-4xl">{{ stats.today }}</h2>
         </BaseCard>
 
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Concedidos hoy</p>
-          <h2 class="text-4xl font-black mt-2 text-emerald-400">{{ stats.granted }}</h2>
+          <h2 class="mt-2 text-3xl font-black text-emerald-400 sm:text-4xl">{{ stats.granted }}</h2>
         </BaseCard>
 
         <BaseCard>
           <p class="text-[var(--color-text-secondary)]">Denegados hoy</p>
-          <h2 class="text-4xl font-black mt-2 text-red-400">{{ stats.denied }}</h2>
+          <h2 class="mt-2 text-3xl font-black text-red-400 sm:text-4xl">{{ stats.denied }}</h2>
         </BaseCard>
       </div>
 
       <!-- Result -->
       <div
         v-if="result"
-        class="rounded-3xl border p-6"
+        class="rounded-3xl border p-4 sm:p-6"
         :class="
           result.allowed
             ? 'border-emerald-500/50 bg-emerald-500/10'
@@ -466,17 +466,19 @@ onUnmounted(() => {
       >
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-start gap-4">
-            <span class="text-6xl leading-none">{{ result.allowed ? '✅' : '⛔' }}</span>
+            <span class="text-5xl leading-none sm:text-6xl">{{
+              result.allowed ? '✅' : '⛔'
+            }}</span>
 
-            <div>
+            <div class="min-w-0">
               <p
-                class="text-3xl font-black"
+                class="text-2xl font-black sm:text-3xl"
                 :class="result.allowed ? 'text-emerald-400' : 'text-red-400'"
               >
                 {{ result.allowed ? 'Acceso concedido' : 'Acceso denegado' }}
               </p>
 
-              <p class="text-lg mt-1">
+              <p class="mt-1 break-words text-base sm:text-lg">
                 {{ result.allowed
                   ? 'Acceso registrado correctamente.'
                   : formatCheckinReason(result.reasonCode || result.reason || result.message) }}
@@ -500,7 +502,7 @@ onUnmounted(() => {
         <BaseCard>
           <div class="space-y-5">
             <div>
-              <h2 class="text-2xl font-bold">Credencial del miembro</h2>
+              <h2 class="text-xl font-bold sm:text-2xl">Credencial del miembro</h2>
 
               <p class="text-[var(--color-text-secondary)] mt-1">
                 Escanea el QR temporal del miembro o introduce el código de un solo uso generado
@@ -586,7 +588,7 @@ onUnmounted(() => {
         <BaseCard>
           <div class="space-y-5">
             <div>
-              <h2 class="text-2xl font-bold">QR para la app del miembro</h2>
+              <h2 class="text-xl font-bold sm:text-2xl">QR para la app del miembro</h2>
 
               <p class="text-[var(--color-text-secondary)] mt-1">
                 El miembro escanea este código desde su cuenta para registrar su llegada.
@@ -599,10 +601,13 @@ onUnmounted(() => {
                   v-if="qrImage"
                   :src="qrImage"
                   alt="QR rotativo de check-in"
-                  class="h-64 w-64"
+                  class="aspect-square h-auto w-full max-w-[256px]"
                 />
 
-                <div v-else class="h-64 w-64 flex items-center justify-center text-black">
+                <div
+                  v-else
+                  class="flex aspect-square w-full max-w-[256px] items-center justify-center text-center text-black"
+                >
                   Código QR no disponible
                 </div>
               </div>
@@ -626,8 +631,8 @@ onUnmounted(() => {
       <!-- Recent accesses -->
       <BaseCard>
         <div class="space-y-4">
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-2xl font-bold">Últimos accesos</h2>
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <h2 class="text-xl font-bold sm:text-2xl">Últimos accesos</h2>
 
             <span class="text-sm text-[var(--color-text-secondary)]">
               {{ recentAccesses.length }} registro(s)

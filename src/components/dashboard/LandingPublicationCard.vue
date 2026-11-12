@@ -65,7 +65,7 @@ async function copyLink() {
   <BaseCard>
     <section class="space-y-4" aria-label="Enlace de la página del gimnasio">
       <div>
-        <h2 class="text-2xl font-black">Página de tu gimnasio</h2>
+        <h2 class="text-xl font-black sm:text-2xl">Página de tu gimnasio</h2>
         <p class="text-sm text-[var(--color-text-secondary)] mt-1">
           Tu página muestra los cambios que guardes en este editor. Comparte el enlace con tus
           visitantes.

@@ -132,11 +132,11 @@ const removeClass = async (classId) => {
   <BaseModal :open="open" @close="emit('close')">
     <div class="space-y-8">
       <!-- HEADER -->
-      <div class="flex items-center justify-between gap-4">
-        <div>
-          <h2 class="text-4xl font-black">Agenda del día</h2>
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+          <h2 class="text-2xl font-black sm:text-4xl">Agenda del día</h2>
 
-          <p class="text-[var(--color-text-secondary)] mt-2">
+          <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
             {{ selectedDay }}
 
             <span v-if="isPastDay" class="ml-2 text-red-400"> (Fecha pasada) </span>
@@ -150,7 +150,7 @@ const removeClass = async (classId) => {
       </div>
 
       <!-- EMPTY -->
-      <div v-if="!dayClasses.length" class="text-center py-16 text-[var(--color-text-secondary)]">
+      <div v-if="!dayClasses.length" class="py-10 text-center text-[var(--color-text-secondary)] sm:py-16">
         No existen clases para este día
       </div>
 
@@ -159,21 +159,21 @@ const removeClass = async (classId) => {
         <div
           v-for="gymClass in dayClasses"
           :key="gymClass.id"
-          class="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-6 space-y-4"
+          class="space-y-4 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 sm:p-6"
         >
           <!-- TOP -->
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex items-center gap-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div class="flex min-w-0 items-center gap-3 sm:gap-4">
               <div
-                class="w-5 h-5 rounded-full"
+                class="h-5 w-5 shrink-0 rounded-full"
                 :style="{
                   background: gymClass.color,
                 }"
               />
 
-              <div>
-                <div class="flex items-center gap-3">
-                  <h3 class="text-2xl font-bold">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <h3 class="break-words text-xl font-bold sm:text-2xl">
                     {{ gymClass.name }}
                   </h3>
 
@@ -205,7 +205,12 @@ const removeClass = async (classId) => {
             </div>
 
             <!-- DELETE -->
-            <BaseButton v-if="canManage" variant="secondary" @click="removeClass(gymClass.id)">
+            <BaseButton
+              v-if="canManage"
+              variant="secondary"
+              class="self-start"
+              @click="removeClass(gymClass.id)"
+            >
               Eliminar
             </BaseButton>
           </div>
