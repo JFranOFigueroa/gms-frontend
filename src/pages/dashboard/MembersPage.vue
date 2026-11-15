@@ -199,7 +199,7 @@ const reactivate = async (member) => {
         <h1 class="text-3xl font-black sm:text-4xl">Miembros</h1>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-          Altas, bajas, pagos y expediente de los miembros del gimnasio.
+          Altas, bajas, pagos y expediente de los miembros de la sucursal.
         </p>
       </div>
 
@@ -409,7 +409,7 @@ const reactivate = async (member) => {
           <h2 class="text-2xl font-bold">Pagos de miembros</h2>
 
           <p class="text-[var(--color-text-secondary)]">
-            {{ paymentList.length }} pago(s) registrados en este gimnasio.
+            {{ paymentList.length }} pago(s) registrados en esta sucursal.
           </p>
         </div>
 

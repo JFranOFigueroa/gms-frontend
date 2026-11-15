@@ -6,7 +6,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useTenantStore } from '@/stores/useTenantStore'
 import { useModuleStore } from '@/stores/useModuleStore'
-import { hydrateActiveGym } from '@/bootstrap/loadBackend'
+import { hydrateActiveBranch } from '@/bootstrap/loadBackend'
 
 const authStore = useAuthStore()
 const tenantStore = useTenantStore()
@@ -17,11 +17,11 @@ const password = ref('')
 const loginError = ref('')
 const loading = ref(false)
 const pending = ref(null)
-const selectedGym = ref('')
-const gyms = computed(() => pending.value?.gyms || [])
-// Mostrar siempre el paso de selección, incluso con un solo gimnasio.
-// Un administrador sin gimnasios también debe poder iniciar sesión y crear el primero.
-const chooseGym = computed(() => Boolean(pending.value))
+const selectedBranch = ref('')
+const branches = computed(() => pending.value?.branches || [])
+// Mostrar siempre el paso de selección, incluso con una sola sucursal.
+// Un administrador sin sucursales también debe poder iniciar sesión y crear el primero.
+const chooseBranch = computed(() => Boolean(pending.value))
 
 async function credentialsLogin() {
   loginError.value = ''
@@ -34,13 +34,13 @@ async function credentialsLogin() {
     const session = await authStore.authenticate(email.value.trim().toLowerCase(), password.value)
     if (!session?.token || !session?.user)
       throw new Error('No se pudo iniciar sesión. Intenta nuevamente.')
-    if (!session.user.platformAdmin && !session.gyms?.length) {
-      throw new Error('Tu cuenta no tiene gimnasios activos asociados.')
+    if (!session.user.platformAdmin && !session.branches?.length) {
+      throw new Error('Tu cuenta no tiene sucursales activas asociadas.')
     }
     pending.value = session
-    selectedGym.value =
-      session.gyms?.find((g) => g.id === session.user.defaultGymId)?.id ||
-      session.gyms?.[0]?.id ||
+    selectedBranch.value =
+      session.branches?.find((g) => g.id === session.user.defaultBranchId)?.id ||
+      session.branches?.[0]?.id ||
       ''
   } catch (error) {
     loginError.value = error.message
@@ -51,17 +51,17 @@ async function credentialsLogin() {
 
 async function completeLogin() {
   if (!pending.value) return
-  if (gyms.value.length && !selectedGym.value) {
-    loginError.value = 'Selecciona un gimnasio.'
+  if (branches.value.length && !selectedBranch.value) {
+    loginError.value = 'Selecciona una sucursal.'
     return
   }
   loading.value = true
   try {
     authStore.login(pending.value)
-    if (selectedGym.value) authStore.selectGym(selectedGym.value)
+    if (selectedBranch.value) authStore.selectBranch(selectedBranch.value)
     pending.value = null
     password.value = ''
-    await hydrateActiveGym()
+    await hydrateActiveBranch()
     const role = authStore.role
     const destination =
       role === 'trainer'
@@ -85,7 +85,7 @@ async function completeLogin() {
   }
 }
 
-const resetGymSelection = () => {
+const resetBranchSelection = () => {
   pending.value = null
   loginError.value = ''
 }
@@ -98,25 +98,25 @@ const resetGymSelection = () => {
       class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8"
     >
       <h1 class="max-w-full break-words text-xl font-black leading-tight sm:text-2xl 2xl:text-3xl">
-        {{ tenantStore.gym.shortName }}
+        {{ tenantStore.branch.shortName }}
       </h1>
       <p class="text-[var(--color-text-secondary)] mb-8">Iniciar sesión</p>
       <div class="space-y-6">
-        <template v-if="!chooseGym">
+        <template v-if="!chooseBranch">
           <BaseInput v-model="email" placeholder="Correo" />
           <BaseInput v-model="password" placeholder="Contraseña" type="password" />
         </template>
         <template v-else>
           <p class="text-[var(--color-text-secondary)]">
-            {{ gyms.length ? 'Selecciona el gimnasio al que deseas ingresar.' : 'Todavía no hay gimnasios disponibles. Ingresa para configurar el primero.' }}
+            {{ branches.length ? 'Selecciona la sucursal a la que deseas ingresar.' : 'Todavía no hay sucursales disponibles. Ingresa para configurar el primero.' }}
           </p>
           <select
-            v-if="gyms.length"
-            v-model="selectedGym"
+            v-if="branches.length"
+            v-model="selectedBranch"
             class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
-            <option v-for="gym in gyms" :key="gym.id" :value="gym.id">
-              {{ gym.name }}
+            <option v-for="branch in branches" :key="branch.id" :value="branch.id">
+              {{ branch.name }}
             </option>
           </select>
         </template>
@@ -130,15 +130,15 @@ const resetGymSelection = () => {
         <BaseButton
           class="w-full"
           :disabled="loading"
-          @click="chooseGym ? completeLogin() : credentialsLogin()"
+          @click="chooseBranch ? completeLogin() : credentialsLogin()"
         >
-          {{ loading ? 'Verificando…' : chooseGym ? gyms.length ? 'Ingresar al gimnasio' : 'Ingresar a administración' : 'Entrar' }}
+          {{ loading ? 'Verificando…' : chooseBranch ? branches.length ? 'Ingresar a la sucursal' : 'Ingresar a administración' : 'Entrar' }}
         </BaseButton>
         <button
-          v-if="chooseGym"
+          v-if="chooseBranch"
           type="button"
           class="w-full text-sm underline"
-          @click="resetGymSelection"
+          @click="resetBranchSelection"
         >
           Cambiar cuenta
         </button>

@@ -11,8 +11,8 @@ import { formatCheckinReason } from '@/utils/checkinLabels'
 
 const route = useRoute()
 const checkins = useCheckinStore()
-const slug = computed(() => (typeof route.query.gym === 'string' ? route.query.gym.trim() : ''))
-const gymName = computed(() => checkins.kioskConfig?.name || 'GMS FITNESS')
+const code = computed(() => (typeof route.query.branch === 'string' ? route.query.branch.trim() : ''))
+const branchName = computed(() => checkins.kioskConfig?.name || 'GMS FITNESS')
 const todayLabel = computed(() =>
   new Date().toLocaleDateString('es-MX', {
     weekday: 'long',
@@ -36,23 +36,23 @@ const qrImage = ref('')
 const remainingSeconds = ref('—')
 const recentAccesses = computed(() => []) // El kiosco no consulta auditoría privada.
 const stats = computed(() => ({ today: '—', granted: '—', denied: '—' }))
-const slugMismatch = computed(() =>
+const codeMismatch = computed(() =>
   Boolean(
     checkins.kioskSession &&
     checkins.kioskConfig &&
-    (!checkins.kioskSession.slug ||
-      !checkins.kioskConfig.slug ||
-      checkins.kioskSession.slug !== checkins.kioskConfig.slug),
+    (!checkins.kioskSession.code ||
+      !checkins.kioskConfig.code ||
+      checkins.kioskSession.code !== checkins.kioskConfig.code),
   ),
 )
 const ready = computed(
   () =>
     checkins.kioskState === 'ready' &&
     checkins.kioskConfig?.checkinAvailable === true &&
-    Boolean(checkins.kioskSession?.slug) &&
-    !slugMismatch.value,
+    Boolean(checkins.kioskSession?.code) &&
+    !codeMismatch.value,
 )
-const sessionName = computed(() => checkins.kioskSession?.gymName || '')
+const sessionName = computed(() => checkins.kioskSession?.branchName || '')
 let qrTimer = null
 let sessionTimer = null
 let clockTimer = null
@@ -72,7 +72,7 @@ function stopQr() {
   qrImage.value = ''
   remainingSeconds.value = '—'
   issuedQr = null
-  checkins.currentGymQr = null
+  checkins.currentBranchQr = null
 }
 function stopScanner() {
   scannerEpoch++
@@ -138,7 +138,7 @@ async function issueQr() {
   const epoch = pageEpoch
   renewingEpoch = epoch
   try {
-    const data = await checkins.issueGymQr()
+    const data = await checkins.issueBranchQr()
     if (epoch !== pageEpoch || !ready.value) return
     const lifetime = serverDuration(data)
     if (!Number.isFinite(lifetime) || lifetime <= 0) throw new Error('El QR ya caducó.')
@@ -173,25 +173,25 @@ async function issueQr() {
   }
 }
 async function refreshSession() {
-  if (!slug.value) {
-    pageError.value = 'Abre Check-in desde la página de tu gimnasio.'
+  if (!code.value) {
+    pageError.value = 'Abre Check-in desde la página de tu sucursal.'
     return
   }
   const epoch = pageEpoch
   try {
-    const config = await checkins.loadKioskConfig(slug.value)
+    const config = await checkins.loadKioskConfig(code.value)
     if (epoch !== pageEpoch) return
     if (!config?.checkinAvailable) {
-      pageError.value = 'El Check-in no está disponible para este gimnasio.'
+      pageError.value = 'El Check-in no está disponible para esta sucursal.'
       return
     }
     await checkins.loadKioskSession()
     if (epoch !== pageEpoch) return
-    if (slugMismatch.value) {
+    if (codeMismatch.value) {
       stopQr()
       stopScanner()
       pageError.value =
-        'Este dispositivo está activado en otro gimnasio. Cierra su sesión y actívalo en el gimnasio correcto.'
+        'Este dispositivo está activado en otra sucursal. Cierra su sesión y actívalo en la sucursal correcta.'
       return
     }
     if (ready.value) {
@@ -203,7 +203,7 @@ async function refreshSession() {
   }
 }
 watch(
-  slug,
+  code,
   async () => {
     pageEpoch++
     stopAll()
@@ -211,26 +211,26 @@ watch(
     scannerStatus.value = ''
     activationCode.value = ''
     checkins.clearKioskState()
-    // V6 verifica el slug efectivo de la cookie contra la configuración pública, incluso tras F5.
+    // V6 verifica el code efectivo de la cookie contra la configuración pública, incluso tras F5.
     await refreshSession()
   },
   { immediate: true },
 )
 async function activate() {
-  if (!activationCode.value.trim() || !slug.value || activating.value || slugMismatch.value) return
+  if (!activationCode.value.trim() || !code.value || activating.value || codeMismatch.value) return
   activating.value = true
   pageError.value = ''
   try {
     const session = await checkins.activateKiosk(
-      checkins.kioskConfig?.slug || slug.value,
+      checkins.kioskConfig?.code || code.value,
       activationCode.value.trim(),
     )
     activationCode.value = ''
-    if (session && slugMismatch.value) {
+    if (session && codeMismatch.value) {
       stopQr()
       stopScanner()
       pageError.value =
-        'El dispositivo corresponde a otro gimnasio. Cierra la sesión y solicita otra activación.'
+        'El dispositivo corresponde a otra sucursal. Cierra la sesión y solicita otra activación.'
     } else if (session && ready.value) {
       armSessionExpiry()
       await issueQr()
@@ -251,7 +251,7 @@ async function logoutDevice() {
   } catch (error) {
     pageError.value = error.message || 'No se pudo cerrar la sesión del dispositivo.'
   } finally {
-    checkins.kioskSessionSlug = null
+    checkins.kioskSessionCode = null
     checkins.kioskState = 'needs_activation'
   }
 }
@@ -382,7 +382,7 @@ onUnmounted(() => {
       <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div class="flex flex-wrap items-center gap-3">
-            <h1 class="break-words text-3xl font-black sm:text-4xl">{{ gymName }}</h1>
+            <h1 class="break-words text-3xl font-black sm:text-4xl">{{ branchName }}</h1>
 
             <span
               class="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-sm font-semibold text-[var(--color-primary)]"
@@ -408,14 +408,14 @@ onUnmounted(() => {
       </header>
 
       <p v-if="pageError" role="alert" class="text-red-400">{{ pageError }}</p>
-      <BaseCard v-if="checkins.kioskState === 'needs_activation' || slugMismatch">
+      <BaseCard v-if="checkins.kioskState === 'needs_activation' || codeMismatch">
         <div class="space-y-3">
           <h2 class="text-xl font-bold">Activar dispositivo</h2>
           <p class="text-[var(--color-text-secondary)]">
-            Solicita un código de activación al propietario o administrador del gimnasio. Caduca en
+            Solicita un código de activación al propietario o administrador de la sucursal. Caduca en
             10 minutos.
           </p>
-          <template v-if="!slugMismatch">
+          <template v-if="!codeMismatch">
             <BaseInput
               v-model="activationCode"
               placeholder="Código de activación"

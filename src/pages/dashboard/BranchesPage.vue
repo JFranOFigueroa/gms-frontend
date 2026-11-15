@@ -6,11 +6,11 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 const saveError = ref('')
 
-const gymsStore = useGymsStore()
+const branchesStore = useBranchesStore()
 
 const modalOpen = ref(false)
 const editingId = ref(null)
@@ -20,7 +20,7 @@ const shortName = ref('')
 const address = ref('')
 const phone = ref('')
 
-const isActive = (id) => gymsStore.activeGymId === id
+const isActive = (id) => branchesStore.activeBranchId === id
 
 const resetForm = () => {
   editingId.value = null
@@ -35,17 +35,17 @@ const openCreate = () => {
   modalOpen.value = true
 }
 
-const openEdit = (gym) => {
-  editingId.value = gym.id
-  name.value = gym.name
-  shortName.value = gym.shortName || ''
-  address.value = gym.address || ''
-  phone.value = gym.phone || ''
+const openEdit = (branch) => {
+  editingId.value = branch.id
+  name.value = branch.name
+  shortName.value = branch.shortName || ''
+  address.value = branch.address || ''
+  phone.value = branch.phone || ''
 
   modalOpen.value = true
 }
 
-const saveGym = async () => {
+const saveBranch = async () => {
   if (!name.value.trim()) return
   saveError.value = ''
 
@@ -57,10 +57,10 @@ const saveGym = async () => {
   }
 
   try {
-    if (editingId.value) await gymsStore.updateGym(editingId.value, payload)
+    if (editingId.value) await branchesStore.updateBranch(editingId.value, payload)
     else {
-      const created = await gymsStore.addGym(payload)
-      if (!gymsStore.activeGymId) useAuthStore().selectGym(created.id)
+      const created = await branchesStore.addBranch(payload)
+      if (!branchesStore.activeBranchId) useAuthStore().selectBranch(created.id)
     }
     modalOpen.value = false
     resetForm()
@@ -69,19 +69,19 @@ const saveGym = async () => {
   }
 }
 
-const selectGym = (id) => {
-  useAuthStore().selectGym(id)
+const selectBranch = (id) => {
+  useAuthStore().selectBranch(id)
 }
 
-const removeGym = async (id) => {
-  if (gymsStore.gyms.length <= 1) return
+const removeBranch = async (id) => {
+  if (branchesStore.branches.length <= 1) return
 
-  if (!confirm('¿Eliminar este gimnasio y toda su información asociada?')) return
+  if (!confirm('¿Eliminar esta sucursal y toda su información asociada?')) return
 
   try {
-    await gymsStore.removeGym(id)
-    if (!gymsStore.activeGymId && gymsStore.gyms.length)
-      useAuthStore().selectGym(gymsStore.gyms[0].id)
+    await branchesStore.removeBranch(id)
+    if (!branchesStore.activeBranchId && branchesStore.branches.length)
+      useAuthStore().selectBranch(branchesStore.branches[0].id)
   } catch (error) {
     saveError.value = error.message
   }
@@ -92,33 +92,33 @@ const removeGym = async (id) => {
   <div class="space-y-8">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 class="text-3xl font-black sm:text-4xl">Gimnasios</h1>
+        <h1 class="text-3xl font-black sm:text-4xl">Sucursales</h1>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-          Administra los gimnasios de la plataforma
+          Administra las sucursales de la plataforma
         </p>
       </div>
 
-      <BaseButton @click="openCreate"> Nuevo gimnasio </BaseButton>
+      <BaseButton @click="openCreate"> Nueva sucursal </BaseButton>
     </div>
 
     <p v-if="saveError" role="alert" class="text-red-400">{{ saveError }}</p>
     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      <BaseCard v-for="gym in gymsStore.gyms" :key="gym.id">
+      <BaseCard v-for="branch in branchesStore.branches" :key="branch.id">
         <div class="space-y-4">
           <div class="flex items-start justify-between gap-3">
             <div>
               <h2 class="text-2xl font-bold">
-                {{ gym.name }}
+                {{ branch.name }}
               </h2>
 
               <p class="text-[var(--color-text-secondary)] mt-1">
-                {{ gym.shortName }}
+                {{ branch.shortName }}
               </p>
             </div>
 
             <span
-              v-if="isActive(gym.id)"
+              v-if="isActive(branch.id)"
               class="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-xs text-[var(--color-primary)]"
             >
               Activo
@@ -126,23 +126,23 @@ const removeGym = async (id) => {
           </div>
 
           <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
-            <p v-if="gym.address">{{ gym.address }}</p>
-            <p v-if="gym.phone">{{ gym.phone }}</p>
-            <p>Estado: {{ gym.active === false ? 'Inactivo' : 'Activo' }}</p>
-            <p>Creado: {{ gym.createdAt }}</p>
+            <p v-if="branch.address">{{ branch.address }}</p>
+            <p v-if="branch.phone">{{ branch.phone }}</p>
+            <p>Estado: {{ branch.active === false ? 'Inactivo' : 'Activo' }}</p>
+            <p>Creado: {{ branch.createdAt }}</p>
           </div>
 
           <div class="flex flex-wrap gap-3">
-            <BaseButton v-if="!isActive(gym.id)" variant="secondary" @click="selectGym(gym.id)">
+            <BaseButton v-if="!isActive(branch.id)" variant="secondary" @click="selectBranch(branch.id)">
               Seleccionar
             </BaseButton>
 
-            <BaseButton variant="secondary" @click="openEdit(gym)"> Editar </BaseButton>
+            <BaseButton variant="secondary" @click="openEdit(branch)"> Editar </BaseButton>
 
             <BaseButton
-              v-if="gymsStore.gyms.length > 1"
+              v-if="branchesStore.branches.length > 1"
               variant="secondary"
-              @click="removeGym(gym.id)"
+              @click="removeBranch(branch.id)"
             >
               Eliminar
             </BaseButton>
@@ -154,10 +154,10 @@ const removeGym = async (id) => {
     <BaseModal :open="modalOpen" @close="modalOpen = false">
       <div class="space-y-6">
         <h2 class="text-2xl font-black sm:text-3xl">
-          {{ editingId ? 'Editar gimnasio' : 'Nuevo gimnasio' }}
+          {{ editingId ? 'Editar sucursal' : 'Nueva sucursal' }}
         </h2>
 
-        <BaseInput v-model="name" placeholder="Nombre del gimnasio" />
+        <BaseInput v-model="name" placeholder="Nombre de la sucursal" />
 
         <BaseInput v-model="shortName" placeholder="Nombre corto" />
 
@@ -165,7 +165,7 @@ const removeGym = async (id) => {
 
         <BaseInput v-model="phone" placeholder="Teléfono" />
 
-        <BaseButton class="w-full" @click="saveGym"> Guardar gimnasio </BaseButton>
+        <BaseButton class="w-full" @click="saveBranch"> Guardar sucursal </BaseButton>
       </div>
     </BaseModal>
   </div>

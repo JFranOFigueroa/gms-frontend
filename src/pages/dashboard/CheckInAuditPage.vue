@@ -5,16 +5,16 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import CheckinDevicesPanel from '@/components/dashboard/CheckinDevicesPanel.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { formatCheckinReason, formatCheckinMethod } from '@/utils/checkinLabels'
 
 const checkinStore = useCheckinStore()
-const gyms = useGymsStore()
+const branches = useBranchesStore()
 const auth = useAuthStore()
 const canManageDevices = computed(
   () =>
     auth.isAuthenticated &&
-    Boolean(gyms.activeGymId) &&
+    Boolean(branches.activeBranchId) &&
     (auth.user?.platformAdmin === true || auth.role === 'owner'),
 )
 const auditError = ref('')
@@ -31,11 +31,11 @@ const stats = computed(() =>
 )
 const hourly = computed(() => checkinStore.checkinStats?.byHour || [])
 watch(
-  () => gyms.activeGymId,
-  async (gym) => {
+  () => branches.activeBranchId,
+  async (branch) => {
     checkinStore.checkinStats = null
     auditError.value = ''
-    if (!gym) return
+    if (!branch) return
     const dateParts = new Intl.DateTimeFormat('en', {
       timeZone: 'America/Mexico_City',
       year: 'numeric',
@@ -45,10 +45,10 @@ watch(
     const val = (type) => dateParts.find((p) => p.type === type)?.value
     const day = `${val('year')}-${val('month')}-${val('day')}`
     const results = await Promise.allSettled([
-      checkinStore.load(gym),
-      checkinStore.loadStats(gym, { from: day, to: day }),
+      checkinStore.load(branch),
+      checkinStore.loadStats(branch, { from: day, to: day }),
     ])
-    if (gym !== gyms.activeGymId) return
+    if (branch !== branches.activeBranchId) return
     if (results.some((r) => r.status === 'rejected'))
       auditError.value = 'No se pudieron cargar todos los registros de acceso.'
   },
@@ -104,14 +104,14 @@ const recent = computed(() => checkinStore.checkins.slice(0, 30))
 
     <CheckinDevicesPanel
       v-if="canManageDevices"
-      :key="gyms.activeGymId"
-      :gym-id="gyms.activeGymId"
-      :gym-slug="gyms.activeGym?.slug || ''"
+      :key="branches.activeBranchId"
+      :branch-id="branches.activeBranchId"
+      :branch-code="branches.activeBranch?.code || ''"
     />
 
     <div v-if="hourly.length" class="space-y-2">
       <p class="text-sm text-[var(--color-text-secondary)]">
-        Intentos por hora (horario del gimnasio)
+        Intentos por hora (horario de la sucursal)
       </p>
       <div class="flex flex-wrap gap-3 text-sm">
         <span

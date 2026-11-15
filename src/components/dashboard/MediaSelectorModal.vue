@@ -51,7 +51,7 @@ const designReferences = [
     url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200',
   },
   {
-    name: 'Gym Interior',
+    name: 'Interior del gimnasio',
     url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200',
   },
 ]

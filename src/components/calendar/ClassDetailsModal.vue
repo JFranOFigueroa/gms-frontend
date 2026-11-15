@@ -23,20 +23,20 @@ const mine = useMyReservationsStore()
 const busy = ref(false)
 const error = ref('')
 
-const gymClass = computed(() => {
+const branchClass = computed(() => {
   return scheduleStore.classes.find((c) => String(c.id) === String(props.classId))
 })
 
-const availability = computed(() => scheduleStore.availabilityByClass[gymClass.value?.id])
+const availability = computed(() => scheduleStore.availabilityByClass[branchClass.value?.id])
 const alreadyBooked = computed(() => Boolean(availability.value?.myReservationStatus))
 const spotsLeft = computed(() => availability.value?.available ?? null)
 watch(
-  () => [props.open, props.classId, gymClass.value?.id],
+  () => [props.open, props.classId, branchClass.value?.id],
   async () => {
-    if (props.open && gymClass.value) {
+    if (props.open && branchClass.value) {
       error.value = ''
       try {
-        await scheduleStore.loadAvailability(gymClass.value.id)
+        await scheduleStore.loadAvailability(branchClass.value.id)
       } catch (e) {
         error.value = e.message
       }
@@ -45,11 +45,11 @@ watch(
   { immediate: true },
 )
 const bookClass = async () => {
-  if (!gymClass.value || !availability.value?.bookable || busy.value) return
+  if (!branchClass.value || !availability.value?.bookable || busy.value) return
   busy.value = true
   error.value = ''
   try {
-    await scheduleStore.bookClass(gymClass.value.id)
+    await scheduleStore.bookClass(branchClass.value.id)
     await mine.load()
   } catch (e) {
     error.value = e.message
@@ -61,24 +61,24 @@ const bookClass = async () => {
 
 <template>
   <BaseModal :open="open" @close="emit('close')">
-    <div v-if="gymClass" class="space-y-6">
+    <div v-if="branchClass" class="space-y-6">
       <p v-if="error" role="alert" class="text-red-400">{{ error }}</p>
       <div>
         <div class="flex items-center gap-3 sm:gap-4">
           <div
             class="h-5 w-5 shrink-0 rounded-full"
             :style="{
-              background: gymClass.color,
+              background: branchClass.color,
             }"
           />
 
           <h2 class="break-words text-2xl font-black sm:text-4xl">
-            {{ gymClass.name }}
+            {{ branchClass.name }}
           </h2>
         </div>
 
         <p class="text-[var(--color-text-secondary)] mt-2">
-          {{ gymClass.date }}
+          {{ branchClass.date }}
         </p>
       </div>
 
@@ -86,14 +86,14 @@ const bookClass = async () => {
       <div class="space-y-2 text-[var(--color-text-secondary)]">
         <p>
           Horario:
-          {{ gymClass.startTime }}
+          {{ branchClass.startTime }}
           -
-          {{ gymClass.endTime }}
+          {{ branchClass.endTime }}
         </p>
 
         <p>
           Capacidad:
-          {{ gymClass.capacity }}
+          {{ branchClass.capacity }}
         </p>
 
         <p>

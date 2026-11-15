@@ -9,14 +9,14 @@ import GlobalAccountsPanel from '@/components/dashboard/GlobalAccountsPanel.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useUserStore, OwnerLinkPendingError } from '@/stores/useUserStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { api } from '@/api/service'
 
 import { ROLE_LABELS, assignableRoles, canEditStaffRole } from '@/config/permissions'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
-const gymsStore = useGymsStore()
+const branchesStore = useBranchesStore()
 
 const modalOpen = ref(false)
 const editingId = ref(null)
@@ -26,7 +26,7 @@ const mode = ref('create') // create o link: la búsqueda nunca bloquea el alta 
 const submitting = ref(false)
 const lookingUp = ref(false)
 const foundAccount = ref(null)
-const pendingOwnerLink = ref(null) // {userId, gymId} solo en memoria.
+const pendingOwnerLink = ref(null) // {userId, branchId} solo en memoria.
 
 const search = ref('')
 const roleFilter = ref('all')
@@ -37,8 +37,8 @@ const phone = ref('')
 const password = ref('')
 const role = ref('trainer')
 
-const selectedGymIds = ref([])
-const defaultGymId = ref(null)
+const selectedBranchIds = ref([])
+const defaultBranchId = ref(null)
 
 const actorRole = computed(() => authStore.role)
 const availableRoles = computed(() =>
@@ -48,28 +48,28 @@ const availableRoles = computed(() =>
 )
 const canCreate = computed(() => availableRoles.value.length > 0)
 
-const isGymScopedForm = computed(() => ['owner', 'trainer'].includes(role.value))
+const isBranchScopedForm = computed(() => ['owner', 'trainer'].includes(role.value))
 
-const selectedGyms = computed(() => {
-  return gymsStore.gyms.filter((gym) => selectedGymIds.value.includes(gym.id))
+const selectedBranches = computed(() => {
+  return branchesStore.branches.filter((branch) => selectedBranchIds.value.includes(branch.id))
 })
 
-const assignableGyms = computed(() => {
+const assignableBranches = computed(() => {
   if (authStore.role === 'admin')
-    return gymsStore.gyms.filter((g) => g.id === gymsStore.activeGymId)
+    return branchesStore.branches.filter((g) => g.id === branchesStore.activeBranchId)
 
-  const allowedIds = authStore.user?.gymIds
+  const allowedIds = authStore.user?.branchIds
 
   if (!allowedIds?.length) {
-    return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
+    return branchesStore.branches.filter((branch) => branch.id === branchesStore.activeBranchId)
   }
 
-  return gymsStore.gyms.filter(
-    (gym) => allowedIds.includes(gym.id) && gym.id === gymsStore.activeGymId,
+  return branchesStore.branches.filter(
+    (branch) => allowedIds.includes(branch.id) && branch.id === branchesStore.activeBranchId,
   )
 })
 
-const gymName = (id) => gymsStore.getGymById(id)?.name || 'Gimnasio'
+const branchName = (id) => branchesStore.getBranchById(id)?.name || 'Sucursal'
 
 const canEditUser = (user) =>
   (user.roles?.length ? user.roles : [user.role]).every(
@@ -78,18 +78,18 @@ const canEditUser = (user) =>
       (assignedRole !== 'owner' || authStore.user?.platformAdmin === true),
   )
 
-const toggleGymAccess = (gymId) => {
-  if (selectedGymIds.value.includes(gymId)) {
-    selectedGymIds.value = selectedGymIds.value.filter((id) => id !== gymId)
+const toggleBranchAccess = (branchId) => {
+  if (selectedBranchIds.value.includes(branchId)) {
+    selectedBranchIds.value = selectedBranchIds.value.filter((id) => id !== branchId)
 
-    if (defaultGymId.value === gymId) {
-      defaultGymId.value = selectedGymIds.value[0] ?? null
+    if (defaultBranchId.value === branchId) {
+      defaultBranchId.value = selectedBranchIds.value[0] ?? null
     }
   } else {
-    selectedGymIds.value = [...selectedGymIds.value, gymId]
+    selectedBranchIds.value = [...selectedBranchIds.value, branchId]
 
-    if (!defaultGymId.value) {
-      defaultGymId.value = gymId
+    if (!defaultBranchId.value) {
+      defaultBranchId.value = branchId
     }
   }
 }
@@ -106,13 +106,13 @@ watch(
 
 watch(role, (value) => {
   if (value === 'owner' || value === 'trainer') {
-    if (!selectedGymIds.value.length) {
-      selectedGymIds.value = [gymsStore.activeGymId]
-      defaultGymId.value = gymsStore.activeGymId
+    if (!selectedBranchIds.value.length) {
+      selectedBranchIds.value = [branchesStore.activeBranchId]
+      defaultBranchId.value = branchesStore.activeBranchId
     }
   } else {
-    selectedGymIds.value = []
-    defaultGymId.value = null
+    selectedBranchIds.value = []
+    defaultBranchId.value = null
   }
 })
 
@@ -142,8 +142,8 @@ const resetForm = () => {
   phone.value = ''
   password.value = ''
   role.value = availableRoles.value[0] || ''
-  selectedGymIds.value = []
-  defaultGymId.value = null
+  selectedBranchIds.value = []
+  defaultBranchId.value = null
   formError.value = ''
   mode.value = 'create'
   foundAccount.value = null
@@ -185,10 +185,10 @@ const findExistingAccount = async () => {
   }
   lookingUp.value = true
   try {
-    const gym = gymsStore.activeGymId
-    if (!gym) throw new Error('Selecciona primero un gimnasio.')
-    // El owner solo puede buscar cuentas en su gimnasio. Admin global: búsqueda global.
-    const result = await api.users.search(contact, authStore.user?.platformAdmin ? undefined : gym)
+    const branch = branchesStore.activeBranchId
+    if (!branch) throw new Error('Selecciona primero una sucursal.')
+    // El owner solo puede buscar cuentas en su sucursal. Admin global: búsqueda global.
+    const result = await api.users.search(contact, authStore.user?.platformAdmin ? undefined : branch)
     if (result?.status !== 'active') throw new Error('Esta cuenta no está activa.')
     foundAccount.value = result
   } catch (error) {
@@ -202,8 +202,8 @@ const openCreate = () => {
   resetForm()
   notice.value = ''
   role.value = availableRoles.value.includes('trainer') ? 'trainer' : availableRoles.value[0]
-  selectedGymIds.value = [gymsStore.activeGymId]
-  defaultGymId.value = gymsStore.activeGymId
+  selectedBranchIds.value = [branchesStore.activeBranchId]
+  defaultBranchId.value = branchesStore.activeBranchId
   modalOpen.value = true
 }
 
@@ -219,11 +219,11 @@ const openEdit = (user) => {
   role.value = user.role
 
   if (user.role === 'owner' || user.role === 'trainer') {
-    selectedGymIds.value = user.gymIds?.length ? [...user.gymIds] : user.gymId ? [user.gymId] : []
-    defaultGymId.value = user.defaultGymId || selectedGymIds.value[0] || null
+    selectedBranchIds.value = user.branchIds?.length ? [...user.branchIds] : user.branchId ? [user.branchId] : []
+    defaultBranchId.value = user.defaultBranchId || selectedBranchIds.value[0] || null
   } else {
-    selectedGymIds.value = []
-    defaultGymId.value = null
+    selectedBranchIds.value = []
+    defaultBranchId.value = null
   }
 
   modalOpen.value = true
@@ -237,15 +237,15 @@ const saveUser = async () => {
     if (editingId.value) {
       await userStore.updateUser(editingId.value, { role: role.value })
     } else {
-      const gym = gymsStore.activeGymId
-      if (!gym || !selectedGymIds.value.includes(gym))
-        throw new Error('Selecciona el gimnasio en el que deseas registrar a esta persona.')
+      const branch = branchesStore.activeBranchId
+      if (!branch || !selectedBranchIds.value.includes(branch))
+        throw new Error('Selecciona la sucursal en la que deseas registrar a esta persona.')
       if (!availableRoles.value.includes(role.value))
         throw new Error('No tienes permiso para asignar este rol.')
       if (pendingOwnerLink.value) {
-        if (pendingOwnerLink.value.gymId !== gym)
-          throw new Error('Selecciona el gimnasio donde quedó pendiente la asignación.')
-        await userStore.linkStaff(pendingOwnerLink.value.userId, 'owner', gym)
+        if (pendingOwnerLink.value.branchId !== branch)
+          throw new Error('Selecciona la sucursal donde quedó pendiente la asignación.')
+        await userStore.linkStaff(pendingOwnerLink.value.userId, 'owner', branch)
         pendingOwnerLink.value = null
       } else if (mode.value === 'link') {
         if (
@@ -254,7 +254,7 @@ const saveUser = async () => {
         )
           throw new Error('Busca y confirma primero la cuenta que deseas vincular.')
         if (foundAccount.value.status !== 'active') throw new Error('Esta cuenta no está activa.')
-        await userStore.linkStaff(foundAccount.value.id, role.value, gym)
+        await userStore.linkStaff(foundAccount.value.id, role.value, branch)
       } else {
         if (
           !name.value.trim() ||
@@ -270,9 +270,9 @@ const saveUser = async () => {
           phone: phone.value.trim(),
           password: password.value,
         }
-        if (role.value === 'trainer') await userStore.registerTrainer(data, gym)
+        if (role.value === 'trainer') await userStore.registerTrainer(data, branch)
         else if (role.value === 'owner' && authStore.user?.platformAdmin === true)
-          await userStore.registerOwner(data, gym)
+          await userStore.registerOwner(data, branch)
         else throw new Error('No tienes permiso para registrar este rol.')
       }
     }
@@ -283,7 +283,7 @@ const saveUser = async () => {
     resetForm()
   } catch (error) {
     if (error instanceof OwnerLinkPendingError) {
-      pendingOwnerLink.value = { userId: error.userId, gymId: error.gymId }
+      pendingOwnerLink.value = { userId: error.userId, branchId: error.branchId }
       password.value = ''
       formError.value = error.message
     } else {
@@ -369,12 +369,12 @@ const toggleActive = (user) => {
 
             <p>Estado: {{ user.active ? 'Activo' : 'Inactivo' }}</p>
 
-            <p v-if="['owner', 'trainer'].includes(user.role) && user.gymIds?.length">
-              Gimnasios: {{ user.gymIds.map(gymName).join(', ') }}
+            <p v-if="['owner', 'trainer'].includes(user.role) && user.branchIds?.length">
+              Sucursales: {{ user.branchIds.map(branchName).join(', ') }}
             </p>
 
-            <p v-if="['owner', 'trainer'].includes(user.role) && user.defaultGymId">
-              Gimnasio por defecto: {{ gymName(user.defaultGymId) }}
+            <p v-if="['owner', 'trainer'].includes(user.role) && user.defaultBranchId">
+              Sucursal por defecto: {{ branchName(user.defaultBranchId) }}
             </p>
           </div>
 
@@ -430,7 +430,7 @@ const toggleActive = (user) => {
         <BaseInput
           v-if="editingId || mode === 'create'"
           v-model="name"
-          name="gym_staff_full_name"
+          name="branch_staff_full_name"
           autocomplete="off"
           placeholder="Nombre completo"
           :disabled="!!editingId || submitting || !!pendingOwnerLink"
@@ -438,7 +438,7 @@ const toggleActive = (user) => {
 
         <BaseInput
           v-model="email"
-          name="gym_staff_contact_email"
+          name="branch_staff_contact_email"
           type="email"
           autocomplete="off"
           placeholder="Correo"
@@ -449,7 +449,7 @@ const toggleActive = (user) => {
         <BaseInput
           v-if="editingId || mode === 'create'"
           v-model="phone"
-          name="gym_staff_contact_phone"
+          name="branch_staff_contact_phone"
           type="tel"
           inputmode="tel"
           autocomplete="off"
@@ -459,7 +459,7 @@ const toggleActive = (user) => {
         <BaseInput
           v-if="!editingId && mode === 'create' && !pendingOwnerLink"
           v-model="password"
-          name="gym_staff_new_password"
+          name="branch_staff_new_password"
           autocomplete="new-password"
           type="password"
           placeholder="Contraseña (mín. 10 caracteres)"
@@ -497,54 +497,54 @@ const toggleActive = (user) => {
           class="text-sm text-[var(--color-text-secondary)]"
           v-if="!editingId && mode === 'create'"
         >
-          Los entrenadores y propietarios nuevos se registran en el gimnasio seleccionado. Para
+          Los entrenadores y propietarios nuevos se registran en la sucursal seleccionada. Para
           vincular una cuenta ya creada, usa “Vincular cuenta existente”.
         </p>
         <p class="text-sm text-[var(--color-text-secondary)]" v-else-if="!editingId">
-          Confirma la cuenta encontrada antes de asignarle acceso al gimnasio seleccionado.
+          Confirma la cuenta encontrada antes de asignarle acceso a la sucursal seleccionada.
         </p>
         <p class="text-sm text-[var(--color-text-secondary)]" v-else>
-          Los cambios de permisos se aplican al gimnasio seleccionado.
+          Los cambios de permisos se aplican a la sucursal seleccionada.
         </p>
-        <div v-if="!editingId && isGymScopedForm" class="grid gap-4">
+        <div v-if="!editingId && isBranchScopedForm" class="grid gap-4">
           <p class="text-xs text-[var(--color-text-secondary)]">
-            Esta operación afecta únicamente al gimnasio seleccionado; los otros gimnasios se
+            Esta operación afecta únicamente a la sucursal seleccionada; las otras sucursales se
             administran por separado.
           </p>
           <div>
-            <p class="mb-2 text-[var(--color-text-secondary)]">Gimnasios con acceso</p>
+            <p class="mb-2 text-[var(--color-text-secondary)]">Sucursales con acceso</p>
 
             <div class="grid gap-3 sm:grid-cols-2">
               <button
-                v-for="gym in assignableGyms"
-                :key="gym.id"
+                v-for="branch in assignableBranches"
+                :key="branch.id"
                 type="button"
                 class="rounded-2xl border p-3 text-left transition"
                 :class="
-                  selectedGymIds.includes(gym.id)
+                  selectedBranchIds.includes(branch.id)
                     ? 'border-[var(--color-primary)]'
                     : 'border-[var(--color-border)]'
                 "
                 :disabled="submitting || !!pendingOwnerLink"
-                @click="toggleGymAccess(gym.id)"
+                @click="toggleBranchAccess(branch.id)"
               >
-                <p class="font-semibold">{{ gym.name }}</p>
+                <p class="font-semibold">{{ branch.name }}</p>
 
-                <p class="text-xs text-[var(--color-text-secondary)]">{{ gym.shortName }}</p>
+                <p class="text-xs text-[var(--color-text-secondary)]">{{ branch.shortName }}</p>
               </button>
             </div>
           </div>
 
           <div>
-            <p class="mb-2 text-[var(--color-text-secondary)]">Gimnasio por defecto</p>
+            <p class="mb-2 text-[var(--color-text-secondary)]">Sucursal por defecto</p>
 
             <select
-              v-model="defaultGymId"
+              v-model="defaultBranchId"
               :disabled="submitting || !!pendingOwnerLink"
               class="w-full h-14 px-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]"
             >
-              <option v-for="gym in selectedGyms" :key="gym.id" :value="gym.id">
-                {{ gym.name }}
+              <option v-for="branch in selectedBranches" :key="branch.id" :value="branch.id">
+                {{ branch.name }}
               </option>
             </select>
           </div>
@@ -570,7 +570,7 @@ const toggleActive = (user) => {
             submitting
               ? 'Guardando…'
               : pendingOwnerLink
-                ? 'Reintentar asignación al gimnasio'
+                ? 'Reintentar asignación a la sucursal'
                 : 'Guardar usuario'
           }}
         </BaseButton>

@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { mapProduct, mapSale } from '@/api/mappers'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 export const usePosStore = defineStore('pos', {
   state: () => ({ allProducts: [], allSales: [], cart: [], checkoutAttempt: null, checkoutSubmitting: false }),
   getters: {
-    products: (s) => s.allProducts.filter((p) => p.gymId === useGymsStore().activeGymId),
-    sales: (s) => s.allSales.filter((sale) => sale.gymId === useGymsStore().activeGymId),
+    products: (s) => s.allProducts.filter((p) => p.branchId === useBranchesStore().activeBranchId),
+    sales: (s) => s.allSales.filter((sale) => sale.branchId === useBranchesStore().activeBranchId),
     cartTotal: (s) => s.cart.reduce((sum, i) => sum + i.price * i.qty, 0),
     totalRevenue() {
       return this.sales.reduce((sum, s) => sum + s.total, 0)
@@ -36,17 +36,17 @@ export const usePosStore = defineStore('pos', {
     },
   },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allProducts = []
         this.allSales = []
         return
       }
       const [products, sales] = await Promise.all([
-        useIntegrationStore().track('productos', () => api.products.list(gym)),
-        useIntegrationStore().track('ventas', () => api.sales.list(gym)),
+        useIntegrationStore().track('productos', () => api.products.list(branch)),
+        useIntegrationStore().track('ventas', () => api.sales.list(branch)),
       ])
-      if (useGymsStore().activeGymId === gym) {
+      if (useBranchesStore().activeBranchId === branch) {
         this.allProducts = products.map(mapProduct)
         this.allSales = sales.map(mapSale)
       }
@@ -83,9 +83,9 @@ export const usePosStore = defineStore('pos', {
     async checkout() {
       if (!this.cart.length) return { ok: false, reason: 'El carrito está vacío' }
       if (this.checkoutSubmitting) return { ok: false, reason: 'La venta ya se está procesando.' }
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const items = this.cart.map((i) => ({ productId: i.productId, quantity: i.qty }))
-      const signature = JSON.stringify({ gym, items })
+      const signature = JSON.stringify({ branch, items })
       // En un fallo de red, conservar el mismo cuerpo y la misma clave al reintentar.
       if (!this.checkoutAttempt || this.checkoutAttempt.signature !== signature) {
         this.checkoutAttempt = { signature, items, key: crypto.randomUUID() }
@@ -94,11 +94,11 @@ export const usePosStore = defineStore('pos', {
       this.checkoutSubmitting = true
       try {
         const row = await useIntegrationStore().track('ventas', () =>
-          api.sales.checkout(gym, attempt.items, attempt.key),
+          api.sales.checkout(branch, attempt.items, attempt.key),
         )
         this.clearCart()
         // La venta YA se registró. Un fallo refrescando el catálogo no autoriza repetirla.
-        await this.load(gym).catch(() => {})
+        await this.load(branch).catch(() => {})
         return { ok: true, sale: mapSale(row) }
       } catch (error) {
         if (error.status === 409) this.checkoutAttempt = null
@@ -108,25 +108,25 @@ export const usePosStore = defineStore('pos', {
       }
     },
     async addProduct(data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const body = { ...data, sku: data.sku?.trim(), barcode: data.barcode?.trim() || null }
       const row = await useIntegrationStore().track('productos', () =>
-        api.products.create(gym, body),
+        api.products.create(branch, body),
       )
       this.allProducts.push(mapProduct(row))
       return row
     },
     async updateProduct(id, data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('productos', () =>
-        api.products.update(gym, id, data),
+        api.products.update(branch, id, data),
       )
       this.allProducts = this.allProducts.map((p) => (p.id === id ? mapProduct(row) : p))
       return row
     },
     async removeProduct(id) {
-      const gym = useGymsStore().activeGymId
-      await useIntegrationStore().track('productos', () => api.products.remove(gym, id))
+      const branch = useBranchesStore().activeBranchId
+      await useIntegrationStore().track('productos', () => api.products.remove(branch, id))
       this.allProducts = this.allProducts.filter((p) => p.id !== id)
     },
   },

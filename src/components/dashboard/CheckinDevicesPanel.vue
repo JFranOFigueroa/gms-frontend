@@ -5,8 +5,8 @@ import { api } from '@/api/service'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const props = defineProps({
-  gymId: { type: String, required: true },
-  gymSlug: { type: String, default: '' },
+  branchId: { type: String, required: true },
+  branchCode: { type: String, default: '' },
 })
 const auth = useAuthStore()
 const canManage = computed(
@@ -57,8 +57,8 @@ function formatDate(iso) {
 function messageFor(error) {
   if (error?.status === 401) return 'La sesión terminó. Inicia sesión nuevamente.'
   if (error?.status === 403)
-    return 'No tienes permiso para administrar dispositivos de este gimnasio.'
-  if (error?.status === 404) return 'El dispositivo ya no existe o el gimnasio no está disponible.'
+    return 'No tienes permiso para administrar dispositivos de esta sucursal.'
+  if (error?.status === 404) return 'El dispositivo ya no existe o la sucursal no está disponible.'
   if (error?.status === 409)
     return 'No se pudo completar por un conflicto de datos. Actualiza la lista.'
   if (error?.status === 429) return 'Demasiadas solicitudes. Intenta nuevamente más tarde.'
@@ -71,10 +71,10 @@ function normalizeDevices(data) {
 async function refreshDevices() {
   const epoch = generation
   const run = ++latestLoad
-  if (!canManage.value || !props.gymId) return
+  if (!canManage.value || !props.branchId) return
   loading.value = true
   try {
-    const data = await api.checkinDevices.list(props.gymId)
+    const data = await api.checkinDevices.list(props.branchId)
     if (disposed || epoch !== generation || run !== latestLoad) return
     devices.value = normalizeDevices(data)
     errorText.value = ''
@@ -120,7 +120,7 @@ function createDevice() {
   }
   clearCode()
   mutate(async () => {
-    const response = await api.checkinDevices.create(props.gymId, name)
+    const response = await api.checkinDevices.create(props.branchId, name)
     deviceName.value = ''
     return { response, label: name }
   }, 'Dispositivo creado. Copia su código de activación antes de cerrar esta sección.')
@@ -160,20 +160,20 @@ function confirmOperation() {
   if (selected.kind === 'reissue') {
     mutate(
       async () => ({
-        response: await api.checkinDevices.reissue(props.gymId, selected.id),
+        response: await api.checkinDevices.reissue(props.branchId, selected.id),
         label: selected.name,
       }),
       'Código regenerado. Las sesiones anteriores del dispositivo quedaron revocadas.',
     )
   } else if (selected.kind === 'remove') {
     mutate(async () => {
-      await api.checkinDevices.remove(props.gymId, selected.id)
+      await api.checkinDevices.remove(props.branchId, selected.id)
       return { response: null }
     }, 'Dispositivo eliminado.')
   } else if (selected.kind === 'toggle') {
     mutate(
       async () => {
-        await api.checkinDevices.update(props.gymId, selected.id, !selected.active)
+        await api.checkinDevices.update(props.branchId, selected.id, !selected.active)
         return { response: null }
       },
       selected.active ? 'Dispositivo desactivado.' : 'Dispositivo habilitado.',
@@ -190,7 +190,7 @@ async function copyCode() {
   }
 }
 watch(
-  () => [props.gymId, canManage.value],
+  () => [props.branchId, canManage.value],
   () => {
     generation++
     devices.value = []
@@ -198,7 +198,7 @@ watch(
     errorText.value = ''
     successText.value = ''
     clearCode()
-    if (canManage.value && props.gymId) refreshDevices()
+    if (canManage.value && props.branchId) refreshDevices()
   },
   { immediate: true },
 )
@@ -216,12 +216,12 @@ onUnmounted(() => {
         <div>
           <h2 id="devices-title" class="text-2xl font-bold">Dispositivos de acceso</h2>
           <p class="text-sm text-[var(--color-text-secondary)] mt-2">
-            Crea y administra los kioscos que pueden validar códigos y QR en este gimnasio.
+            Crea y administra los kioscos que pueden validar códigos y QR en esta sucursal.
           </p>
         </div>
         <RouterLink
-          v-if="gymSlug"
-          :to="{ name: 'standalone-checkin', query: { gym: gymSlug } }"
+          v-if="branchCode"
+          :to="{ name: 'standalone-checkin', query: { branch: branchCode } }"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center justify-center rounded-2xl border border-[var(--color-border)] px-4 py-3 font-semibold hover:bg-[var(--color-surface-hover)]"
@@ -332,7 +332,7 @@ onUnmounted(() => {
         Cargando dispositivos…
       </p>
       <p v-else-if="!devices.length" class="text-sm text-[var(--color-text-secondary)]">
-        No hay dispositivos registrados para este gimnasio.
+        No hay dispositivos registrados para esta sucursal.
       </p>
       <ul v-else class="space-y-3">
         <li

@@ -10,7 +10,7 @@ import { useMediaStore } from '@/stores/useMediaStore'
 const props = defineProps({
   data: Object,
   mediaAssets: { type: Array, default: null },
-  publicGym: { type: Object, default: null },
+  publicSite: { type: Object, default: null },
 })
 
 const mediaStore = useMediaStore()

@@ -1,31 +1,18 @@
 <script setup>
-import { computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useLandingStore } from '@/stores/useLandingStore'
+import { computed, onMounted } from 'vue'
 import { usePublicLandingStore } from '@/stores/usePublicLandingStore'
 import { themePresets } from '@/config/themePresets'
 import PublicTopbar from '@/components/landing/PublicTopbar.vue'
 import BlockRenderer from '@/components/landing/BlockRenderer.vue'
 
-const route = useRoute()
-const landingStore = useLandingStore() // Se mantiene la vista raíz ya existente.
 const publicStore = usePublicLandingStore()
-const slug = computed(() => (typeof route.params.slug === 'string' ? route.params.slug : null))
-watch(
-  slug,
-  async (value) => {
-    if (value) await publicStore.load(value)
-    else publicStore.clear()
-  },
-  { immediate: true },
-)
-const publicGym = computed(() => publicStore.page?.gym || null)
-const blocks = computed(() =>
-  slug.value ? publicStore.page?.blocks || [] : landingStore.sortedBlocks,
-)
+onMounted(() => publicStore.load())
+
+const site = computed(() => publicStore.page?.site || null)
+const blocks = computed(() => publicStore.page?.blocks || [])
 const hasHero = computed(() => blocks.value[0]?.type === 'hero')
 const publicStyles = computed(() => {
-  if (!slug.value || !publicStore.page?.theme) return {}
+  if (!publicStore.page?.theme) return {}
   const theme = publicStore.page.theme
   const preset = themePresets.find(
     (item) => item.id === (theme.preset || theme.themePreset || theme.theme_preset),
@@ -55,46 +42,32 @@ const publicStyles = computed(() => {
     :style="publicStyles"
     class="min-h-dvh bg-[var(--color-background)] text-[var(--color-text)]"
   >
-    <template v-if="slug">
-      <div v-if="publicStore.loading" role="status" class="mx-auto max-w-3xl p-12 text-center">
-        Cargando página del gimnasio…
-      </div>
-      <div
-        v-else-if="publicStore.error || !publicStore.page"
-        role="alert"
-        class="mx-auto max-w-3xl p-12 text-center"
-      >
-        <h1 class="text-2xl font-bold">Página no disponible</h1>
-        <p class="mt-3 text-[var(--color-text-secondary)]">
-          {{ publicStore.error || 'No hay contenido público.' }}
-        </p>
-      </div>
-      <template v-else>
-        <PublicTopbar :public-gym="publicGym" />
-        <div v-if="!blocks.length" class="mx-auto max-w-3xl px-4 pb-12 pt-24 text-center sm:p-12">
-          Este gimnasio todavía no ha agregado contenido a su página.
-        </div>
-        <template v-else>
-          <div v-if="!hasHero" class="h-16 sm:h-20" aria-hidden="true" />
-          <BlockRenderer
-            :blocks="blocks"
-            :public-gym="publicGym"
-            :media-assets="publicStore.page?.mediaAssets || []"
-          />
-        </template>
-      </template>
-    </template>
+    <div v-if="publicStore.loading" role="status" class="mx-auto max-w-3xl p-12 text-center">
+      Cargando página…
+    </div>
+    <div
+      v-else-if="publicStore.error"
+      role="alert"
+      class="mx-auto max-w-3xl p-12 text-center"
+    >
+      <h1 class="text-2xl font-bold">Página no disponible</h1>
+      <p class="mt-3 text-[var(--color-text-secondary)]">{{ publicStore.error }}</p>
+    </div>
     <template v-else>
-      <PublicTopbar />
+      <PublicTopbar :site="site" />
       <div
         v-if="!blocks.length"
         class="mx-auto max-w-3xl px-4 pb-12 pt-24 text-center text-[var(--color-text-secondary)] sm:p-12"
       >
-        Visita el enlace de tu gimnasio para conocer sus instalaciones y servicios.
+        El sitio todavía no tiene contenido público.
       </div>
       <template v-else>
         <div v-if="!hasHero" class="h-16 sm:h-20" aria-hidden="true" />
-        <BlockRenderer :blocks="blocks" />
+        <BlockRenderer
+          :blocks="blocks"
+          :public-site="site"
+          :media-assets="publicStore.page?.mediaAssets || []"
+        />
       </template>
     </template>
   </div>

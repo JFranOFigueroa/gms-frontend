@@ -22,7 +22,7 @@ const selectPreset = async (preset) => {
       <h2 class="text-xl font-black sm:text-2xl">Temas Recomendados</h2>
 
       <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-        Selecciona una identidad visual para tu gimnasio
+        Selecciona la identidad visual del sitio
       </p>
     </div>
 

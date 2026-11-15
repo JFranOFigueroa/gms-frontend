@@ -1,10 +1,10 @@
 /**
  * Matriz central de roles y permisos de GMS.
  *
- * - admin: staff de GMS. Administra la plataforma, gimnasios y módulos.
- * - owner: propietario de un gimnasio. Acceso completo excepto lo exclusivo de admin.
- * - trainer: entrenador. Acceso operativo limitado a sus gimnasios.
- * - member: miembro del gimnasio.
+ * - admin: staff de GMS. Administra la plataforma, sucursales y módulos.
+ * - owner: propietario de una sucursal. Acceso completo excepto lo exclusivo de admin.
+ * - trainer: entrenador. Acceso operativo limitado a sus sucursales.
+ * - member: miembro de la sucursal.
  * - guest: acceso temporal.
  */
 
@@ -22,14 +22,14 @@ export const isTrainer = (role) => role === 'trainer'
 export const isMember = (role) => role === 'member'
 export const isGuest = (role) => role === 'guest'
 
-/** Admin y owner comparten la vista de gestión del gimnasio. */
+/** Admin y owner comparten la vista de gestión de la sucursal. */
 export const isManager = (role) => isAdmin(role) || isOwner(role)
 
 /** Solo el staff de GMS puede activar/desactivar módulos. */
 export const canManageModules = (role) => isAdmin(role)
 
-/** Solo el staff de GMS puede crear/editar/eliminar gimnasios. */
-export const canManageGyms = (role) => isAdmin(role)
+/** Solo el staff de GMS puede crear/editar/eliminar sucursales. */
+export const canManageBranches = (role) => isAdmin(role)
 
 /** Landing builder y multimedia son de admin y owner. */
 export const canAccessLandingBuilder = (role) => isAdmin(role) || isOwner(role)

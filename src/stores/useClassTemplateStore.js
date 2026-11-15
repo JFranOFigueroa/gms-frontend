@@ -1,26 +1,26 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { mapTemplate } from '@/api/mappers'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 export const useClassTemplateStore = defineStore('class-templates', {
   state: () => ({ allTemplates: [] }),
   getters: {
-    templates: (s) => s.allTemplates.filter((t) => t.gymId === useGymsStore().activeGymId),
+    templates: (s) => s.allTemplates.filter((t) => t.branchId === useBranchesStore().activeBranchId),
   },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allTemplates = []
         return
       }
-      const rows = await useIntegrationStore().track('plantillas', () => api.templates.list(gym))
-      if (gym === useGymsStore().activeGymId) this.allTemplates = rows.map(mapTemplate)
+      const rows = await useIntegrationStore().track('plantillas', () => api.templates.list(branch))
+      if (branch === useBranchesStore().activeBranchId) this.allTemplates = rows.map(mapTemplate)
     },
     async addTemplate(data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('plantillas', () =>
-        api.templates.create(gym, {
+        api.templates.create(branch, {
           name: data.name,
           color: data.color,
           durationMinutes: Number(data.duration),
@@ -32,8 +32,8 @@ export const useClassTemplateStore = defineStore('class-templates', {
       return row
     },
     async removeTemplate(id) {
-      const gym = useGymsStore().activeGymId
-      await useIntegrationStore().track('plantillas', () => api.templates.remove(gym, id))
+      const branch = useBranchesStore().activeBranchId
+      await useIntegrationStore().track('plantillas', () => api.templates.remove(branch, id))
       this.allTemplates = this.allTemplates.filter((t) => t.id !== id)
     },
   },

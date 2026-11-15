@@ -6,15 +6,13 @@ import { RouterLink, useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useTenantStore } from '@/stores/useTenantStore'
 import { resolveApiUrl } from '@/api/http'
 
 import { useScrollLock } from '@/composables/useScrollLock'
 
-const props = defineProps({ publicGym: { type: Object, default: null } })
+const props = defineProps({ site: { type: Object, default: null } })
 
 const authStore = useAuthStore()
-const tenantStore = useTenantStore()
 const route = useRoute()
 
 const { lock, unlock } = useScrollLock()
@@ -22,12 +20,8 @@ const { lock, unlock } = useScrollLock()
 const menuOpen = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-// Mantener los accesos visibles tanto en / como en /g/:slug.
-// Las pantallas de destino conservan sus validaciones y límites del backend.
-const selectedSlug = computed(() => props.publicGym?.slug || null)
-const publicQuery = computed(() => (selectedSlug.value ? { gym: selectedSlug.value } : {}))
-
-const logoSrc = computed(() => resolveApiUrl(props.publicGym?.logoUrl || props.publicGym?.logo_url))
+const logoSrc = computed(() => resolveApiUrl(props.site?.logoUrl || props.site?.logo_url))
+const siteName = computed(() => props.site?.shortName || props.site?.name || 'GymBack')
 
 const onKeydown = (event) => {
   if (event.key === 'Escape') menuOpen.value = false
@@ -67,31 +61,24 @@ onBeforeUnmount(() => {
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-6">
       <!-- LOGO -->
       <RouterLink
-        :to="props.publicGym ? `/g/${props.publicGym.slug}` : `/`"
+        to="/"
         class="min-w-0 max-w-full break-words text-lg font-black leading-tight sm:text-xl xl:text-2xl 2xl:text-3xl"
       >
         <span class="inline-flex items-center gap-2 sm:gap-3">
           <img
             v-if="logoSrc"
             :src="logoSrc"
-            alt="Logo del gimnasio"
+            alt="Logo del sitio"
             class="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10"
           />
-          <span class="truncate">{{
-            props.publicGym?.shortName || props.publicGym?.name || tenantStore.gym.shortName
-          }}</span>
+          <span class="truncate">{{ siteName }}</span>
         </span>
       </RouterLink>
 
       <!-- DESKTOP ACTIONS -->
       <div class="hidden items-center gap-3 sm:flex">
-        <RouterLink :to="{ path: '/checkin', query: publicQuery }">
-          <BaseButton size="sm" variant="secondary"> Check-in </BaseButton>
-        </RouterLink>
-
-        <!-- NOT AUTH -->
         <template v-if="!isAuthenticated">
-          <RouterLink :to="{ path: '/guest-access', query: publicQuery }">
+          <RouterLink to="/guest-access">
             <BaseButton size="sm"> Clase muestra </BaseButton>
           </RouterLink>
 
@@ -100,10 +87,9 @@ onBeforeUnmount(() => {
           </RouterLink>
         </template>
 
-        <!-- AUTHENTICATED -->
         <template v-else>
           <RouterLink to="/dashboard">
-            <BaseButton> ☰ </BaseButton>
+            <BaseButton> Ir al panel </BaseButton>
           </RouterLink>
         </template>
       </div>
@@ -129,20 +115,8 @@ onBeforeUnmount(() => {
           id="public-mobile-menu"
           class="fixed inset-x-4 top-[4.5rem] z-50 max-h-[calc(100dvh-6rem)] space-y-2 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl"
         >
-          <RouterLink
-            :to="{ path: '/checkin', query: publicQuery }"
-            class="block"
-            @click="closeMenu"
-          >
-            <BaseButton class="w-full" size="sm" variant="secondary"> Check-in </BaseButton>
-          </RouterLink>
-
           <template v-if="!isAuthenticated">
-            <RouterLink
-              :to="{ path: '/guest-access', query: publicQuery }"
-              class="block"
-              @click="closeMenu"
-            >
+            <RouterLink to="/guest-access" class="block" @click="closeMenu">
               <BaseButton class="w-full" size="sm"> Clase muestra </BaseButton>
             </RouterLink>
 

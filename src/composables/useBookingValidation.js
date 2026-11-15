@@ -5,8 +5,8 @@ export function useBookingValidation() {
     return startA < endB && endA > startB
   }
 
-  const validateBooking = ({ gymClass, userBookings, settings, role }) => {
-    const categoryConfig = classCategories.find((c) => c.id === gymClass.category)
+  const validateBooking = ({ branchClass, userBookings, settings, role }) => {
+    const categoryConfig = classCategories.find((c) => c.id === branchClass.category)
 
     /*
       =====================
@@ -14,7 +14,7 @@ export function useBookingValidation() {
       =====================
       */
 
-    if (gymClass.attendees.length >= gymClass.capacity) {
+    if (branchClass.attendees.length >= branchClass.capacity) {
       return {
         valid: false,
 
@@ -42,7 +42,7 @@ export function useBookingValidation() {
       =====================
       */
 
-    const sameDayBookings = userBookings.filter((booking) => booking.date === gymClass.date)
+    const sameDayBookings = userBookings.filter((booking) => booking.date === branchClass.date)
 
     /*
       =====================
@@ -50,7 +50,7 @@ export function useBookingValidation() {
       =====================
       */
 
-    const isNormalClass = gymClass.category === 'normal'
+    const isNormalClass = branchClass.category === 'normal'
 
     if (!settings.allowMultipleNormalClassesPerDay && isNormalClass) {
       const alreadyHasNormal = sameDayBookings.some((booking) => booking.category === 'normal')
@@ -84,8 +84,8 @@ export function useBookingValidation() {
       }
 
       return overlaps(
-        gymClass.startTime,
-        gymClass.endTime,
+        branchClass.startTime,
+        branchClass.endTime,
 
         booking.startTime,
         booking.endTime,

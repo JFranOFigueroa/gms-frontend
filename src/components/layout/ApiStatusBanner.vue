@@ -1,6 +1,6 @@
 <script setup>
 import { useIntegrationStore } from '@/stores/useIntegrationStore'
-import { hydrateActiveGym } from '@/bootstrap/loadBackend'
+import { hydrateActiveBranch } from '@/bootstrap/loadBackend'
 const status = useIntegrationStore()
 </script>
 <template>
@@ -11,7 +11,7 @@ const status = useIntegrationStore()
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <strong>No se pudieron cargar algunos datos</strong>
-      <button class="underline" type="button" @click="hydrateActiveGym()">
+      <button class="underline" type="button" @click="hydrateActiveBranch()">
         Reintentar consultas
       </button>
     </div>

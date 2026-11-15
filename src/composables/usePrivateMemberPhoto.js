@@ -1,35 +1,36 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { api } from '@/api/service'
 import { resolveApiUrl } from '@/api/http'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 
 /** Imagen privada: se pide con Bearer, nunca se asigna un endpoint privado a img.src. */
 export function usePrivateMemberPhoto(memberRef) {
   const source = ref(null)
-  const gyms = useGymsStore()
+  const branches = useBranchesStore()
   let objectUrl = null
   let generation = 0
+  const currentMember = () =>
+    typeof memberRef === 'function' ? memberRef() : memberRef.value
+
   function release() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     objectUrl = null
     source.value = null
   }
+
   watch(
     () => {
-      const member = typeof memberRef === 'function' ? memberRef() : memberRef.value
-      return [member?.gymId || gyms.activeGymId, member?.photoAssetId, member?.photo]
+      const member = currentMember()
+      return [member?.branchId || branches.activeBranchId, member?.id, member?.photo]
     },
-    async ([gym, asset, fallback]) => {
+    async ([branch, memberId, fallback]) => {
       const current = ++generation
       release()
-      // Soportar URLs privadas antiguas que incluyen el identificador del archivo.
-      const privatePath =
-        typeof fallback === 'string' && /\/media-assets\/[^/]+\/content(?:\?|$)/.test(fallback)
-      const match = privatePath && fallback.match(/\/media-assets\/([^/?]+)\/content/)
-      const id = asset || (match ? decodeURIComponent(match[1]) : null)
-      if (id && gym) {
+      const privatePhoto =
+        typeof fallback === 'string' && /\/members\/[^/]+\/photo(?:\?|$)/.test(fallback)
+      if (privatePhoto && memberId && branch) {
         try {
-          const blob = await api.media.content(gym, id)
+          const blob = await api.members.photo(branch, memberId)
           if (current !== generation) return
           if (blob.type?.startsWith('image/')) {
             objectUrl = URL.createObjectURL(blob)
