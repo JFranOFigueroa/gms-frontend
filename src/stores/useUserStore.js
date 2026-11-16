@@ -1,24 +1,24 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { mapStaff } from '@/api/mappers'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 
-// La cuenta global ya existe si falla solamente la asignación al gimnasio.
+// La cuenta global ya existe si falla solamente la asignación a la sucursal.
 export class OwnerLinkPendingError extends Error {
-  constructor(userId, gymId) {
+  constructor(userId, branchId) {
     super(
-      'La cuenta se creó, pero no se pudo asignar al gimnasio. Intenta completar la asignación.',
+      'La cuenta se creó, pero no se pudo asignar a la sucursal. Intenta completar la asignación.',
     )
     this.name = 'OwnerLinkPendingError'
     this.userId = userId
-    this.gymId = gymId
+    this.branchId = branchId
   }
 }
 export const useUserStore = defineStore('users', {
   state: () => ({ allUsers: [] }),
   getters: {
-    users: (s) => s.allUsers.filter((u) => u.gymId === useGymsStore().activeGymId),
+    users: (s) => s.allUsers.filter((u) => u.branchId === useBranchesStore().activeBranchId),
     owners() {
       return this.users.filter((u) => u.roles.includes('owner'))
     },
@@ -30,13 +30,13 @@ export const useUserStore = defineStore('users', {
     },
   },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allUsers = []
         return
       }
-      const data = await useIntegrationStore().track('personal', () => api.staff.list(gym))
-      if (useGymsStore().activeGymId === gym) this.allUsers = data.map(mapStaff)
+      const data = await useIntegrationStore().track('personal', () => api.staff.list(branch))
+      if (useBranchesStore().activeBranchId === branch) this.allUsers = data.map(mapStaff)
     },
     findByEmail(email) {
       return (
@@ -47,9 +47,9 @@ export const useUserStore = defineStore('users', {
     isAdminUser(id) {
       return this.allUsers.some((u) => u.id === id && u.roles.includes('admin'))
     },
-    async registerTrainer(data, gym = useGymsStore().activeGymId) {
+    async registerTrainer(data, branch = useBranchesStore().activeBranchId) {
       const result = await useIntegrationStore().track('personal', () =>
-        api.staff.register(gym, {
+        api.staff.register(branch, {
           fullName: data.name,
           email: data.email,
           phone: data.phone,
@@ -57,10 +57,10 @@ export const useUserStore = defineStore('users', {
           status: 'active',
         }),
       )
-      await this.load(gym)
+      await this.load(branch)
       return result
     },
-    async registerOwner(data, gym = useGymsStore().activeGymId) {
+    async registerOwner(data, branch = useBranchesStore().activeBranchId) {
       // Primero cuenta global, después vínculo owner. Nunca enviar owner a staff/register.
       const account = await useIntegrationStore().track('cuentas globales', () =>
         api.users.create({
@@ -75,37 +75,37 @@ export const useUserStore = defineStore('users', {
       let staff
       try {
         staff = await useIntegrationStore().track('personal', () =>
-          api.staff.create(gym, { userId: account.id, role: 'owner' }),
+          api.staff.create(branch, { userId: account.id, role: 'owner' }),
         )
       } catch {
         // Guardar identificador solamente en memoria, sin repetir POST /users.
-        throw new OwnerLinkPendingError(account.id, gym)
+        throw new OwnerLinkPendingError(account.id, branch)
       }
-      await this.load(gym)
+      await this.load(branch)
       return { account, staff }
     },
-    async linkStaff(userId, role, gym = useGymsStore().activeGymId) {
+    async linkStaff(userId, role, branch = useBranchesStore().activeBranchId) {
       const result = await useIntegrationStore().track('personal', () =>
-        api.staff.create(gym, { userId, role }),
+        api.staff.create(branch, { userId, role }),
       )
-      await this.load(gym)
+      await this.load(branch)
       return result
     },
     addUser() {
       throw new Error('Para crear cuentas globales usa la gestión de cuentas del administrador.')
     },
     async updateUser(id, payload) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       if (!payload.role) throw new Error('Selecciona un permiso válido para esta persona.')
       const row = await useIntegrationStore().track('personal', () =>
-        api.staff.update(gym, id, { role: payload.role }),
+        api.staff.update(branch, id, { role: payload.role }),
       )
       this.allUsers = this.allUsers.map((u) => (u.id === id ? mapStaff(row) : u))
     },
     async removeUser(id) {
-      const gym = useGymsStore().activeGymId
-      await useIntegrationStore().track('personal', () => api.staff.remove(gym, id))
-      await this.load(gym)
+      const branch = useBranchesStore().activeBranchId
+      await useIntegrationStore().track('personal', () => api.staff.remove(branch, id))
+      await this.load(branch)
     },
     toggleActive() {
       throw new Error('Esta opción no está disponible desde esta sección.')

@@ -2,22 +2,22 @@
 const pick = (row, camel, snake, fallback = null) => row?.[camel] ?? row?.[snake] ?? fallback
 const asMoney = (v) => Number(v ?? 0)
 const asDate = (v) => (v ? String(v).slice(0, 10) : null)
-export const mapGym = (g) => ({
-  id: g.id,
-  name: g.name,
-  slug: g.slug,
-  shortName: g.shortName || g.short_name || g.name,
-  address: g.address || '',
-  phone: g.phone || '',
-  logo: g.logoUrl || g.logo_url || null,
-  status: g.status,
-  active: g.status === 'active',
-  createdAt: asDate(g.createdAt || g.created_at),
+export const mapBranch = (b) => ({
+  id: b.id,
+  name: b.name,
+  code: b.code,
+  shortName: b.shortName || b.short_name || b.name,
+  address: b.address || '',
+  phone: b.phone || '',
+  logo: b.logoUrl || b.logo_url || null,
+  status: b.status,
+  active: b.status === 'active',
+  createdAt: asDate(b.createdAt || b.created_at),
 })
 export const mapMember = (m) => ({
   id: m.id,
   userId: pick(m, 'userId', 'user_id'),
-  gymId: pick(m, 'gymId', 'gym_id'),
+  branchId: pick(m, 'branchId', 'branch_id'),
   code: m.code ?? m.memberCode,
   name: m.name || '',
   email: String(m.email || ''),
@@ -27,7 +27,6 @@ export const mapMember = (m) => ({
   emergencyContactName: pick(m, 'emergencyContactName', 'emergency_contact_name', ''),
   emergencyContactPhone: pick(m, 'emergencyContactPhone', 'emergency_contact_phone', ''),
   photo: pick(m, 'photoUrl', 'photo_url'),
-  photoAssetId: pick(m, 'photoAssetId', 'photo_asset_id'),
   startDate: asDate(pick(m, 'startDate', 'start_date')),
   paymentModality: pick(m, 'paymentModality', 'payment_modality'),
   lastPaymentDate: asDate(pick(m, 'lastPaymentDate', 'last_payment_date')),
@@ -39,7 +38,7 @@ export const mapMember = (m) => ({
 })
 export const mapPayment = (p) => ({
   id: p.id,
-  gymId: pick(p, 'gymId', 'gym_id'),
+  branchId: pick(p, 'branchId', 'branch_id'),
   memberId: pick(p, 'memberId', 'member_id'),
   amount: asMoney(p.amount),
   method: p.method,
@@ -62,22 +61,22 @@ export const mapPlan = (p) => ({
 export const mapStaff = (u) => ({
   ...u,
   name: u.name || u.fullName || u.full_name || '',
-  gymId: pick(u, 'gymId', 'gym_id'),
+  branchId: pick(u, 'branchId', 'branch_id'),
   role: u.role || u.roles?.[0] || '',
   roles: u.roles || [u.role].filter(Boolean),
   active: u.status === 'active',
-  gymIds: [pick(u, 'gymId', 'gym_id')].filter(Boolean),
+  branchIds: [pick(u, 'branchId', 'branch_id')].filter(Boolean),
 })
 export const mapProduct = (p) => ({
   ...p,
-  gymId: p.gymId || p.gym_id,
+  branchId: p.branchId || p.branch_id,
   price: asMoney(p.price),
   stock: Number(p.stock || 0),
   active: p.isActive ?? p.is_active ?? true,
 })
 export const mapSale = (s) => ({
   id: s.id,
-  gymId: s.gymId,
+  branchId: s.branchId,
   total: asMoney(s.total),
   createdBy: s.soldBy,
   createdAt: s.soldAt,
@@ -115,7 +114,7 @@ export const mapClass = (c) => {
     to = localParts(endsAt)
   return {
     id: c.id,
-    gymId: pick(c, 'gymId', 'gym_id'),
+    branchId: pick(c, 'branchId', 'branch_id'),
     templateId: pick(c, 'templateId', 'template_id'),
     name: c.name,
     category: c.category,
@@ -133,7 +132,7 @@ export const mapClass = (c) => {
 }
 export const mapTemplate = (t) => ({
   ...t,
-  gymId: pick(t, 'gymId', 'gym_id'),
+  branchId: pick(t, 'branchId', 'branch_id'),
   duration: pick(t, 'durationMinutes', 'duration_minutes', 60),
   category: t.category || 'normal',
 })
@@ -146,7 +145,7 @@ export const mapReservation = (r) => ({
 })
 export const mapCheckin = (e) => ({
   id: e.id,
-  gymId: pick(e, 'gymId', 'gym_id'),
+  branchId: pick(e, 'branchId', 'branch_id'),
   userId:
     pick(e, 'memberId', 'member_id') ||
     pick(e, 'staffUserId', 'staff_user_id') ||
@@ -181,7 +180,6 @@ export const mapCheckin = (e) => ({
 })
 export const mapBlock = (b) => ({
   id: b.id,
-  gymId: pick(b, 'gymId', 'gym_id'),
   type: pick(b, 'blockType', 'block_type', b.type),
   order: pick(b, 'sortOrder', 'sort_order', b.order ?? 0),
   enabled: b.enabled !== false,
@@ -189,10 +187,9 @@ export const mapBlock = (b) => ({
 })
 export const mapMedia = (m) => ({
   id: m.id,
-  gymId: pick(m, 'gymId', 'gym_id'),
   name: m.name,
   type: pick(m, 'mediaType', 'media_type'),
-  url: pick(m, 'externalUrl', 'external_url') || null,
+  url: m.url || pick(m, 'externalUrl', 'external_url') || null,
   contentUrl: pick(m, 'contentUrl', 'content_url'),
   mimeType: pick(m, 'mimeType', 'mime_type'),
   byteSize: pick(m, 'byteSize', 'byte_size'),

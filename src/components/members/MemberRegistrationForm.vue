@@ -6,7 +6,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 
 import { useMemberStore } from '@/stores/useMemberStore'
 import { api } from '@/api/service'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { calculateNextPaymentDate, todayISO } from '@/utils/date'
 import { validateImageFile } from '@/stores/useMediaStore'
 import { usePrivateMemberPhoto } from '@/composables/usePrivateMemberPhoto'
@@ -21,7 +21,7 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const memberStore = useMemberStore()
-const gymsStore = useGymsStore()
+const branchesStore = useBranchesStore()
 
 const today = todayISO()
 
@@ -115,7 +115,7 @@ const goNext = async () => {
   if (creationMode.value === 'existing' && !isEdit.value) {
     searchingAccount.value = true
     try {
-      const account = await api.users.search(form.email.trim().toLowerCase(), gymsStore.activeGymId)
+      const account = await api.users.search(form.email.trim().toLowerCase(), branchesStore.activeBranchId)
       if (account.status !== 'active') throw new Error('Esta cuenta no está activa.')
       form.userId = account.id // Identificador de uso interno; nunca se muestra en pantalla.
       verifiedEmail.value = form.email.trim().toLowerCase()

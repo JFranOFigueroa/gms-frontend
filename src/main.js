@@ -9,8 +9,8 @@ import router from './router'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useTenantStore } from '@/stores/useTenantStore'
-import { useGymsStore } from '@/stores/useGymsStore'
-import { hydrateActiveGym, clearGymData } from '@/bootstrap/loadBackend'
+import { useBranchesStore } from '@/stores/useBranchesStore'
+import { hydrateActiveBranch, clearBranchData } from '@/bootstrap/loadBackend'
 import { registerSessionHandlers } from '@/api/http'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
@@ -35,18 +35,18 @@ await authStore.restoreSession()
 const tenantStore = useTenantStore()
 tenantStore.restoreTenant()
 
-// En cambios de gimnasio se limpian datos anteriores antes de consultar el servidor.
-const gymsStore = useGymsStore()
+// En cambios de sucursal se limpian datos anteriores antes de consultar el servidor.
+const branchesStore = useBranchesStore()
 watch(
-  () => gymsStore.activeGymId,
+  () => branchesStore.activeBranchId,
   async (newId, oldId) => {
     if (newId !== oldId) {
-      clearGymData()
-      if (authStore.isAuthenticated && newId) await hydrateActiveGym()
+      clearBranchData()
+      if (authStore.isAuthenticated && newId) await hydrateActiveBranch()
     }
   },
 )
-if (authStore.isAuthenticated && gymsStore.activeGymId) void hydrateActiveGym()
+if (authStore.isAuthenticated) void hydrateActiveBranch()
 
 app.use(router)
 registerSessionHandlers({

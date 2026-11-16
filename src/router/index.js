@@ -5,7 +5,6 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
 import HomePage from '@/pages/public/HomePage.vue'
-import GlobalHomePage from '@/pages/public/GlobalHomePage.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
 
@@ -20,15 +19,9 @@ const routes = [
       {
         path: '',
         name: 'home',
-        component: GlobalHomePage,
+        component: HomePage,
       },
     ],
-  },
-
-  {
-    path: '/g/:slug',
-    component: PublicLayout,
-    children: [{ path: '', name: 'public-gym', component: HomePage }],
   },
 
   {
@@ -176,9 +169,9 @@ const routes = [
         },
       },
       {
-        path: 'gyms',
-        name: 'gyms',
-        component: () => import('@/pages/dashboard/GymsPage.vue'),
+        path: 'branches',
+        name: 'branches',
+        component: () => import('@/pages/dashboard/BranchesPage.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin'],

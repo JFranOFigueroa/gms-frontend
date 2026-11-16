@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { asModuleMap } from '@/api/mappers'
 import { moduleRegistry, modulePresets } from '@/config/moduleRegistry'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 export const useModuleStore = defineStore('modules', {
   state: () => ({
@@ -11,14 +11,14 @@ export const useModuleStore = defineStore('modules', {
   }),
   getters: { enabledModules: (s) => Object.keys(s.modules).filter((k) => s.modules[k]) },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.modules = {}
         this.loaded = false
         return
       }
-      const data = await useIntegrationStore().track('módulos', () => api.settings.modules(gym))
-      if (useGymsStore().activeGymId === gym) {
+      const data = await useIntegrationStore().track('módulos', () => api.settings.modules(branch))
+      if (useBranchesStore().activeBranchId === branch) {
         this.modules = asModuleMap(data)
         this.loaded = true
       }
@@ -32,9 +32,9 @@ export const useModuleStore = defineStore('modules', {
     async setModule(id, enabled) {
       if (!moduleRegistry.some((m) => m.id === id))
         throw new Error('No es posible cambiar esta opción.')
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const rows = await useIntegrationStore().track('módulos', () =>
-        api.settings.updateModule(gym, id, enabled),
+        api.settings.updateModule(branch, id, enabled),
       )
       this.modules = asModuleMap(rows)
     },

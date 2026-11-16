@@ -7,7 +7,7 @@ import { ROLE_LABELS } from '@/config/permissions'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCheckinStore } from '@/stores/useCheckinStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import { usePosStore } from '@/stores/usePosStore'
 import { formatCheckinReason, formatCheckinMethod, formatCheckinRole } from '@/utils/checkinLabels'
@@ -16,7 +16,7 @@ defineEmits(['toggle-sidebar'])
 
 const authStore = useAuthStore()
 const checkinStore = useCheckinStore()
-const gymsStore = useGymsStore()
+const branchesStore = useBranchesStore()
 const notificationStore = useNotificationStore()
 const posStore = usePosStore()
 const router = useRouter()
@@ -25,36 +25,36 @@ const notificationOpen = ref(false)
 
 const isStaff = computed(() => ['admin', 'owner', 'trainer'].includes(authStore.role))
 
-const availableGyms = computed(() => {
-  if (authStore.user?.platformAdmin) return gymsStore.gyms
+const availableBranches = computed(() => {
+  if (authStore.user?.platformAdmin) return branchesStore.branches
 
-  const allowedIds = authStore.gymAccess.map((g) => g.id)
+  const allowedIds = authStore.branchAccess.map((g) => g.id)
 
   if (!allowedIds?.length) {
-    return gymsStore.gyms.filter((gym) => gym.id === gymsStore.activeGymId)
+    return branchesStore.branches.filter((branch) => branch.id === branchesStore.activeBranchId)
   }
 
-  return gymsStore.gyms.filter((gym) => allowedIds.includes(gym.id))
+  return branchesStore.branches.filter((branch) => allowedIds.includes(branch.id))
 })
 
-const changeGym = (event) => {
+const changeBranch = (event) => {
   if (posStore.checkoutSubmitting) return
-  const gymId = event.target.value
+  const branchId = event.target.value
 
-  if (!availableGyms.value.some((gym) => gym.id === gymId)) return
+  if (!availableBranches.value.some((branch) => branch.id === branchId)) return
 
-  authStore.selectGym(gymId)
+  authStore.selectBranch(branchId)
 
   posStore.clearCart()
 }
 
 watch(
-  availableGyms,
-  (gyms) => {
-    if (!gyms.length) return
+  availableBranches,
+  (branches) => {
+    if (!branches.length) return
 
-    if (!gyms.some((gym) => gym.id === gymsStore.activeGymId)) {
-      authStore.selectGym(gyms[0].id)
+    if (!branches.some((branch) => branch.id === branchesStore.activeBranchId)) {
+      authStore.selectBranch(branches[0].id)
     }
   },
   { immediate: true },
@@ -169,17 +169,17 @@ const openNotification = (notification) => {
 
     <!-- RIGHT -->
     <div class="flex shrink-0 items-center gap-1.5 sm:gap-4">
-      <!-- Gym selector -->
-      <div v-if="availableGyms.length" class="block min-w-0">
+      <!-- Branch selector -->
+      <div v-if="availableBranches.length" class="block min-w-0">
         <select
-          aria-label="Seleccionar gimnasio"
+          aria-label="Seleccionar sucursal"
           :disabled="posStore.checkoutSubmitting"
-          :value="gymsStore.activeGymId"
+          :value="branchesStore.activeBranchId"
           class="h-10 w-auto min-w-0 max-w-[7rem] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-xs sm:h-12 sm:max-w-52 sm:px-4 sm:text-sm"
-          @change="changeGym"
+          @change="changeBranch"
         >
-          <option v-for="gym in availableGyms" :key="gym.id" :value="gym.id">
-            {{ gym.name }}
+          <option v-for="branch in availableBranches" :key="branch.id" :value="branch.id">
+            {{ branch.name }}
           </option>
         </select>
       </div>

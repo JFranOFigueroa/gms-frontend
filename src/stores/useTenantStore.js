@@ -1,17 +1,17 @@
 import { defineStore } from 'pinia'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 export const useTenantStore = defineStore('tenant', {
   getters: {
-    gym() {
-      return useGymsStore().activeGym || { name: 'Gimnasio', shortName: 'Gym', logo: null }
+    branch() {
+      return useBranchesStore().activeBranch || { name: 'GymBack', shortName: 'GymBack', logo: null }
     },
   },
   actions: {
-    updateGym(payload) {
-      return useGymsStore().updateGym(useGymsStore().activeGymId, payload)
+    updateBranch(payload) {
+      return useBranchesStore().updateBranch(useBranchesStore().activeBranchId, payload)
     },
     restoreTenant() {
-      /* El gimnasio activo está unificado con la sesión. */
+      /* El sucursal activa está unificado con la sesión. */
     },
   },
 })

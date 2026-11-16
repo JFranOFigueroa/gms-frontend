@@ -33,7 +33,7 @@ watch(
         <h2 class="text-2xl font-black sm:text-3xl">Check-in</h2>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-          Registra tu llegada al gimnasio
+          Registra tu llegada a la sucursal
         </p>
       </div>
 

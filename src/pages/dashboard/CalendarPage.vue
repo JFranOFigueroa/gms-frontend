@@ -7,12 +7,12 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useClassScheduleStore } from '@/stores/useClassScheduleStore'
 import { useMyReservationsStore } from '@/stores/useMyReservationsStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const scheduleStore = useClassScheduleStore()
 const myReservations = useMyReservationsStore()
-const gyms = useGymsStore()
+const branches = useBranchesStore()
 const auth = useAuthStore()
 const loadingError = ref('')
 
@@ -44,17 +44,17 @@ const toLocalISO = (date) => {
 
 const todayISO = toLocalISO(today)
 watch(
-  () => [gyms.activeGymId, currentYear.value, currentMonth.value, auth.role],
-  async ([gym, year, month, role]) => {
-    if (!gym) return
+  () => [branches.activeBranchId, currentYear.value, currentMonth.value, auth.role],
+  async ([branch, year, month, role]) => {
+    if (!branch) return
     const from = toLocalISO(new Date(year, month, 1))
     const to = toLocalISO(new Date(year, month + 1, 0))
     loadingError.value = ''
-    const requests = [scheduleStore.loadRange(gym, from, to)]
-    if (role === 'member') requests.push(myReservations.load(gym, { from, to }))
+    const requests = [scheduleStore.loadRange(branch, from, to)]
+    if (role === 'member') requests.push(myReservations.load(branch, { from, to }))
     const results = await Promise.allSettled(requests)
     const failure = results.find((r) => r.status === 'rejected')
-    if (failure && gyms.activeGymId === gym)
+    if (failure && branches.activeBranchId === branch)
       loadingError.value = failure.reason?.message || 'No fue posible cargar el calendario'
   },
   { immediate: true },
@@ -63,18 +63,18 @@ watch(
 const eventsByDate = computed(() => {
   const grouped = {}
 
-  scheduleStore.classes.forEach((gymClass) => {
-    if (!grouped[gymClass.date]) {
-      grouped[gymClass.date] = {
+  scheduleStore.classes.forEach((branchClass) => {
+    if (!grouped[branchClass.date]) {
+      grouped[branchClass.date] = {
         total: 0,
         special: 0,
       }
     }
 
-    grouped[gymClass.date].total++
+    grouped[branchClass.date].total++
 
-    if (gymClass.category !== 'normal') {
-      grouped[gymClass.date].special++
+    if (branchClass.category !== 'normal') {
+      grouped[branchClass.date].special++
     }
   })
 

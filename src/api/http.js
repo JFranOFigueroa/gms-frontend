@@ -80,7 +80,7 @@ function safeErrorMessage(response, data) {
     return defaults[response.status] || 'No se pudo completar la operación.'
   }
   if (
-    /\b(?:UUID|userId|gymId|USER_API_ENABLED|SQL|JDBC|constraint|stacktrace|org\.springframework|java\.|endpoint|\/api\/v1)\b/i.test(
+    /\b(?:UUID|userId|branchId|USER_API_ENABLED|SQL|JDBC|constraint|stacktrace|org\.springframework|java\.|endpoint|\/api\/v1)\b/i.test(
       message,
     )
   ) {

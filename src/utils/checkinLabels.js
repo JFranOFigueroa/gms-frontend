@@ -13,7 +13,7 @@ const REASONS = Object.freeze({
   member_inactive: 'El perfil del miembro se encuentra inactivo.',
   duplicate: 'El acceso ya fue registrado anteriormente.',
   already_checked_in: 'El acceso ya fue registrado anteriormente.',
-  wrong_gym: 'La credencial corresponde a otro gimnasio.',
+  wrong_branch: 'La credencial corresponde a otra sucursal.',
   not_found: 'No se encontró una membresía asociada.',
   invalid_code: 'El código de acceso no es válido.',
   expired_code: 'El código de acceso ha caducado.',

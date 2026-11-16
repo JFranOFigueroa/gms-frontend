@@ -1,15 +1,15 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { mapMember, mapPayment } from '@/api/mappers'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 import { todayISO } from '@/utils/date'
 import { validateImageFile } from './useMediaStore'
 export const useMemberStore = defineStore('members', {
   state: () => ({ allMembers: [], allPayments: [], ownMember: null, pendingPayment: null, paymentSubmitting: false }),
   getters: {
-    members: (s) => s.allMembers.filter((m) => m.gymId === useGymsStore().activeGymId),
-    payments: (s) => s.allPayments.filter((p) => p.gymId === useGymsStore().activeGymId),
+    members: (s) => s.allMembers.filter((m) => m.branchId === useBranchesStore().activeBranchId),
+    payments: (s) => s.allPayments.filter((p) => p.branchId === useBranchesStore().activeBranchId),
     activeMembers() {
       return this.members.filter((m) => m.active)
     },
@@ -27,33 +27,33 @@ export const useMemberStore = defineStore('members', {
     },
   },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allMembers = []
         return
       }
-      const rows = await useIntegrationStore().track('miembros', () => api.members.list(gym))
-      if (useGymsStore().activeGymId === gym) this.allMembers = rows.map(mapMember)
+      const rows = await useIntegrationStore().track('miembros', () => api.members.list(branch))
+      if (useBranchesStore().activeBranchId === branch) this.allMembers = rows.map(mapMember)
     },
-    async loadPayments(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async loadPayments(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allPayments = []
         return
       }
-      const rows = await useIntegrationStore().track('pagos', () => api.payments.list(gym))
-      if (useGymsStore().activeGymId === gym) this.allPayments = rows.map(mapPayment)
+      const rows = await useIntegrationStore().track('pagos', () => api.payments.list(branch))
+      if (useBranchesStore().activeBranchId === branch) this.allPayments = rows.map(mapPayment)
     },
-    async loadMine(gym = useGymsStore().activeGymId) {
+    async loadMine(branch = useBranchesStore().activeBranchId) {
       this.ownMember = null
-      if (!gym) return
-      const row = await useIntegrationStore().track('mi perfil', () => api.members.me(gym))
-      if (gym === useGymsStore().activeGymId) this.ownMember = mapMember(row)
+      if (!branch) return
+      const row = await useIntegrationStore().track('mi perfil', () => api.members.me(branch))
+      if (branch === useBranchesStore().activeBranchId) this.ownMember = mapMember(row)
       return this.ownMember
     },
     async registerNewMember(data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('miembros', () =>
-        api.members.register(gym, {
+        api.members.register(branch, {
           user: {
             fullName: data.name,
             email: data.email,
@@ -73,7 +73,7 @@ export const useMemberStore = defineStore('members', {
           },
         }),
       )
-      await this.load(gym)
+      await this.load(branch)
       return row
     },
     // Solo un pago anterior con fecha de vencimiento conocida puede estar vencido.
@@ -92,8 +92,8 @@ export const useMemberStore = defineStore('members', {
     },
     getAccessStatus(member) {
       if (!member) return { allowed: false, code: 'not_found', reason: 'Miembro no disponible' }
-      if (member.gymId !== useGymsStore().activeGymId)
-        return { allowed: false, code: 'wrong_gym', reason: 'Otro gimnasio' }
+      if (member.branchId !== useBranchesStore().activeBranchId)
+        return { allowed: false, code: 'wrong_branch', reason: 'Otro sucursal' }
       if (!member.active) return { allowed: false, code: 'inactive', reason: 'Miembro inactivo' }
       const paymentState = this.memberPaymentState(member)
       if (paymentState === 'no_payment')
@@ -142,9 +142,9 @@ export const useMemberStore = defineStore('members', {
     },
     async addMember(data) {
       if (!data.userId) throw new Error('Primero busca la cuenta que deseas vincular.')
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('miembros', () =>
-        api.members.create(gym, {
+        api.members.create(branch, {
           userId: data.userId,
           code: data.code,
           birthDate: data.birthDate || null,
@@ -156,11 +156,11 @@ export const useMemberStore = defineStore('members', {
           active: data.active ?? true,
         }),
       )
-      await this.load(gym)
+      await this.load(branch)
       return mapMember(row)
     },
     async updateMember(id, data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const body = {
         birthDate: data.birthDate || null,
         address: data.address || '',
@@ -171,22 +171,19 @@ export const useMemberStore = defineStore('members', {
         active: data.active,
       }
       const row = await useIntegrationStore().track('miembros', () =>
-        api.members.update(gym, id, body),
+        api.members.update(branch, id, body),
       )
       this.allMembers = this.allMembers.map((m) => (m.id === id ? mapMember(row) : m))
       return mapMember(row)
     },
     async updateMemberPhoto(memberId, file) {
       validateImageFile(file)
-      const gym = useGymsStore().activeGymId
-      const asset = await useIntegrationStore().track('fotografía', () =>
-        api.media.upload(gym, file, 'Foto del miembro'),
+      const branch = useBranchesStore().activeBranchId
+      const result = await useIntegrationStore().track('fotografía', () =>
+        api.members.uploadPhoto(branch, memberId, file),
       )
-      await useIntegrationStore().track('fotografía', () =>
-        api.members.update(gym, memberId, { photoAssetId: asset.id }),
-      )
-      await this.load(gym)
-      return asset
+      await this.load(branch)
+      return result
     },
     async deactivateMember(id) {
       return this.updateMember(id, { ...this.findById(id), active: false })
@@ -195,7 +192,7 @@ export const useMemberStore = defineStore('members', {
       return this.updateMember(id, { ...this.findById(id), active: true })
     },
     async registerPayment(id, payload) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       if (!payload.planId) return { ok: false, reason: 'Selecciona un plan de membresía válido.' }
       if (this.paymentSubmitting) return { ok: false, reason: 'El pago ya se está procesando.' }
       const body = {
@@ -205,18 +202,18 @@ export const useMemberStore = defineStore('members', {
         periods: Number(payload.periods) || 1,
         notes: payload.notes || null,
       }
-      const signature = JSON.stringify({ gym, body })
+      const signature = JSON.stringify({ branch, body })
       if (!this.pendingPayment || this.pendingPayment.signature !== signature)
         this.pendingPayment = { signature, key: crypto.randomUUID() }
       const key = this.pendingPayment.key
       this.paymentSubmitting = true
       try {
         const payment = await useIntegrationStore().track('pagos', () =>
-          api.payments.create(gym, body, key),
+          api.payments.create(branch, body, key),
         )
         this.pendingPayment = null
         // El POST fue exitoso; el refresco no debe convertirlo en un cobro fallido.
-        await Promise.allSettled([this.load(gym), this.loadPayments(gym)])
+        await Promise.allSettled([this.load(branch), this.loadPayments(branch)])
         return { ok: true, payment }
       } catch (error) {
         if (error.status === 409) this.pendingPayment = null

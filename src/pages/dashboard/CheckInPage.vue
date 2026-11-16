@@ -7,12 +7,12 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { useCheckinStore } from '@/stores/useCheckinStore'
 import { useMemberStore } from '@/stores/useMemberStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const checkinStore = useCheckinStore()
 const memberStore = useMemberStore()
-const gyms = useGymsStore()
+const branches = useBranchesStore()
 const auth = useAuthStore()
 const loadError = ref('')
 const issuingManualCode = ref(false)
@@ -29,7 +29,7 @@ const ownQrImage = ref('')
 const ownQrSeconds = ref(0)
 const issuingOwnQr = ref(false)
 const member = computed(() =>
-  memberStore.ownMember?.gymId === gyms.activeGymId ? memberStore.ownMember : null,
+  memberStore.ownMember?.branchId === branches.activeBranchId ? memberStore.ownMember : null,
 )
 const accessStatus = computed(() =>
   member.value ? memberStore.getAccessStatus(member.value) : null,
@@ -51,14 +51,14 @@ function clearMyCode() {
   checkinStore.clearManualCode()
 }
 async function requestMyCode() {
-  const gym = gyms.activeGymId
-  if (!gym || !member.value || issuingManualCode.value) return
+  const branch = branches.activeBranchId
+  if (!branch || !member.value || issuingManualCode.value) return
   issuingManualCode.value = true
   manualCodeStatus.value = ''
   const epoch = currentPageEpoch
   clearMyCode() // Solicitar uno nuevo invalida el código anterior.
   try {
-    const data = await checkinStore.issueMyCode(gym)
+    const data = await checkinStore.issueMyCode(branch)
     if (epoch !== currentPageEpoch || !data) return
     const duration = Date.parse(data.expiresAt) - Date.parse(data.serverTime)
     if (!Number.isFinite(duration) || duration <= 0)
@@ -105,8 +105,8 @@ function stopScanner() {
   }
 }
 watch(
-  () => gyms.activeGymId,
-  async (gym) => {
+  () => branches.activeBranchId,
+  async (branch) => {
     currentPageEpoch++
     const epoch = currentPageEpoch
     stopScanner()
@@ -116,10 +116,10 @@ watch(
     manualCodeStatus.value = ''
     loadError.value = ''
     scannerStatus.value = ''
-    if (!gym) return
+    if (!branch) return
     const results = await Promise.allSettled([
-      memberStore.loadMine(gym),
-      checkinStore.loadMine(gym),
+      memberStore.loadMine(branch),
+      checkinStore.loadMine(branch),
     ])
     if (epoch !== currentPageEpoch) return
     const failure = results.find((r) => r.status === 'rejected')
@@ -128,13 +128,13 @@ watch(
   { immediate: true },
 )
 async function showMyQr() {
-  const gym = gyms.activeGymId
-  if (!gym || issuingOwnQr.value) return
+  const branch = branches.activeBranchId
+  if (!branch || issuingOwnQr.value) return
   issuingOwnQr.value = true
   const epoch = currentPageEpoch
   clearOwnQr()
   try {
-    const data = await checkinStore.issueMyQr(gym)
+    const data = await checkinStore.issueMyQr(branch)
     if (epoch !== currentPageEpoch) return
     const duration = Math.max(0, Date.parse(data.expiresAt) - Date.parse(data.serverTime))
     if (!Number.isFinite(duration) || duration <= 0) throw new Error('La credencial ya caducó.')
@@ -154,28 +154,28 @@ async function showMyQr() {
     issuingOwnQr.value = false
   }
 }
-async function submitGymQr(kioskToken) {
-  if (!gyms.activeGymId || checkinStore.isSubmitting) return
+async function submitBranchQr(kioskToken) {
+  if (!branches.activeBranchId || checkinStore.isSubmitting) return
   stopScanner()
-  const gym = gyms.activeGymId
+  const branch = branches.activeBranchId
   const epoch = currentPageEpoch
   scannerStatus.value = 'Validando acceso…'
   try {
-    const decision = await checkinStore.scanGymQr(gym, kioskToken, crypto.randomUUID())
+    const decision = await checkinStore.scanBranchQr(branch, kioskToken, crypto.randomUUID())
     if (epoch !== currentPageEpoch) return
     scanDecision.value = decision
     scannerStatus.value = decision?.allowed === true
       ? 'Acceso registrado.'
       : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
     // El historial es la fuente real, incluso para intentos rechazados.
-    await checkinStore.loadMine(gym)
+    await checkinStore.loadMine(branch)
   } catch (error) {
     if (epoch === currentPageEpoch)
       scannerStatus.value = error.message || 'No se pudo validar el QR.'
   }
 }
 async function startScanner() {
-  if (scannerRunning.value || checkinStore.isSubmitting || !gyms.activeGymId) return
+  if (scannerRunning.value || checkinStore.isSubmitting || !branches.activeBranchId) return
   if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
     scannerStatus.value = 'La cámara necesita HTTPS o localhost y permiso del navegador.'
     return
@@ -199,7 +199,7 @@ async function startScanner() {
     if (current !== scannerEpoch) return
     scannerRunning.value = true
     scanDecision.value = null
-    scannerStatus.value = 'Apunta la cámara al QR temporal del gimnasio.'
+    scannerStatus.value = 'Apunta la cámara al QR temporal de la sucursal.'
     const tick = async () => {
       if (!scannerRunning.value || current !== scannerEpoch) return
       try {
@@ -207,7 +207,7 @@ async function startScanner() {
           const qrValue = await detector.detect(videoRef.value)
           if (current !== scannerEpoch) return
           if (qrValue) {
-            await submitGymQr(qrValue)
+            await submitBranchQr(qrValue)
             return
           }
         }
@@ -284,7 +284,7 @@ onUnmounted(() => {
           <h2 class="text-2xl font-bold">Escanear QR de acceso</h2>
 
           <p class="text-[var(--color-text-secondary)]">
-            Apunta la cámara al código QR mostrado en el acceso del gimnasio.
+            Apunta la cámara al código QR mostrado en el acceso de la sucursal.
           </p>
 
           <video
@@ -321,7 +321,7 @@ onUnmounted(() => {
           <div class="space-y-3">
             <p class="text-sm text-[var(--color-text-secondary)]">
               ¿No puedes usar la cámara? Solicita un código temporal para escribirlo en el kiosco
-              del gimnasio.
+              de la sucursal.
             </p>
             <div
               v-if="temporaryCode"
@@ -434,7 +434,7 @@ onUnmounted(() => {
         <h2 class="text-2xl font-bold">Mis check-ins</h2>
 
         <div v-if="!userCheckins.length" class="text-[var(--color-text-secondary)]">
-          Todavía no hay accesos registrados en este gimnasio.
+          Todavía no hay accesos registrados en esta sucursal.
         </div>
 
         <div

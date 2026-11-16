@@ -1,11 +1,11 @@
 import { endpoints as e, itemUrl } from './endpoints'
 import { http, request, getAll } from './http'
 const resource = (resolve) => ({
-  list: (gym) => getAll(resolve(gym)),
-  one: (gym, id) => http.get(itemUrl(resolve(gym), id)),
-  create: (gym, value) => http.post(resolve(gym), value),
-  update: (gym, id, value) => http.patch(itemUrl(resolve(gym), id), value),
-  remove: (gym, id) => http.delete(itemUrl(resolve(gym), id)),
+  list: (branch) => getAll(resolve(branch)),
+  one: (branch, id) => http.get(itemUrl(resolve(branch), id)),
+  create: (branch, value) => http.post(resolve(branch), value),
+  update: (branch, id, value) => http.patch(itemUrl(resolve(branch), id), value),
+  remove: (branch, id) => http.delete(itemUrl(resolve(branch), id)),
 })
 export const api = {
   auth: {
@@ -17,11 +17,17 @@ export const api = {
     logout: (refreshToken) =>
       request(e.auth.logout, { method: 'POST', body: { refreshToken }, auth: false }),
   },
-  gyms: { ...resource(() => e.gyms) },
+  branches: {
+    list: () => getAll(e.branches),
+    one: (id) => http.get(e.branch(id)),
+    create: (value) => http.post(e.branches, value),
+    update: (id, value) => http.patch(e.branch(id), value),
+    remove: (id) => http.delete(e.branch(id)),
+  },
   staff: {
     ...resource(e.staff),
-    list: (gym) => http.get(e.staff(gym)), // No admite offset/limit.
-    register: (gym, user) => http.post(e.staffRegister(gym), { user, role: 'trainer' }),
+    list: (branch) => http.get(e.staff(branch)), // No admite offset/limit.
+    register: (branch, user) => http.post(e.staffRegister(branch), { user, role: 'trainer' }),
   },
   users: {
     list: (params = {}) => http.get(e.users, params),
@@ -29,64 +35,76 @@ export const api = {
     create: (data) => http.post(e.users, data),
     update: (id, data) => http.patch(itemUrl(e.users, id), data),
     changeStatus: (id, status) => http.patch(e.userStatus(id), { status }),
-    search: (email, gymId) => http.get(e.userSearch, { email, gymId }),
+    search: (email, branchId) => http.get(e.userSearch, { email, branchId }),
   },
   members: {
     ...resource(e.members),
-    register: (gym, data) => http.post(e.memberRegister(gym), data),
-    me: (gym) => http.get(e.memberMe(gym)),
+    register: (branch, data) => http.post(e.memberRegister(branch), data),
+    me: (branch) => http.get(e.memberMe(branch)),
+    photo: (branch, memberId) =>
+      http.get(e.memberPhoto(branch, memberId), undefined, { responseType: 'blob' }),
+    uploadPhoto: (branch, memberId, file) => {
+      const body = new FormData()
+      body.append('file', file)
+      return http.post(e.memberPhoto(branch, memberId), body)
+    },
+    removePhoto: (branch, memberId) => http.delete(e.memberPhoto(branch, memberId)),
   },
   plans: resource(e.plans),
   payments: {
-    list: (gym, memberId) => http.get(e.payments(gym), { limit: 100, memberId }),
-    create: (gym, data, idempotencyKey) =>
-      http.post(e.payments(gym), data, {
+    list: (branch, memberId) => http.get(e.payments(branch), { limit: 100, memberId }),
+    create: (branch, data, idempotencyKey) =>
+      http.post(e.payments(branch), data, {
         extraHeaders: { 'Idempotency-Key': idempotencyKey },
       }),
   },
   classes: {
     ...resource(e.classes),
-    listRange: (gym, params) => getAll(e.classes(gym), { query: params }),
-    availability: (gym, classId) => http.get(e.classAvailability(gym, classId)),
+    listRange: (branch, params) => getAll(e.classes(branch), { query: params }),
+    availability: (branch, classId) => http.get(e.classAvailability(branch, classId)),
   },
   templates: resource(e.classTemplates),
   reservations: {
-    list: (gym, classId) => http.get(e.reservations(gym), { classId }),
-    create: (gym, classId) => http.post(e.reservations(gym), { classId }),
-    cancel: (gym, id) => http.delete(itemUrl(e.reservations(gym), id)),
-    mine: (gym, params = {}) => http.get(e.reservationsMe(gym), params),
+    list: (branch, classId) => http.get(e.reservations(branch), { classId }),
+    create: (branch, classId) => http.post(e.reservations(branch), { classId }),
+    cancel: (branch, id) => http.delete(itemUrl(e.reservations(branch), id)),
+    mine: (branch, params = {}) => http.get(e.reservationsMe(branch), params),
   },
   routines: resource(e.routines),
   products: resource(e.products),
   sales: {
-    list: (gym) => http.get(e.sales(gym), { limit: 100 }),
-    checkout: (gym, items, idempotencyKey) =>
-      http.post(e.sales(gym), { items }, {
-        extraHeaders: { 'Idempotency-Key': idempotencyKey },
-      }),
+    list: (branch) => http.get(e.sales(branch), { limit: 100 }),
+    checkout: (branch, items, idempotencyKey) =>
+      http.post(
+        e.sales(branch),
+        { items },
+        {
+          extraHeaders: { 'Idempotency-Key': idempotencyKey },
+        },
+      ),
   },
   checkins: {
-    list: (gym) => http.get(e.checkins(gym), { limit: 100 }),
-    manual: (gym, memberId) => http.post(e.checkins(gym), { memberId }),
-    mine: (gym, params = {}) => http.get(e.checkinsMe(gym), params),
-    scanGymQr: (gym, kioskToken, idempotencyKey) =>
+    list: (branch) => http.get(e.checkins(branch), { limit: 100 }),
+    manual: (branch, memberId) => http.post(e.checkins(branch), { memberId }),
+    mine: (branch, params = {}) => http.get(e.checkinsMe(branch), params),
+    scanBranchQr: (branch, kioskToken, idempotencyKey) =>
       http.post(
-        e.checkinScanGymQr(gym),
+        e.checkinScanBranchQr(branch),
         { kioskToken },
         { extraHeaders: { 'Idempotency-Key': idempotencyKey } },
       ),
-    issueMyQr: (gym) => http.post(e.checkinMyQr(gym)),
-    issueMyCode: (gym) => http.post(e.checkinMyCode(gym)),
-    stats: (gym, params) => http.get(e.checkinStats(gym), params),
+    issueMyQr: (branch) => http.post(e.checkinMyQr(branch)),
+    issueMyCode: (branch) => http.post(e.checkinMyCode(branch)),
+    stats: (branch, params) => http.get(e.checkinStats(branch), params),
   },
   // El kiosco usa solamente su cookie HttpOnly y CSRF, jamás el Bearer privado.
   kiosk: {
-    publicConfig: (slug) => http.get(e.publicCheckinConfig(slug), undefined, { auth: false }),
+    publicConfig: (code) => http.get(e.publicCheckinConfig(code), undefined, { auth: false }),
     session: () => http.get(e.kioskSession, undefined, { auth: false, credentials: 'include' }),
-    activate: (slug, activationCode) =>
-      http.post(e.kioskActivate, { slug, activationCode }, { auth: false, credentials: 'include' }),
-    issueGymQr: (csrfToken) =>
-      http.post(e.kioskGymQr, undefined, {
+    activate: (code, activationCode) =>
+      http.post(e.kioskActivate, { code, activationCode }, { auth: false, credentials: 'include' }),
+    issueBranchQr: (csrfToken) =>
+      http.post(e.kioskBranchQr, undefined, {
         auth: false,
         credentials: 'include',
         extraHeaders: { 'X-CSRF-Token': csrfToken },
@@ -125,38 +143,38 @@ export const api = {
       }),
   },
   checkinDevices: {
-    list: (gym) => http.get(e.checkinDevices(gym)),
-    create: (gym, deviceName) => http.post(e.checkinDevices(gym), { deviceName }),
-    reissue: (gym, deviceId) => http.post(e.checkinDeviceReissue(gym, deviceId)),
-    update: (gym, deviceId, active) => http.patch(e.checkinDevice(gym, deviceId), { active }),
-    remove: (gym, deviceId) => http.delete(e.checkinDevice(gym, deviceId)),
+    list: (branch) => http.get(e.checkinDevices(branch)),
+    create: (branch, deviceName) => http.post(e.checkinDevices(branch), { deviceName }),
+    reissue: (branch, deviceId) => http.post(e.checkinDeviceReissue(branch, deviceId)),
+    update: (branch, deviceId, active) => http.patch(e.checkinDevice(branch, deviceId), { active }),
+    remove: (branch, deviceId) => http.delete(e.checkinDevice(branch, deviceId)),
   },
   settings: {
-    get: (gym) => http.get(e.settings(gym)),
-    update: (gym, body) => http.patch(e.settings(gym), body),
-    modules: (gym) => http.get(e.modules(gym)),
-    updateModule: (gym, key, enabled) => http.patch(itemUrl(e.modules(gym), key), { enabled }),
+    get: (branch) => http.get(e.settings(branch)),
+    update: (branch, body) => http.patch(e.settings(branch), body),
+    modules: (branch) => http.get(e.modules(branch)),
+    updateModule: (branch, key, enabled) => http.patch(itemUrl(e.modules(branch), key), { enabled }),
   },
-  landing: {
-    ...resource(e.landing),
-    link: (gym) => http.get(e.landingLink(gym)),
-    changeSlug: (gym, slug) => http.patch(e.landingSlug(gym), { slug }),
-    changeLogo: (gym, imageAssetId) => http.patch(e.landingLogo(gym), { imageAssetId }),
-    publicPage: (slug, { signal } = {}) =>
-      http.get(e.publicLanding(slug), undefined, { auth: false, signal }),
+  site: {
+    publicPage: ({ signal } = {}) => http.get(e.publicSite, undefined, { auth: false, signal }),
+    settings: {
+      get: () => http.get(e.siteSettings),
+      update: (body) => http.patch(e.siteSettings, body),
+    },
+    landing: resource(() => e.siteLanding),
+    media: {
+      ...resource(() => e.siteMedia),
+      // El catálogo del sitio no pagina: se solicita completo en una sola llamada.
+      list: () => http.get(e.siteMedia),
+      upload: (file, name = '') => {
+        const body = new FormData()
+        body.append('file', file)
+        if (name) body.append('name', name)
+        return http.post(e.siteMediaUpload, body)
+      },
+    },
   },
   dashboard: {
-    summary: (gym, params = {}) => http.get(e.dashboardSummary(gym), params),
-  },
-  media: {
-    ...resource(e.media), // Se conserva el registro de imágenes HTTPS.
-    upload: (gym, file, name = '') => {
-      const body = new FormData()
-      body.append('file', file)
-      if (name) body.append('name', name)
-      return http.post(e.mediaUpload(gym), body)
-    },
-    content: (gym, assetId) =>
-      http.get(e.mediaContent(gym, assetId), undefined, { responseType: 'blob' }),
+    summary: (branch, params = {}) => http.get(e.dashboardSummary(branch), params),
   },
 }

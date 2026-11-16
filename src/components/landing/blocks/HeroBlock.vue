@@ -9,16 +9,14 @@ import 'swiper/css'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import { useMediaStore } from '@/stores/useMediaStore'
-import { useTenantStore } from '@/stores/useTenantStore'
 
 const props = defineProps({
   data: Object,
   mediaAssets: { type: Array, default: null },
-  publicGym: { type: Object, default: null },
+  publicSite: { type: Object, default: null },
 })
 
 const mediaStore = useMediaStore()
-const tenantStore = useTenantStore()
 
 const slides = computed(() => {
   return (Array.isArray(props.data?.slides) ? props.data.slides : [])
@@ -28,7 +26,7 @@ const slides = computed(() => {
     .filter(Boolean)
 })
 
-const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name || 'GMS FITNESS')
+const siteName = computed(() => props.publicSite?.name || 'GMS FITNESS')
 </script>
 
 <template>
@@ -61,7 +59,7 @@ const gymName = computed(() => props.publicGym?.name || tenantStore.gym?.name ||
     >
       <div class="w-full max-w-4xl text-center">
         <p class="mb-4 break-words text-sm text-[var(--color-text-secondary)] sm:text-base">
-          {{ gymName }}
+          {{ siteName }}
         </p>
 
         <h1 class="break-words text-4xl font-black leading-tight sm:text-6xl md:text-7xl">

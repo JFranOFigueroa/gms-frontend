@@ -55,10 +55,10 @@ const applyPreset = async (presetId) => {
   <BaseCard>
     <div class="space-y-6">
       <div>
-        <h2 class="text-xl font-black sm:text-2xl">Módulos del gimnasio</h2>
+        <h2 class="text-xl font-black sm:text-2xl">Módulos de la sucursal</h2>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-          Activa o desactiva funcionalidades según el tipo de gimnasio
+          Activa o desactiva funcionalidades según el tipo de sucursal
         </p>
       </div>
 

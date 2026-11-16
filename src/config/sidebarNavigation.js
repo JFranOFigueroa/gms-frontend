@@ -33,8 +33,8 @@ export const sidebarNavigation = {
       path: '/dashboard/users',
     },
     {
-      label: 'Gimnasios',
-      path: '/dashboard/gyms',
+      label: 'Sucursales',
+      path: '/dashboard/branches',
     },
     {
       label: 'Check-in',

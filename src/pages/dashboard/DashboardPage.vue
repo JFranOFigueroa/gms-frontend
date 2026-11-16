@@ -15,7 +15,7 @@ import { useCheckinStore } from '@/stores/useCheckinStore'
 import { usePosStore } from '@/stores/usePosStore'
 import { useModuleStore } from '@/stores/useModuleStore'
 import { useDashboardSummaryStore } from '@/stores/useDashboardSummaryStore'
-import { useGymsStore } from '@/stores/useGymsStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 
 import { isManager as isManagerRole } from '@/config/permissions'
 import { toDateOnly, todayISO as getTodayISO } from '@/utils/date'
@@ -29,15 +29,15 @@ const checkinStore = useCheckinStore()
 const posStore = usePosStore()
 const moduleStore = useModuleStore()
 const summary = useDashboardSummaryStore()
-const gyms = useGymsStore()
+const branches = useBranchesStore()
 watch(
-  () => [gyms.activeGymId, authStore.role],
-  async ([gym, role]) => {
-    if (gym && ['admin', 'owner'].includes(role)) await summary.load(gym).catch(() => {})
+  () => [branches.activeBranchId, authStore.role],
+  async ([branch, role]) => {
+    if (branch && ['admin', 'owner'].includes(role)) await summary.load(branch).catch(() => {})
   },
   { immediate: true },
 )
-const daily = computed(() => (summary.gymId === gyms.activeGymId ? summary.data : null))
+const daily = computed(() => (summary.branchId === branches.activeBranchId ? summary.data : null))
 const money = (value) =>
   new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -55,7 +55,7 @@ const activeMembers = computed(() => memberStore.activeMembers.length)
 const activeTrainers = computed(() => userStore.trainers.filter((user) => user.active).length)
 
 const todayClasses = computed(() => {
-  return scheduleStore.classes.filter((gymClass) => gymClass.date === todayISO)
+  return scheduleStore.classes.filter((branchClass) => branchClass.date === todayISO)
 })
 
 const todayCheckins = computed(() => checkinStore.grantedToday)
@@ -171,7 +171,7 @@ const detailTitle = computed(() => {
             isAdmin
               ? 'Dashboard administrativo'
               : isOwner
-                ? 'Dashboard del gimnasio'
+                ? 'Dashboard de la sucursal'
                 : isTrainer
                   ? 'Dashboard de entrenador'
                   : 'Dashboard'
@@ -183,7 +183,7 @@ const detailTitle = computed(() => {
             isAdmin
               ? 'Resumen operativo de la plataforma'
               : isOwner
-                ? 'Resumen operativo de tu gimnasio'
+                ? 'Resumen operativo de tu sucursal'
                 : isTrainer
                   ? 'Resumen de tu jornada y actividad'
                   : 'Resumen general'
@@ -200,8 +200,8 @@ const detailTitle = computed(() => {
           <BaseButton variant="secondary"> Usuarios </BaseButton>
         </RouterLink>
 
-        <RouterLink v-if="isAdmin" to="/dashboard/gyms">
-          <BaseButton variant="secondary"> Gimnasios </BaseButton>
+        <RouterLink v-if="isAdmin" to="/dashboard/branches">
+          <BaseButton variant="secondary"> Sucursales </BaseButton>
         </RouterLink>
 
         <RouterLink
@@ -232,7 +232,7 @@ const detailTitle = computed(() => {
     </div>
 
     <!-- Cifras calculadas por SQL sobre TODO el rango, no solo 100 filas. -->
-    <BaseCard v-if="isManager && gyms.activeGymId">
+    <BaseCard v-if="isManager && branches.activeBranchId">
       <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -245,7 +245,7 @@ const detailTitle = computed(() => {
           <BaseButton
             variant="secondary"
             :disabled="summary.loading"
-            @click="summary.load(gyms.activeGymId).catch(() => {})"
+            @click="summary.load(branches.activeBranchId).catch(() => {})"
             >Actualizar</BaseButton
           >
         </div>
@@ -367,22 +367,22 @@ const detailTitle = computed(() => {
           </div>
 
           <div
-            v-for="gymClass in todaySchedule"
-            :key="gymClass.id"
+            v-for="branchClass in todaySchedule"
+            :key="branchClass.id"
             class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
           >
             <div>
               <p class="font-semibold">
-                {{ gymClass.name }}
+                {{ branchClass.name }}
               </p>
 
               <p class="text-sm text-[var(--color-text-secondary)]">
-                {{ gymClass.startTime }} - {{ gymClass.endTime }} · {{ gymClass.capacity }} cupos
+                {{ branchClass.startTime }} - {{ branchClass.endTime }} · {{ branchClass.capacity }} cupos
               </p>
             </div>
 
             <div class="text-sm text-[var(--color-text-secondary)]">
-              {{ gymClass.attendees?.length || 0 }} inscritos
+              {{ branchClass.attendees?.length || 0 }} inscritos
             </div>
           </div>
         </div>

@@ -196,7 +196,7 @@ async function findEmail() {
         </p>
         <p v-if="notice" role="status" class="text-sm text-emerald-400">{{ notice }}</p>
         <p class="text-xs text-[var(--color-text-secondary)]">
-          La asignación de gimnasios y permisos se realiza desde la sección de usuarios.
+          La asignación de sucursales y permisos se realiza desde la sección de usuarios.
         </p>
       </div>
     </div></BaseCard

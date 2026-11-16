@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/service'
 import { mapClass, mapReservation } from '@/api/mappers'
-import { useGymsStore } from './useGymsStore'
+import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 // Las fechas se envían con offset ISO 8601; nunca se inventan IDs ni asistentes.
 const toOffset = (date, time) => {
@@ -11,42 +11,42 @@ const toOffset = (date, time) => {
 }
 export const useClassScheduleStore = defineStore('class-schedule', {
   state: () => ({ allClasses: [], availabilityByClass: {} }),
-  getters: { classes: (s) => s.allClasses.filter((c) => c.gymId === useGymsStore().activeGymId) },
+  getters: { classes: (s) => s.allClasses.filter((c) => c.branchId === useBranchesStore().activeBranchId) },
   actions: {
-    async load(gym = useGymsStore().activeGymId) {
-      if (!gym) {
+    async load(branch = useBranchesStore().activeBranchId) {
+      if (!branch) {
         this.allClasses = []
         return
       }
-      const rows = await useIntegrationStore().track('clases', () => api.classes.list(gym))
-      if (gym === useGymsStore().activeGymId) this.allClasses = rows.map(mapClass)
+      const rows = await useIntegrationStore().track('clases', () => api.classes.list(branch))
+      if (branch === useBranchesStore().activeBranchId) this.allClasses = rows.map(mapClass)
     },
-    async loadRange(gym = useGymsStore().activeGymId, from, to) {
-      if (!gym || !from || !to) return
+    async loadRange(branch = useBranchesStore().activeBranchId, from, to) {
+      if (!branch || !from || !to) return
       const rows = await useIntegrationStore().track('clases', () =>
-        api.classes.listRange(gym, { from, to }),
+        api.classes.listRange(branch, { from, to }),
       )
-      if (gym !== useGymsStore().activeGymId) return
+      if (branch !== useBranchesStore().activeBranchId) return
       // Conservar clases de otros meses ya consultados y actualizar el mes visible.
       this.allClasses = this.allClasses
-        .filter((c) => c.gymId !== gym || c.date < from || c.date > to)
+        .filter((c) => c.branchId !== branch || c.date < from || c.date > to)
         .concat(rows.map(mapClass))
     },
     async loadAvailability(classId) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const result = await useIntegrationStore().track('disponibilidad', () =>
-        api.classes.availability(gym, classId),
+        api.classes.availability(branch, classId),
       )
-      if (gym === useGymsStore().activeGymId)
+      if (branch === useBranchesStore().activeBranchId)
         this.availabilityByClass = { ...this.availabilityByClass, [classId]: result }
       return result
     },
     async loadReservationsForClass(classId) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const rows = await useIntegrationStore().track('reservas', () =>
-        api.reservations.list(gym, classId),
+        api.reservations.list(branch, classId),
       )
-      const target = this.allClasses.find((c) => c.id === classId && c.gymId === gym)
+      const target = this.allClasses.find((c) => c.id === classId && c.branchId === branch)
       if (target) {
         const active = rows
           .map(mapReservation)
@@ -58,9 +58,9 @@ export const useClassScheduleStore = defineStore('class-schedule', {
       return rows
     },
     async addClass(data) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('clases', () =>
-        api.classes.create(gym, {
+        api.classes.create(branch, {
           templateId: data.templateId,
           name: data.name,
           color: data.color,
@@ -75,16 +75,16 @@ export const useClassScheduleStore = defineStore('class-schedule', {
       return row
     },
     async bookClass(classId) {
-      const gym = useGymsStore().activeGymId
+      const branch = useBranchesStore().activeBranchId
       const row = await useIntegrationStore().track('reservas', () =>
-        api.reservations.create(gym, classId),
+        api.reservations.create(branch, classId),
       )
       await this.loadAvailability(classId)
       return row
     },
     async removeClass(id) {
-      const gym = useGymsStore().activeGymId
-      await useIntegrationStore().track('clases', () => api.classes.remove(gym, id))
+      const branch = useBranchesStore().activeBranchId
+      await useIntegrationStore().track('clases', () => api.classes.remove(branch, id))
       this.allClasses = this.allClasses.filter((c) => c.id !== id)
     },
   },

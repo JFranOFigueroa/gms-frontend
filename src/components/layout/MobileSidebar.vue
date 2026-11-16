@@ -6,7 +6,6 @@ import { RouterLink, useRouter } from 'vue-router'
 import { sidebarNavigation } from '@/config/sidebarNavigation'
 
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useGymsStore } from '@/stores/useGymsStore'
 import { useModuleStore } from '@/stores/useModuleStore'
 import { useTenantStore } from '@/stores/useTenantStore'
 
@@ -21,7 +20,6 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const tenantStore = useTenantStore()
-const gyms = useGymsStore()
 const authStore = useAuthStore()
 const moduleStore = useModuleStore()
 const router = useRouter()
@@ -32,11 +30,7 @@ const closeButton = ref(null)
 
 let previouslyFocused = null
 
-const publicHome = computed(() =>
-  authStore.role === 'owner' && gyms.activeGym?.slug
-    ? `/g/${encodeURIComponent(gyms.activeGym.slug)}`
-    : '/',
-)
+const publicHome = '/'
 
 const navigation = computed(() => {
   return (sidebarNavigation[authStore.role] || []).filter((item) => {
@@ -107,7 +101,7 @@ const logout = async () => {
             class="max-w-full break-words text-xl font-black leading-tight"
             @click="emit('close')"
           >
-            {{ tenantStore.gym.shortName }}
+            {{ tenantStore.branch.shortName }}
           </RouterLink>
 
           <button
