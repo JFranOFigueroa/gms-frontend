@@ -66,7 +66,7 @@ Invalida el refresh token.
 
 ### `GET /api/v1/public/site`
 
-Anónimo. Devuelve `{ site, theme, blocks, mediaAssets }`; ver `README.md`.
+Anónimo. Devuelve `{ site, theme, blocks, mediaAssets, branches }`. `branches` contiene las sucursales activas (`id`, `name`, `code`) para el selector de Check-in de la landing; ver `README.md`.
 
 ### `GET /api/v1/site/settings`
 
@@ -87,9 +87,18 @@ Campos admitidos:
   "timezone": "America/Mexico_City",
   "currency": "MXN",
   "themePreset": "crossfit-dark",
-  "themeOverrides": {}
+  "themeOverrides": {},
+  "modulesGlobal": false,
+  "globalModules": {
+    "calendar": false,
+    "routines": true,
+    "checkin": true,
+    "pos": true
+  }
 }
 ```
+
+`modulesGlobal` y `globalModules` solo pueden modificarse con un `admin` global (`platformAdmin`). Cuando `modulesGlobal` es `true`, `GET /api/v1/branches/{branchId}/modules` devuelve los módulos globales para todas las sucursales y los toggles por sucursal se rechazan.
 
 ### Landing
 
@@ -224,7 +233,9 @@ El frontend espera errores JSON con `message` legible. Códigos relevantes:
 
 - Esquema gestionado externamente con **Liquibase**.
 - Baseline: `src/main/resources/db/schema/schema.sql`.
+- Módulos globales: `src/main/resources/db/schema/site_modules.sql`.
 - Seed idempotente: `src/main/resources/db/seed/seed.sql`.
+- Administrador inicial: `src/main/resources/db/seed/seed_platform_admin.sql`.
 - La aplicación usa `spring.jpa.hibernate.ddl-auto=validate`.
 - Flyway está deshabilitado por defecto; el test de integración asume un esquema preparado externamente.
 
@@ -256,4 +267,4 @@ BOOTSTRAP_ADMIN_EMAIL=admin@gms.local
 BOOTSTRAP_ADMIN_PASSWORD=...   # >= 12 caracteres
 ```
 
-`AdminBootstrap` solo crea la cuenta administradora si `BOOTSTRAP_ADMIN_PASSWORD` está definido. También la vincula como `owner` de “Sucursal Demo” si existe.
+`AdminBootstrap` solo crea la cuenta administradora si `BOOTSTRAP_ADMIN_PASSWORD` está definido y la cuenta no existe. Si el seed ya creó `admin@gms.local`, no sobrescribe su contraseña. También la vincula como `owner` de “Sucursal Demo” si existe. La cuenta platform admin se oculta de `/users` y `/staff` y no se administra desde la UI.
