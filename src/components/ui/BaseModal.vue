@@ -13,6 +13,10 @@ const props = defineProps({
 
     default: false,
   },
+  wide: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['close'])
@@ -116,7 +120,8 @@ onBeforeUnmount(deactivate)
           ref="panel"
           role="dialog"
           aria-modal="true"
-          class="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl"
+          class="flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl"
+          :class="wide ? 'max-w-5xl' : 'max-w-2xl'"
         >
           <div class="overflow-y-auto p-5 sm:p-8">
             <slot />
