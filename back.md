@@ -66,7 +66,7 @@ Invalida el refresh token.
 
 ### `GET /api/v1/public/site`
 
-Anónimo. Devuelve `{ site, theme, blocks, mediaAssets, branches }`. `branches` contiene las sucursales activas (`id`, `name`, `code`) para el selector de Check-in de la landing; ver `README.md`.
+Anónimo. Devuelve `{ site, theme, blocks, mediaAssets, branches }`. `branches` contiene las sucursales activas con check-in habilitado (`id`, `name`, `code`) para el selector de la landing; ver `README.md`.
 
 ### `GET /api/v1/site/settings`
 

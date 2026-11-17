@@ -66,7 +66,7 @@ Respuesta:
 }
 ```
 
-Las imágenes locales del sitio se sirven desde `GET /api/v1/public/media/{id}`. Las imágenes externas usan su URL HTTPS directamente. `branches` alimenta el selector de Check-in de la landing; el kiosco sigue recibiendo `?branch=<code>`.
+Las imágenes locales del sitio se sirven desde `GET /api/v1/public/media/{id}`. Las imágenes externas usan su URL HTTPS directamente. `branches` alimenta el selector de Check-in de la landing y solo incluye sucursales activas con el módulo de check-in habilitado; el kiosco sigue recibiendo `?branch=<code>`.
 
 ## Dashboard
 

@@ -56,7 +56,11 @@ const activePreset = computed(() => {
 })
 
 const controlsDisabled = computed(
-  () => !canManage.value || saving.value || (!modulesGlobal.value && !activeBranchId.value),
+  () =>
+    !canManage.value ||
+    saving.value ||
+    loadingSettings.value ||
+    (!modulesGlobal.value && !activeBranchId.value),
 )
 
 async function loadSiteSettings() {
@@ -205,7 +209,7 @@ onMounted(async () => {
           type="checkbox"
           class="mt-1 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
           :checked="modulesGlobal"
-          :disabled="!canManage || saving"
+          :disabled="!canManage || saving || loadingSettings"
           @change="toggleGlobalMode"
         />
         <span class="min-w-0">

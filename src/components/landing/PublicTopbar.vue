@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { RouterLink, useRoute } from 'vue-router'
 
@@ -61,13 +61,8 @@ const toggleCheckIn = () => {
 }
 
 watch(menuOpen, (open) => {
-  if (open) {
-    lock()
-    window.addEventListener('keydown', onKeydown)
-  } else {
-    unlock()
-    window.removeEventListener('keydown', onKeydown)
-  }
+  if (open) lock()
+  else unlock()
 })
 
 watch(checkInOpen, (open) => {
@@ -79,6 +74,10 @@ watch(
   () => route.fullPath,
   () => closeMenu(),
 )
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
 
 onBeforeUnmount(() => {
   unlock()
