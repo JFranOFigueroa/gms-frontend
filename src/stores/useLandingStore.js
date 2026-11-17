@@ -46,9 +46,7 @@ export const useLandingStore = defineStore('landing', {
   },
   actions: {
     async load() {
-      const rows = await useIntegrationStore().track('landing', () =>
-        api.site.landing.list(null),
-      )
+      const rows = await useIntegrationStore().track('landing', () => api.site.landing.list(null))
       this.allBlocks = rows.map(mapBlock)
     },
     async addBlock(config) {

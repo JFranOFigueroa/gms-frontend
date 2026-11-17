@@ -7,7 +7,9 @@ export const useBookingStore = defineStore('booking', {
   actions: {
     async loadSettings(branch = useBranchesStore().activeBranchId) {
       if (!branch) return
-      const config = await useIntegrationStore().track('configuración', () => api.settings.get(branch))
+      const config = await useIntegrationStore().track('configuración', () =>
+        api.settings.get(branch),
+      )
       this.settings.allowMultipleNormalPerDay =
         config.allow_multiple_normal_classes_per_day === true
       return config

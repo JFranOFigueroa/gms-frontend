@@ -45,11 +45,7 @@ const publicStyles = computed(() => {
     <div v-if="publicStore.loading" role="status" class="mx-auto max-w-3xl p-12 text-center">
       Cargando página…
     </div>
-    <div
-      v-else-if="publicStore.error"
-      role="alert"
-      class="mx-auto max-w-3xl p-12 text-center"
-    >
+    <div v-else-if="publicStore.error" role="alert" class="mx-auto max-w-3xl p-12 text-center">
       <h1 class="text-2xl font-bold">Página no disponible</h1>
       <p class="mt-3 text-[var(--color-text-secondary)]">{{ publicStore.error }}</p>
     </div>

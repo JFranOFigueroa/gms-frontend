@@ -67,11 +67,7 @@ const activeImage = ref(null)
             class="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] transition-all hover:scale-[1.02]"
             @click="activeImage = slide"
           >
-            <img
-              :src="slide.url"
-              alt=""
-              class="aspect-[4/3] w-full object-cover"
-            />
+            <img :src="slide.url" alt="" class="aspect-[4/3] w-full object-cover" />
           </button>
         </div>
       </div>
@@ -93,11 +89,7 @@ const activeImage = ref(null)
       </button>
 
       <!-- IMAGE -->
-      <img
-        :src="activeImage.url"
-        alt=""
-        class="max-h-full max-w-full rounded-3xl shadow-2xl"
-      />
+      <img :src="activeImage.url" alt="" class="max-h-full max-w-full rounded-3xl shadow-2xl" />
     </div>
   </Transition>
 </template>

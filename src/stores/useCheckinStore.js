@@ -245,7 +245,8 @@ export const useCheckinStore = defineStore('checkin', {
       if (!data?.accessCode || !data?.expiresAt || !data?.serverTime) {
         throw new Error('No se recibió un código temporal válido.')
       }
-      if (epoch !== this.manualCodeEpoch || branch !== useBranchesStore().activeBranchId) return null
+      if (epoch !== this.manualCodeEpoch || branch !== useBranchesStore().activeBranchId)
+        return null
       this.currentManualCode = {
         accessCode: data.accessCode,
         expiresAt: data.expiresAt,

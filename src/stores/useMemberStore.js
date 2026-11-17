@@ -6,7 +6,13 @@ import { useIntegrationStore } from './useIntegrationStore'
 import { todayISO } from '@/utils/date'
 import { validateImageFile } from './useMediaStore'
 export const useMemberStore = defineStore('members', {
-  state: () => ({ allMembers: [], allPayments: [], ownMember: null, pendingPayment: null, paymentSubmitting: false }),
+  state: () => ({
+    allMembers: [],
+    allPayments: [],
+    ownMember: null,
+    pendingPayment: null,
+    paymentSubmitting: false,
+  }),
   getters: {
     members: (s) => s.allMembers.filter((m) => m.branchId === useBranchesStore().activeBranchId),
     payments: (s) => s.allPayments.filter((p) => p.branchId === useBranchesStore().activeBranchId),

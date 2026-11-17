@@ -71,12 +71,12 @@ async function completeLogin() {
             ? '/dashboard/routines'
             : '/dashboard/disponibilidad'
         : role === 'member'
-        ? moduleStore.isModuleEnabled('checkin')
-          ? '/dashboard/checkin'
-          : moduleStore.isModuleEnabled('routines')
-            ? '/dashboard/routine'
-            : '/dashboard'
-        : '/dashboard'
+          ? moduleStore.isModuleEnabled('checkin')
+            ? '/dashboard/checkin'
+            : moduleStore.isModuleEnabled('routines')
+              ? '/dashboard/routine'
+              : '/dashboard'
+          : '/dashboard'
     await router.replace(destination)
   } catch (error) {
     loginError.value = error.message
@@ -91,9 +91,7 @@ const resetBranchSelection = () => {
 }
 </script>
 <template>
-  <div
-    class="flex min-h-dvh items-center justify-center bg-[var(--color-background)] p-4 sm:p-6"
-  >
+  <div class="flex min-h-dvh items-center justify-center bg-[var(--color-background)] p-4 sm:p-6">
     <div
       class="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8"
     >
@@ -108,7 +106,11 @@ const resetBranchSelection = () => {
         </template>
         <template v-else>
           <p class="text-[var(--color-text-secondary)]">
-            {{ branches.length ? 'Selecciona la sucursal a la que deseas ingresar.' : 'Todavía no hay sucursales disponibles. Ingresa para configurar el primero.' }}
+            {{
+              branches.length
+                ? 'Selecciona la sucursal a la que deseas ingresar.'
+                : 'Todavía no hay sucursales disponibles. Ingresa para configurar el primero.'
+            }}
           </p>
           <select
             v-if="branches.length"
@@ -132,7 +134,15 @@ const resetBranchSelection = () => {
           :disabled="loading"
           @click="chooseBranch ? completeLogin() : credentialsLogin()"
         >
-          {{ loading ? 'Verificando…' : chooseBranch ? branches.length ? 'Ingresar a la sucursal' : 'Ingresar a administración' : 'Entrar' }}
+          {{
+            loading
+              ? 'Verificando…'
+              : chooseBranch
+                ? branches.length
+                  ? 'Ingresar a la sucursal'
+                  : 'Ingresar a administración'
+                : 'Entrar'
+          }}
         </BaseButton>
         <button
           v-if="chooseBranch"

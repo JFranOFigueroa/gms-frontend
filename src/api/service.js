@@ -153,7 +153,8 @@ export const api = {
     get: (branch) => http.get(e.settings(branch)),
     update: (branch, body) => http.patch(e.settings(branch), body),
     modules: (branch) => http.get(e.modules(branch)),
-    updateModule: (branch, key, enabled) => http.patch(itemUrl(e.modules(branch), key), { enabled }),
+    updateModule: (branch, key, enabled) =>
+      http.patch(itemUrl(e.modules(branch), key), { enabled }),
   },
   site: {
     publicPage: ({ signal } = {}) => http.get(e.publicSite, undefined, { auth: false, signal }),

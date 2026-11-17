@@ -10,8 +10,8 @@ const modules = useModuleStore()
   >
     <h1 class="text-2xl font-black sm:text-3xl">Módulos no disponibles</h1>
     <p class="text-sm text-[var(--color-text-secondary)] sm:text-base">
-      Tu perfil de entrenador tiene acceso únicamente a Ventas y Rutinas.
-      Contacta al propietario si necesitas habilitar alguno de estos módulos.
+      Tu perfil de entrenador tiene acceso únicamente a Ventas y Rutinas. Contacta al propietario si
+      necesitas habilitar alguno de estos módulos.
     </p>
     <p v-if="!modules.loaded" class="text-sm text-[var(--color-text-secondary)]">
       No se pudo comprobar la configuración de los módulos. Intenta actualizar la página.

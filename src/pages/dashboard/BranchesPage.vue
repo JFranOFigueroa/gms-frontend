@@ -133,7 +133,11 @@ const removeBranch = async (id) => {
           </div>
 
           <div class="flex flex-wrap gap-3">
-            <BaseButton v-if="!isActive(branch.id)" variant="secondary" @click="selectBranch(branch.id)">
+            <BaseButton
+              v-if="!isActive(branch.id)"
+              variant="secondary"
+              @click="selectBranch(branch.id)"
+            >
               Seleccionar
             </BaseButton>
 

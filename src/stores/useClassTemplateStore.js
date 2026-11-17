@@ -6,7 +6,8 @@ import { useIntegrationStore } from './useIntegrationStore'
 export const useClassTemplateStore = defineStore('class-templates', {
   state: () => ({ allTemplates: [] }),
   getters: {
-    templates: (s) => s.allTemplates.filter((t) => t.branchId === useBranchesStore().activeBranchId),
+    templates: (s) =>
+      s.allTemplates.filter((t) => t.branchId === useBranchesStore().activeBranchId),
   },
   actions: {
     async load(branch = useBranchesStore().activeBranchId) {

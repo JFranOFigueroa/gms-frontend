@@ -72,9 +72,7 @@ onBeforeUnmount(() => {
               <div class="min-w-0">
                 <h2 class="text-xl font-black sm:text-2xl">Vista previa</h2>
 
-                <p class="text-xs text-[var(--color-text-secondary)] sm:text-sm">
-                  Modo responsive
-                </p>
+                <p class="text-xs text-[var(--color-text-secondary)] sm:text-sm">Modo responsive</p>
               </div>
 
               <div class="flex flex-wrap items-center gap-2 sm:gap-3">

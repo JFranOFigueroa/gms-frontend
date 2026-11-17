@@ -4,7 +4,13 @@ import { mapProduct, mapSale } from '@/api/mappers'
 import { useBranchesStore } from './useBranchesStore'
 import { useIntegrationStore } from './useIntegrationStore'
 export const usePosStore = defineStore('pos', {
-  state: () => ({ allProducts: [], allSales: [], cart: [], checkoutAttempt: null, checkoutSubmitting: false }),
+  state: () => ({
+    allProducts: [],
+    allSales: [],
+    cart: [],
+    checkoutAttempt: null,
+    checkoutSubmitting: false,
+  }),
   getters: {
     products: (s) => s.allProducts.filter((p) => p.branchId === useBranchesStore().activeBranchId),
     sales: (s) => s.allSales.filter((sale) => sale.branchId === useBranchesStore().activeBranchId),

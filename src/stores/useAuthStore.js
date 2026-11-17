@@ -24,11 +24,15 @@ export const useAuthStore = defineStore('auth', {
       this.branchAccess = Array.isArray(access) ? access : []
       this.user = { ...user, role: null, branchIds: this.branchAccess.map((g) => g.id) }
       const branches = useBranchesStore()
-      const previous = preserveBranch ? branches.activeBranchId : sessionStorage.getItem(SELECTED_BRANCH)
+      const previous = preserveBranch
+        ? branches.activeBranchId
+        : sessionStorage.getItem(SELECTED_BRANCH)
       if (!preserveBranch || !branches.branches.length) branches.setFromSession(this.branchAccess)
       const preferred =
         this.branchAccess.find((g) => g.id === previous)?.id ||
-        (user.platformAdmin && branches.branches.some((g) => g.id === previous) ? previous : null) ||
+        (user.platformAdmin && branches.branches.some((g) => g.id === previous)
+          ? previous
+          : null) ||
         this.branchAccess.find((g) => g.id === user.defaultBranchId)?.id ||
         this.branchAccess[0]?.id ||
         null
@@ -58,7 +62,9 @@ export const useAuthStore = defineStore('auth', {
       else sessionStorage.removeItem(SELECTED_BRANCH)
       const roles = chosen?.roles || []
       // Los permisos de administrador global no dependen de la lista de acceso de una sucursal.
-      const role = this.user?.platformAdmin ? 'admin' : roleOrder.find((r) => roles.includes(r)) || null
+      const role = this.user?.platformAdmin
+        ? 'admin'
+        : roleOrder.find((r) => roles.includes(r)) || null
       if (this.user)
         this.user = {
           ...this.user,

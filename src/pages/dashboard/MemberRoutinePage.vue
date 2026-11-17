@@ -146,7 +146,10 @@ const levelLabel = {
                   {{ exercise.name }}
                 </p>
 
-                <p v-if="exercise.notes" class="break-words text-sm text-[var(--color-text-secondary)]">
+                <p
+                  v-if="exercise.notes"
+                  class="break-words text-sm text-[var(--color-text-secondary)]"
+                >
                   {{ exercise.notes }}
                 </p>
               </div>

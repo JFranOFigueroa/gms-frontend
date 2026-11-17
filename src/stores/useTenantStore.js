@@ -3,7 +3,9 @@ import { useBranchesStore } from './useBranchesStore'
 export const useTenantStore = defineStore('tenant', {
   getters: {
     branch() {
-      return useBranchesStore().activeBranch || { name: 'GymBack', shortName: 'GymBack', logo: null }
+      return (
+        useBranchesStore().activeBranch || { name: 'GymBack', shortName: 'GymBack', logo: null }
+      )
     },
   },
   actions: {

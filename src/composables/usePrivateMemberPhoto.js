@@ -9,8 +9,7 @@ export function usePrivateMemberPhoto(memberRef) {
   const branches = useBranchesStore()
   let objectUrl = null
   let generation = 0
-  const currentMember = () =>
-    typeof memberRef === 'function' ? memberRef() : memberRef.value
+  const currentMember = () => (typeof memberRef === 'function' ? memberRef() : memberRef.value)
 
   function release() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)

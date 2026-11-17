@@ -93,10 +93,7 @@ watch(
           </p>
         </div>
 
-        <span
-          class="self-start rounded-full px-3 py-1 text-sm font-semibold"
-          :class="status.class"
-        >
+        <span class="self-start rounded-full px-3 py-1 text-sm font-semibold" :class="status.class">
           {{ status.label }}
         </span>
       </div>
