@@ -31,6 +31,7 @@ export const usePublicLandingStore = defineStore('public-landing', {
           site: response?.site || null,
           theme: response?.theme || null,
           mediaAssets: assets,
+          branches: Array.isArray(response?.branches) ? response.branches : [],
           blocks: (Array.isArray(response?.blocks) ? response.blocks : [])
             .map(mapBlock)
             .filter((block) => block.enabled !== false)

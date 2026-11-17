@@ -54,7 +54,7 @@ const publicStyles = computed(() => {
       <p class="mt-3 text-[var(--color-text-secondary)]">{{ publicStore.error }}</p>
     </div>
     <template v-else>
-      <PublicTopbar :site="site" />
+      <PublicTopbar :site="site" :branches="publicStore.page?.branches || []" />
       <div
         v-if="!blocks.length"
         class="mx-auto max-w-3xl px-4 pb-12 pt-24 text-center text-[var(--color-text-secondary)] sm:p-12"

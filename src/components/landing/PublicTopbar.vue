@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { RouterLink, useRoute } from 'vue-router'
 
@@ -10,7 +10,10 @@ import { resolveApiUrl } from '@/api/http'
 
 import { useScrollLock } from '@/composables/useScrollLock'
 
-const props = defineProps({ site: { type: Object, default: null } })
+const props = defineProps({
+  site: { type: Object, default: null },
+  branches: { type: Array, default: () => [] },
+})
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -18,31 +21,53 @@ const route = useRoute()
 const { lock, unlock } = useScrollLock()
 
 const menuOpen = ref(false)
+const checkInOpen = ref(false)
+const checkInMenu = ref(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const logoSrc = computed(() => resolveApiUrl(props.site?.logoUrl || props.site?.logo_url))
 const siteName = computed(() => props.site?.shortName || props.site?.name || 'GymBack')
+const checkInBranches = computed(() =>
+  (props.branches || []).filter((branch) => branch?.code && branch?.name),
+)
+const singleCheckInBranch = computed(() =>
+  checkInBranches.value.length === 1 ? checkInBranches.value[0] : null,
+)
+const checkInTarget = (branch) => ({ path: '/checkin', query: { branch: branch.code } })
 
 const onKeydown = (event) => {
-  if (event.key === 'Escape') menuOpen.value = false
+  if (event.key === 'Escape') {
+    menuOpen.value = false
+    checkInOpen.value = false
+  }
+}
+
+const onDocumentClick = (event) => {
+  if (checkInOpen.value && !checkInMenu.value?.contains(event.target)) checkInOpen.value = false
 }
 
 const closeMenu = () => {
   menuOpen.value = false
+  checkInOpen.value = false
 }
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
+  checkInOpen.value = false
+}
+
+const toggleCheckIn = () => {
+  checkInOpen.value = !checkInOpen.value
 }
 
 watch(menuOpen, (open) => {
-  if (open) {
-    lock()
-    window.addEventListener('keydown', onKeydown)
-  } else {
-    unlock()
-    window.removeEventListener('keydown', onKeydown)
-  }
+  if (open) lock()
+  else unlock()
+})
+
+watch(checkInOpen, (open) => {
+  if (open) document.addEventListener('click', onDocumentClick)
+  else document.removeEventListener('click', onDocumentClick)
 })
 
 watch(
@@ -50,9 +75,14 @@ watch(
   () => closeMenu(),
 )
 
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
 onBeforeUnmount(() => {
   unlock()
   window.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('click', onDocumentClick)
 })
 </script>
 
@@ -78,6 +108,41 @@ onBeforeUnmount(() => {
       <!-- DESKTOP ACTIONS -->
       <div class="hidden items-center gap-3 sm:flex">
         <template v-if="!isAuthenticated">
+          <div v-if="checkInBranches.length" ref="checkInMenu" class="relative">
+            <RouterLink v-if="singleCheckInBranch" :to="checkInTarget(singleCheckInBranch)">
+              <BaseButton size="sm"> Check-in </BaseButton>
+            </RouterLink>
+            <template v-else>
+              <BaseButton
+                size="sm"
+                aria-haspopup="menu"
+                :aria-expanded="checkInOpen"
+                @click.stop="toggleCheckIn"
+              >
+                Check-in
+              </BaseButton>
+              <div
+                v-if="checkInOpen"
+                role="menu"
+                class="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-2 shadow-2xl"
+              >
+                <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+                  Elige una sucursal
+                </p>
+                <RouterLink
+                  v-for="branch in checkInBranches"
+                  :key="branch.id"
+                  :to="checkInTarget(branch)"
+                  role="menuitem"
+                  class="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-[var(--color-surface-hover)]"
+                  @click="checkInOpen = false"
+                >
+                  {{ branch.name }}
+                </RouterLink>
+              </div>
+            </template>
+          </div>
+
           <RouterLink to="/guest-access">
             <BaseButton size="sm"> Clase muestra </BaseButton>
           </RouterLink>
@@ -115,6 +180,35 @@ onBeforeUnmount(() => {
           id="public-mobile-menu"
           class="fixed inset-x-4 top-[4.5rem] z-50 max-h-[calc(100dvh-6rem)] space-y-2 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl"
         >
+          <div v-if="!isAuthenticated && checkInBranches.length" class="space-y-2 pb-2">
+            <p class="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+              Check-in
+            </p>
+            <RouterLink
+              v-if="singleCheckInBranch"
+              :to="checkInTarget(singleCheckInBranch)"
+              class="block"
+              @click="closeMenu"
+            >
+              <BaseButton class="w-full" size="sm">
+                Check-in en {{ singleCheckInBranch.name }}
+              </BaseButton>
+            </RouterLink>
+            <template v-else>
+              <RouterLink
+                v-for="branch in checkInBranches"
+                :key="branch.id"
+                :to="checkInTarget(branch)"
+                class="block"
+                @click="closeMenu"
+              >
+                <BaseButton class="w-full" size="sm" variant="secondary">
+                  {{ branch.name }}
+                </BaseButton>
+              </RouterLink>
+            </template>
+          </div>
+
           <template v-if="!isAuthenticated">
             <RouterLink to="/guest-access" class="block" @click="closeMenu">
               <BaseButton class="w-full" size="sm"> Clase muestra </BaseButton>
