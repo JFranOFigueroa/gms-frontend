@@ -13,7 +13,10 @@ defineProps({
           {{ title }}
         </h2>
 
-        <p v-if="subtitle" class="mt-3 text-sm text-[var(--color-text-secondary)] sm:mt-4 sm:text-base">
+        <p
+          v-if="subtitle"
+          class="mt-3 text-sm text-[var(--color-text-secondary)] sm:mt-4 sm:text-base"
+        >
           {{ subtitle }}
         </p>
       </div>

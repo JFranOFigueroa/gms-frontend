@@ -41,8 +41,8 @@ const handleAddBlock = async (config) => {
         <h1 class="text-3xl font-black sm:text-4xl">Landing del sitio</h1>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
-          Contenido público único de la marca. Los módulos operativos se configuran por sucursal
-          o de forma global.
+          Contenido público único de la marca. Los módulos operativos se configuran por sucursal o
+          de forma global.
         </p>
       </div>
 

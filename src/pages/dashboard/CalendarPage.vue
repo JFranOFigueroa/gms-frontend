@@ -174,7 +174,9 @@ const openDaySchedule = (date) => {
             Selecciona un día para ver su agenda
           </p>
 
-          <div class="inline-flex w-fit rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)]/40 p-1">
+          <div
+            class="inline-flex w-fit rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)]/40 p-1"
+          >
             <button
               type="button"
               class="rounded-xl px-3 py-1.5 text-xs font-semibold transition"

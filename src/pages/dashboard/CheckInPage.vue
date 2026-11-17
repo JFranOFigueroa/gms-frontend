@@ -164,9 +164,10 @@ async function submitBranchQr(kioskToken) {
     const decision = await checkinStore.scanBranchQr(branch, kioskToken, crypto.randomUUID())
     if (epoch !== currentPageEpoch) return
     scanDecision.value = decision
-    scannerStatus.value = decision?.allowed === true
-      ? 'Acceso registrado.'
-      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
+    scannerStatus.value =
+      decision?.allowed === true
+        ? 'Acceso registrado.'
+        : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
     // El historial es la fuente real, incluso para intentos rechazados.
     await checkinStore.loadMine(branch)
   } catch (error) {
@@ -320,8 +321,8 @@ onUnmounted(() => {
 
           <div class="space-y-3">
             <p class="text-sm text-[var(--color-text-secondary)]">
-              ¿No puedes usar la cámara? Solicita un código temporal para escribirlo en el kiosco
-              de la sucursal.
+              ¿No puedes usar la cámara? Solicita un código temporal para escribirlo en el kiosco de
+              la sucursal.
             </p>
             <div
               v-if="temporaryCode"
@@ -449,7 +450,11 @@ onUnmounted(() => {
 
             <p class="text-sm text-[var(--color-text-secondary)]">
               Método: {{ formatCheckinMethod(checkin.method) }} ·
-              {{ checkin.allowed === false ? `Denegado: ${formatCheckinReason(checkin.reason)}` : 'Concedido' }}
+              {{
+                checkin.allowed === false
+                  ? `Denegado: ${formatCheckinReason(checkin.reason)}`
+                  : 'Concedido'
+              }}
             </p>
           </div>
         </div>

@@ -36,15 +36,13 @@ export const endpoints = Object.freeze({
   staffRegister: (id) => `${branch(id)}/staff/register`,
   memberRegister: (id) => `${branch(id)}/members/register`,
   memberMe: (id) => `${branch(id)}/members/me`,
-  memberPhoto: (id, memberId) =>
-    `${branch(id)}/members/${encodeURIComponent(memberId)}/photo`,
+  memberPhoto: (id, memberId) => `${branch(id)}/members/${encodeURIComponent(memberId)}/photo`,
   reservationsMe: (id) => `${branch(id)}/reservations/me`,
   classAvailability: (id, classId) =>
     `${branch(id)}/classes/${encodeURIComponent(classId)}/availability`,
   checkinsMe: (id) => `${branch(id)}/checkins/me`,
   // Check-in QR y dispositivos: el kiosco usa el código de sucursal, no una landing.
-  publicCheckinConfig: (code) =>
-    `/public/branches/${encodeURIComponent(code)}/checkin-config`,
+  publicCheckinConfig: (code) => `/public/branches/${encodeURIComponent(code)}/checkin-config`,
   kioskSession: '/kiosk/session',
   kioskActivate: '/kiosk/activate',
   kioskLogout: '/kiosk/logout',

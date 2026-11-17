@@ -88,7 +88,9 @@ onBeforeUnmount(() => {
 
 <template>
   <header class="fixed left-0 right-0 top-0 z-50">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-6">
+    <div
+      class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-6"
+    >
       <!-- LOGO -->
       <RouterLink
         to="/"
@@ -126,7 +128,9 @@ onBeforeUnmount(() => {
                 role="menu"
                 class="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-2 shadow-2xl"
               >
-                <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+                <p
+                  class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]"
+                >
                   Elige una sucursal
                 </p>
                 <RouterLink
@@ -181,7 +185,9 @@ onBeforeUnmount(() => {
           class="fixed inset-x-4 top-[4.5rem] z-50 max-h-[calc(100dvh-6rem)] space-y-2 overflow-y-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-2xl"
         >
           <div v-if="!isAuthenticated && checkInBranches.length" class="space-y-2 pb-2">
-            <p class="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+            <p
+              class="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]"
+            >
               Check-in
             </p>
             <RouterLink

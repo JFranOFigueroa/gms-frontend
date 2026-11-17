@@ -115,7 +115,10 @@ const goNext = async () => {
   if (creationMode.value === 'existing' && !isEdit.value) {
     searchingAccount.value = true
     try {
-      const account = await api.users.search(form.email.trim().toLowerCase(), branchesStore.activeBranchId)
+      const account = await api.users.search(
+        form.email.trim().toLowerCase(),
+        branchesStore.activeBranchId,
+      )
       if (account.status !== 'active') throw new Error('Esta cuenta no está activa.')
       form.userId = account.id // Identificador de uso interno; nunca se muestra en pantalla.
       verifiedEmail.value = form.email.trim().toLowerCase()

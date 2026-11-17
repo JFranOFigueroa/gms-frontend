@@ -11,7 +11,9 @@ const toOffset = (date, time) => {
 }
 export const useClassScheduleStore = defineStore('class-schedule', {
   state: () => ({ allClasses: [], availabilityByClass: {} }),
-  getters: { classes: (s) => s.allClasses.filter((c) => c.branchId === useBranchesStore().activeBranchId) },
+  getters: {
+    classes: (s) => s.allClasses.filter((c) => c.branchId === useBranchesStore().activeBranchId),
+  },
   actions: {
     async load(branch = useBranchesStore().activeBranchId) {
       if (!branch) {

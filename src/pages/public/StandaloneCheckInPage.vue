@@ -11,7 +11,9 @@ import { formatCheckinReason } from '@/utils/checkinLabels'
 
 const route = useRoute()
 const checkins = useCheckinStore()
-const code = computed(() => (typeof route.query.branch === 'string' ? route.query.branch.trim() : ''))
+const code = computed(() =>
+  typeof route.query.branch === 'string' ? route.query.branch.trim() : '',
+)
 const branchName = computed(() => checkins.kioskConfig?.name || 'GMS FITNESS')
 const todayLabel = computed(() =>
   new Date().toLocaleDateString('es-MX', {
@@ -276,9 +278,10 @@ async function submitCode() {
     const decision = await checkins.validateManualCode(attempt.accessCode, attempt.key)
     if (epoch !== pageEpoch) return
     result.value = decision
-    scannerStatus.value = decision?.allowed === true
-      ? 'Acceso registrado.'
-      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
+    scannerStatus.value =
+      decision?.allowed === true
+        ? 'Acceso registrado.'
+        : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
     pendingManualAttempt = null
     manualCode.value = ''
   } catch (error) {
@@ -310,9 +313,10 @@ async function submitMemberQr(memberQr) {
     const decision = await checkins.scanMemberQr(memberQr, crypto.randomUUID())
     if (epoch !== pageEpoch) return
     result.value = decision
-    scannerStatus.value = decision?.allowed === true
-      ? 'Acceso registrado.'
-      : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
+    scannerStatus.value =
+      decision?.allowed === true
+        ? 'Acceso registrado.'
+        : formatCheckinReason(decision?.reasonCode || decision?.reason || decision?.message)
   } catch (error) {
     if (epoch !== pageEpoch) return
     scannerStatus.value = error.message || 'No fue posible validar el acceso.'
@@ -412,8 +416,8 @@ onUnmounted(() => {
         <div class="space-y-3">
           <h2 class="text-xl font-bold">Activar dispositivo</h2>
           <p class="text-[var(--color-text-secondary)]">
-            Solicita un código de activación al propietario o administrador de la sucursal. Caduca en
-            10 minutos.
+            Solicita un código de activación al propietario o administrador de la sucursal. Caduca
+            en 10 minutos.
           </p>
           <template v-if="!codeMismatch">
             <BaseInput
@@ -479,9 +483,11 @@ onUnmounted(() => {
               </p>
 
               <p class="mt-1 break-words text-base sm:text-lg">
-                {{ result.allowed
-                  ? 'Acceso registrado correctamente.'
-                  : formatCheckinReason(result.reasonCode || result.reason || result.message) }}
+                {{
+                  result.allowed
+                    ? 'Acceso registrado correctamente.'
+                    : formatCheckinReason(result.reasonCode || result.reason || result.message)
+                }}
               </p>
 
               <p class="text-[var(--color-text-secondary)] mt-1">

@@ -30,11 +30,7 @@ export function hydrateActiveBranch() {
     const siteEditor = ['admin', 'owner'].includes(auth.role)
     const siteTasks = []
     if (siteEditor) {
-      siteTasks.push(
-        useLandingStore().load(),
-        useMediaStore().load(),
-        useThemeStore().load(),
-      )
+      siteTasks.push(useLandingStore().load(), useMediaStore().load(), useThemeStore().load())
     }
     if (!branch) {
       if (admin) await Promise.allSettled([useBranchesStore().load()])
@@ -59,7 +55,8 @@ export function hydrateActiveBranch() {
     }
     if (staff && modules.isModuleEnabled('pos')) tasks.push(usePosStore().load(branch))
     if (owner && modules.isModuleEnabled('checkin')) tasks.push(useCheckinStore().load(branch))
-    if (owner) tasks.push(useMemberStore().loadPayments(branch), useDashboardSummaryStore().load(branch))
+    if (owner)
+      tasks.push(useMemberStore().loadPayments(branch), useDashboardSummaryStore().load(branch))
     if (admin) tasks.push(useBranchesStore().load())
     await Promise.allSettled([...tasks, ...siteTasks])
   })()

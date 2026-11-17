@@ -210,7 +210,11 @@ const updateProductField = async (product, field, value) => {
                   <p class="text-sm text-[var(--color-text-secondary)]">${{ item.price }} c/u</p>
                 </div>
 
-                <BaseButton variant="secondary" :disabled="submittingPayment" @click="posStore.removeFromCart(item.productId)">
+                <BaseButton
+                  variant="secondary"
+                  :disabled="submittingPayment"
+                  @click="posStore.removeFromCart(item.productId)"
+                >
                   ✕
                 </BaseButton>
               </div>
@@ -235,7 +239,11 @@ const updateProductField = async (product, field, value) => {
               <span>${{ posStore.cartTotal }}</span>
             </div>
 
-            <BaseButton class="w-full" @click="openPayment" :disabled="!posStore.cart.length || submittingPayment">
+            <BaseButton
+              class="w-full"
+              @click="openPayment"
+              :disabled="!posStore.cart.length || submittingPayment"
+            >
               Cobrar
             </BaseButton>
 
@@ -479,7 +487,12 @@ const updateProductField = async (product, field, value) => {
           </div>
         </BaseCard>
 
-        <BaseInput v-model="cashAmount" type="number" placeholder="Monto recibido" :disabled="submittingPayment" />
+        <BaseInput
+          v-model="cashAmount"
+          type="number"
+          placeholder="Monto recibido"
+          :disabled="submittingPayment"
+        />
 
         <BaseCard>
           <div class="flex items-center justify-between">

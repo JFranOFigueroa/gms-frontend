@@ -84,9 +84,10 @@ const adminActivity = computed(() => {
       checkin.allowed === false
         ? `Acceso denegado: ${checkin.userName}`
         : `${checkin.userName} hizo check-in`,
-    description: checkin.allowed === false
-      ? formatCheckinReason(checkin.reason)
-      : `${formatCheckinMethod(checkin.method)} · ${formatCheckinRole(checkin.role)}`,
+    description:
+      checkin.allowed === false
+        ? formatCheckinReason(checkin.reason)
+        : `${formatCheckinMethod(checkin.method)} · ${formatCheckinRole(checkin.role)}`,
     timestamp: checkin.timestamp,
     type: checkin.allowed === false ? 'Acceso' : 'Check-in',
   }))
@@ -377,7 +378,8 @@ const detailTitle = computed(() => {
               </p>
 
               <p class="text-sm text-[var(--color-text-secondary)]">
-                {{ branchClass.startTime }} - {{ branchClass.endTime }} · {{ branchClass.capacity }} cupos
+                {{ branchClass.startTime }} - {{ branchClass.endTime }} ·
+                {{ branchClass.capacity }} cupos
               </p>
             </div>
 

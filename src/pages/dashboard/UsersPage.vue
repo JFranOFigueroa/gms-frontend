@@ -188,7 +188,10 @@ const findExistingAccount = async () => {
     const branch = branchesStore.activeBranchId
     if (!branch) throw new Error('Selecciona primero una sucursal.')
     // El owner solo puede buscar cuentas en su sucursal. Admin global: búsqueda global.
-    const result = await api.users.search(contact, authStore.user?.platformAdmin ? undefined : branch)
+    const result = await api.users.search(
+      contact,
+      authStore.user?.platformAdmin ? undefined : branch,
+    )
     if (result?.status !== 'active') throw new Error('Esta cuenta no está activa.')
     foundAccount.value = result
   } catch (error) {
@@ -219,7 +222,11 @@ const openEdit = (user) => {
   role.value = user.role
 
   if (user.role === 'owner' || user.role === 'trainer') {
-    selectedBranchIds.value = user.branchIds?.length ? [...user.branchIds] : user.branchId ? [user.branchId] : []
+    selectedBranchIds.value = user.branchIds?.length
+      ? [...user.branchIds]
+      : user.branchId
+        ? [user.branchId]
+        : []
     defaultBranchId.value = user.defaultBranchId || selectedBranchIds.value[0] || null
   } else {
     selectedBranchIds.value = []

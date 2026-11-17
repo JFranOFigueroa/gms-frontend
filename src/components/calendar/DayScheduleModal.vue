@@ -150,7 +150,10 @@ const removeClass = async (classId) => {
       </div>
 
       <!-- EMPTY -->
-      <div v-if="!dayClasses.length" class="py-10 text-center text-[var(--color-text-secondary)] sm:py-16">
+      <div
+        v-if="!dayClasses.length"
+        class="py-10 text-center text-[var(--color-text-secondary)] sm:py-16"
+      >
         No existen clases para este día
       </div>
 
@@ -231,7 +234,9 @@ const removeClass = async (classId) => {
               Disponibles:
               {{
                 availabilityFor(branchClass.id)?.available ??
-                (branchClass.attendeeCount == null ? '—' : branchClass.capacity - branchClass.attendeeCount)
+                (branchClass.attendeeCount == null
+                  ? '—'
+                  : branchClass.capacity - branchClass.attendeeCount)
               }}
             </div>
           </div>
