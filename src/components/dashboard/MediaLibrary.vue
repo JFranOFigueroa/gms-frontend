@@ -4,12 +4,13 @@ import { useMediaStore } from '@/stores/useMediaStore'
 import MediaUploader from './MediaUploader.vue'
 import MediaCard from './MediaCard.vue'
 
+defineProps({ embedded: { type: Boolean, default: false } })
 const mediaStore = useMediaStore()
 </script>
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div v-if="!embedded" class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-black sm:text-4xl">Media Library</h1>
 

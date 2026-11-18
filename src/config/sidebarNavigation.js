@@ -15,26 +15,17 @@ export const sidebarNavigation = {
       module: 'calendar',
     },
     {
-      label: 'Plantillas',
-      path: '/dashboard/class-templates',
-      module: 'calendar',
-    },
-    {
       label: 'Rutinas',
       path: '/dashboard/routines',
-      module: 'routines',
+      moduleAny: ['routines', 'calendar'],
     },
     {
       label: 'Miembros',
       path: '/dashboard/members',
     },
     {
-      label: 'Usuarios',
-      path: '/dashboard/users',
-    },
-    {
-      label: 'Sucursales',
-      path: '/dashboard/branches',
+      label: 'Gestión',
+      path: '/dashboard/management',
     },
     {
       label: 'Check-in',
@@ -44,10 +35,6 @@ export const sidebarNavigation = {
     {
       label: 'Landing Builder',
       path: '/dashboard/landing-builder',
-    },
-    {
-      label: 'Multimedia',
-      path: '/dashboard/media',
     },
   ],
 
@@ -67,22 +54,17 @@ export const sidebarNavigation = {
       module: 'calendar',
     },
     {
-      label: 'Plantillas',
-      path: '/dashboard/class-templates',
-      module: 'calendar',
-    },
-    {
       label: 'Rutinas',
       path: '/dashboard/routines',
-      module: 'routines',
+      moduleAny: ['routines', 'calendar'],
     },
     {
       label: 'Miembros',
       path: '/dashboard/members',
     },
     {
-      label: 'Usuarios',
-      path: '/dashboard/users',
+      label: 'Gestión',
+      path: '/dashboard/management',
     },
     {
       label: 'Check-in',
@@ -92,10 +74,6 @@ export const sidebarNavigation = {
     {
       label: 'Landing Builder',
       path: '/dashboard/landing-builder',
-    },
-    {
-      label: 'Multimedia',
-      path: '/dashboard/media',
     },
   ],
 

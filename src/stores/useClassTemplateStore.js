@@ -32,6 +32,24 @@ export const useClassTemplateStore = defineStore('class-templates', {
       this.allTemplates.push(mapTemplate(row))
       return row
     },
+    async updateTemplate(id, data) {
+      const branch = useBranchesStore().activeBranchId
+      const row = await useIntegrationStore().track('plantillas', () =>
+        api.templates.update(branch, id, {
+          name: data.name,
+          color: data.color,
+          durationMinutes: Number(data.duration),
+          capacity: Number(data.capacity),
+          category: data.category || 'normal',
+        }),
+      )
+      if (branch === useBranchesStore().activeBranchId) {
+        this.allTemplates = this.allTemplates.map((template) =>
+          template.id === id ? mapTemplate(row) : template,
+        )
+      }
+      return row
+    },
     async removeTemplate(id) {
       const branch = useBranchesStore().activeBranchId
       await useIntegrationStore().track('plantillas', () => api.templates.remove(branch, id))

@@ -31,13 +31,15 @@ const handleAddBlock = async (config) => {
     error.value = e.message
   }
 }
+
+const props = defineProps({ embedded: { type: Boolean, default: false } })
 </script>
 
 <template>
   <div class="space-y-0">
     <!-- Header -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div>
+      <div v-if="!props.embedded">
         <h1 class="text-3xl font-black sm:text-4xl">Landing del sitio</h1>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">

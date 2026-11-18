@@ -51,6 +51,7 @@ export const api = {
     removePhoto: (branch, memberId) => http.delete(e.memberPhoto(branch, memberId)),
   },
   plans: resource(e.plans),
+  adminPlans: resource(e.adminPlans),
   payments: {
     list: (branch, memberId) => http.get(e.payments(branch), { limit: 100, memberId }),
     create: (branch, data, idempotencyKey) =>

@@ -76,7 +76,7 @@ const routes = [
       {
         path: 'landing-builder',
         name: 'landing-builder',
-        component: () => import('@/pages/dashboard/LandingBuilderPage.vue'),
+        component: () => import('@/pages/dashboard/LandingModulePage.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin', 'owner'],
@@ -85,7 +85,7 @@ const routes = [
       {
         path: 'media',
         name: 'media',
-        component: () => import('@/pages/dashboard/MediaLibraryPage.vue'),
+        redirect: (to) => ({ path: '/dashboard/landing-builder', query: { ...to.query, tab: 'media' } }),
         meta: {
           requiresAuth: true,
           roles: ['admin', 'owner'],
@@ -93,7 +93,7 @@ const routes = [
       },
       {
         path: 'class-templates',
-        component: () => import('@/pages/dashboard/ClassTemplatesPage.vue'),
+        redirect: (to) => ({ path: '/dashboard/routines', query: { ...to.query, tab: 'templates' } }),
         meta: {
           requiresAuth: true,
           module: 'calendar',
@@ -113,10 +113,10 @@ const routes = [
       {
         path: 'routines',
         name: 'routines',
-        component: () => import('@/pages/dashboard/RoutinesPage.vue'),
+        component: () => import('@/pages/dashboard/RoutinesModulePage.vue'),
         meta: {
           requiresAuth: true,
-          module: 'routines',
+          moduleAny: ['routines', 'calendar'],
           roles: ['admin', 'owner', 'trainer'],
         },
       },
@@ -160,9 +160,15 @@ const routes = [
         },
       },
       {
+        path: 'management',
+        name: 'management',
+        component: () => import('@/pages/dashboard/ManagementPage.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'owner'] },
+      },
+      {
         path: 'users',
         name: 'users',
-        component: () => import('@/pages/dashboard/UsersPage.vue'),
+        redirect: (to) => ({ path: '/dashboard/management', query: { ...to.query, tab: 'users' } }),
         meta: {
           requiresAuth: true,
           roles: ['admin', 'owner'],
@@ -171,7 +177,7 @@ const routes = [
       {
         path: 'branches',
         name: 'branches',
-        component: () => import('@/pages/dashboard/BranchesPage.vue'),
+        redirect: (to) => ({ path: '/dashboard/management', query: { ...to.query, tab: 'branches' } }),
         meta: {
           requiresAuth: true,
           roles: ['admin'],
@@ -219,6 +225,12 @@ router.beforeEach((to) => {
 
     return '/dashboard'
   }
+
+  if (to.meta.moduleAny && moduleStore.loaded &&
+      !to.meta.moduleAny.some((key) => moduleStore.isModuleEnabled(key))) return '/dashboard'
+
+  if (to.name === 'routines' && authStore.role === 'trainer' && moduleStore.loaded &&
+      !moduleStore.isModuleEnabled('routines')) return '/dashboard'
 
   if (to.meta.module && moduleStore.loaded && !moduleStore.isModuleEnabled(to.meta.module)) {
     return '/dashboard'

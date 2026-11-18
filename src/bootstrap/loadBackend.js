@@ -4,6 +4,7 @@ import { useIntegrationStore } from '@/stores/useIntegrationStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { useMemberStore } from '@/stores/useMemberStore'
 import { usePlanStore } from '@/stores/usePlanStore'
+import { useAdminPlanStore } from '@/stores/useAdminPlanStore'
 import { usePosStore } from '@/stores/usePosStore'
 import { useRoutineStore } from '@/stores/useRoutineStore'
 import { useClassTemplateStore } from '@/stores/useClassTemplateStore'
@@ -47,6 +48,7 @@ export function hydrateActiveBranch() {
     if (auth.role !== 'trainer' && modules.isModuleEnabled('calendar'))
       tasks.push(useClassScheduleStore().load(branch), useClassTemplateStore().load(branch))
     if (owner) tasks.push(useMemberStore().load(branch))
+    if (owner) tasks.push(useAdminPlanStore().load(branch))
     if (owner) tasks.push(useUserStore().load(branch))
     if (auth.role === 'member') {
       tasks.push(useMemberStore().loadMine(branch))
@@ -72,6 +74,7 @@ export function clearBranchData() {
   useMemberStore().allMembers = []
   useMemberStore().allPayments = []
   usePlanStore().allPlans = []
+  useAdminPlanStore().clear()
   usePosStore().allProducts = []
   usePosStore().allSales = []
   usePosStore().clearCart()

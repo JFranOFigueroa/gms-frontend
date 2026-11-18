@@ -1,10 +1,12 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import ModuleTabs from '@/components/dashboard/ModuleTabs.vue'
+import AdminPlansPage from '@/pages/dashboard/AdminPlansPage.vue'
 
 import MemberRegistrationForm from '@/components/members/MemberRegistrationForm.vue'
 import MemberPhoto from '@/components/members/MemberPhoto.vue'
@@ -13,11 +15,15 @@ import MemberPaymentModal from '@/components/members/MemberPaymentModal.vue'
 
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useMemberStore } from '@/stores/useMemberStore'
+import { useAdminPlanStore } from '@/stores/useAdminPlanStore'
+import { useBranchesStore } from '@/stores/useBranchesStore'
 
 import { canManageMembers } from '@/config/permissions'
 
 const authStore = useAuthStore()
 const memberStore = useMemberStore()
+const adminPlanStore = useAdminPlanStore()
+const branchesStore = useBranchesStore()
 
 const canManage = computed(() => canManageMembers(authStore.role))
 const actionError = ref('')
@@ -44,8 +50,15 @@ const tabs = computed(() => {
   items.push({ id: 'inactive', label: 'Bajas' })
   items.push({ id: 'payments', label: 'Pagos' })
   items.push({ id: 'additional', label: 'Info adicional' })
+  if (canManage.value) items.push({ id: 'plans', label: 'Planes' })
 
   return items
+})
+
+watch([activeTab, () => branchesStore.activeBranchId], ([tab, branch]) => {
+  if (tab === 'plans' && branch && adminPlanStore.loadedBranch !== branch && !adminPlanStore.loading) {
+    adminPlanStore.load(branch).catch(() => {})
+  }
 })
 
 const memberStatus = (member) => {
@@ -116,6 +129,7 @@ const paymentList = computed(() => {
 const collectedThisMonth = computed(() => memberStore.collectedThisMonth)
 const expiredCount = computed(() => memberStore.expiredMembers.length)
 const inactiveCount = computed(() => memberStore.inactiveMembers.length)
+const activePlanCount = computed(() => adminPlanStore.activePlans.length)
 
 const methodLabels = {
   cash: 'Efectivo',
@@ -215,7 +229,7 @@ const reactivate = async (member) => {
 
     <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <!-- Stats -->
-    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
       <BaseCard>
         <p class="text-[var(--color-text-secondary)]">Cuentas activas</p>
         <h3 class="text-3xl font-black mt-3 sm:text-4xl">{{ memberStore.activeMembers.length }}</h3>
@@ -235,25 +249,14 @@ const reactivate = async (member) => {
         <p class="text-[var(--color-text-secondary)]">Cobrado este mes</p>
         <h3 class="text-3xl font-black mt-3 sm:text-4xl">${{ collectedThisMonth }}</h3>
       </BaseCard>
+      <BaseCard v-if="canManage">
+        <p class="text-[var(--color-text-secondary)]">Planes activos</p>
+        <h3 class="text-3xl font-black mt-3 sm:text-4xl">{{ activePlanCount }}</h3>
+      </BaseCard>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        type="button"
-        class="rounded-2xl border px-4 py-2 text-sm font-semibold transition"
-        :class="
-          activeTab === tab.id
-            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
-            : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-        "
-        @click="activeTab = tab.id"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
+    <!-- Pestañas del módulo, conservando las vistas originales -->
+    <ModuleTabs v-model="activeTab" :tabs="tabs" />
 
     <!-- Members tab -->
     <div v-if="activeTab === 'members'" class="space-y-6">
@@ -445,6 +448,8 @@ const reactivate = async (member) => {
         </div>
       </BaseCard>
     </div>
+
+    <AdminPlansPage v-else-if="activeTab === 'plans' && canManage" />
 
     <!-- Additional info tab -->
     <div v-else-if="activeTab === 'additional'" class="space-y-6">

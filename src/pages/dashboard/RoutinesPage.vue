@@ -10,6 +10,8 @@ import { parseRoutineCsv } from '@/utils/routineCsv'
 import csvTemplateUrl from '@/assets/plantilla_rutinas_propuesta.csv?url'
 import { useRoutineStore } from '@/stores/useRoutineStore'
 
+defineProps({ embedded: { type: Boolean, default: false } })
+
 const routineStore = useRoutineStore()
 
 const modalOpen = ref(false)
@@ -167,7 +169,7 @@ const deleteRoutine = async (id) => {
   <div class="space-y-8">
     <p v-if="actionError" role="alert" class="text-red-400">{{ actionError }}</p>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+      <div v-if="!embedded">
         <h1 class="text-3xl font-black sm:text-4xl">Rutinas</h1>
 
         <p class="mt-2 text-sm text-[var(--color-text-secondary)] sm:text-base">
@@ -175,7 +177,7 @@ const deleteRoutine = async (id) => {
         </p>
       </div>
 
-      <BaseButton @click="openCreate"> Nueva rutina </BaseButton>
+      <BaseButton @click="openCreate"> + Nueva rutina </BaseButton>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">

@@ -14,6 +14,7 @@ export const endpoints = Object.freeze({
   staff: (id) => `${branch(id)}/staff`,
   members: (id) => `${branch(id)}/members`,
   plans: (id) => `${branch(id)}/plans`,
+  adminPlans: (id) => `${branch(id)}/admin-plans`,
   payments: (id) => `${branch(id)}/payments`,
   classes: (id) => `${branch(id)}/classes`,
   classTemplates: (id) => `${branch(id)}/class-templates`,

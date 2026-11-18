@@ -7,6 +7,7 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 
 import { useMemberStore } from '@/stores/useMemberStore'
 import { usePlanStore } from '@/stores/usePlanStore'
+import { useAdminPlanStore } from '@/stores/useAdminPlanStore'
 import { addMonths, addYears, todayISO } from '@/utils/date'
 
 const props = defineProps({
@@ -21,10 +22,14 @@ const emit = defineEmits(['close', 'saved'])
 
 const memberStore = useMemberStore()
 const plansStore = usePlanStore()
+const adminPlansStore = useAdminPlanStore()
 const saving = ref(false)
 const selectedPlanId = ref('')
 const selectedPlan = computed(
   () => plansStore.activePlans.find((p) => String(p.id) === String(selectedPlanId.value)) || null,
+)
+const selectedAdminPlan = computed(() =>
+  adminPlansStore.activePlans.find((p) => `admin:${p.id}` === String(selectedPlanId.value)) || null,
 )
 
 const error = ref('')
@@ -79,22 +84,28 @@ const resetForm = () => {
 watch(
   () => props.open,
   (open) => {
-    if (open) resetForm()
+    if (open) {
+      resetForm()
+      adminPlansStore.load().catch(() => {})
+    }
   },
   { immediate: true },
 )
 
-const totalAmount = computed(() =>
-  selectedPlan.value
-    ? Number(selectedPlan.value.price) * Math.max(1, Number(form.periods) || 1)
-    : 0,
-)
+const totalAmount = computed(() => {
+  const chosen = selectedPlan.value || selectedAdminPlan.value
+  return chosen ? Number(chosen.price) * Math.max(1, Number(form.periods) || 1) : 0
+})
 
 const submit = async () => {
   if (saving.value) return
   error.value = ''
   if (!selectedMemberId.value) {
     error.value = 'Selecciona un miembro'
+    return
+  }
+  if (selectedAdminPlan.value) {
+    error.value = 'Este plan es solo administrativo. El servidor de pagos todavía no acepta su identificador; elige un plan de membresía habilitado para cobros.'
     return
   }
   if (!selectedPlan.value) {
@@ -171,7 +182,7 @@ const close = () => {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="p-4 rounded-2xl border border-[var(--color-border)]">
-          <p class="text-sm text-[var(--color-text-secondary)]">Monto calculado</p>
+          <p class="text-sm text-[var(--color-text-secondary)]">{{ selectedAdminPlan ? 'Importe de referencia' : 'Monto calculado' }}</p>
           <p class="font-bold">${{ totalAmount.toFixed(2) }}</p>
         </div>
 
@@ -195,14 +206,22 @@ const close = () => {
             class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
             <option value="">Selecciona un plan</option>
-            <option v-for="plan in plansStore.activePlans" :key="plan.id" :value="plan.id">
-              {{ plan.name }} · {{ plan.billingPeriod === 'yearly' ? 'Anual' : 'Mensual' }} · ${{
-                plan.price
-              }}
-            </option>
+            <optgroup label="Membresías habilitadas para registrar pagos">
+              <option v-for="plan in plansStore.activePlans" :key="plan.id" :value="plan.id">
+                {{ plan.name }} · {{ plan.billingPeriod === 'yearly' ? 'Anual' : 'Mensual' }} · ${{ plan.price }}
+              </option>
+            </optgroup>
+            <optgroup v-if="adminPlansStore.activePlans.length" label="Planes administrativos (aún no habilitados para cobro)">
+              <option v-for="plan in adminPlansStore.activePlans" :key="plan.id" :value="`admin:${plan.id}`">
+                {{ plan.name }} · {{ plan.durationDays }} días · ${{ plan.price }}
+              </option>
+            </optgroup>
           </select>
         </div>
 
+        <p v-if="selectedAdminPlan" role="status" class="sm:col-span-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
+          El plan “{{ selectedAdminPlan.name }}” es de catálogo administrativo. Su precio se muestra como referencia, pero aún no se puede registrar un cobro o calcular su vigencia con el endpoint de pagos actual.
+        </p>
         <BaseInput v-model="form.periods" type="number" placeholder="Periodos" />
 
         <div class="sm:col-span-2">
@@ -227,7 +246,7 @@ const close = () => {
       <div class="flex flex-wrap justify-end gap-3">
         <BaseButton variant="secondary" :disabled="saving" @click="close"> Cancelar </BaseButton>
 
-        <BaseButton :disabled="saving || !selectedPlan" @click="submit">
+        <BaseButton :disabled="saving || !selectedPlan || Number(form.periods) < 1 || !Number.isInteger(Number(form.periods))" @click="submit">
           {{ saving ? 'Registrando…' : 'Registrar pago' }}
         </BaseButton>
       </div>
