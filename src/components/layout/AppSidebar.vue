@@ -23,7 +23,10 @@ const moduleStore = useModuleStore()
 
 const navigation = computed(() => {
   return (sidebarNavigation[authStore.role] || []).filter((item) => {
-    return (!item.module || moduleStore.isModuleEnabled(item.module)) && (!item.moduleAny || item.moduleAny.some((key) => moduleStore.isModuleEnabled(key)))
+    return (
+      (!item.module || moduleStore.isModuleEnabled(item.module)) &&
+      (!item.moduleAny || item.moduleAny.some((key) => moduleStore.isModuleEnabled(key)))
+    )
   })
 })
 

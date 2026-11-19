@@ -95,9 +95,15 @@ const importCsv = async (event) => {
   }
   try {
     const parsed = parseRoutineCsv(await file.text())
-    const hasExercises = days.value.some((day) => day.exercises.length > 0) ||
+    const hasExercises =
+      days.value.some((day) => day.exercises.length > 0) ||
       dayEditors.value.some((editor) => editor?.hasPendingDraft?.())
-    if (hasExercises && !window.confirm('Importar el CSV reemplazará los días y ejercicios actuales. ¿Deseas continuar?')) {
+    if (
+      hasExercises &&
+      !window.confirm(
+        'Importar el CSV reemplazará los días y ejercicios actuales. ¿Deseas continuar?',
+      )
+    ) {
       return
     }
     days.value = parsed.days.map((day) => createDay(day.day, day.exercises))
@@ -270,10 +276,13 @@ const deleteRoutine = async (id) => {
             </div>
           </div>
           <p class="text-xs text-[var(--color-text-secondary)]">
-            El CSV debe usar exactamente: dia, ejercicio, series, repeticiones, descanso, notas.
-            La importación reemplaza los días y ejercicios del formulario, pero no guarda la rutina automáticamente.
+            El CSV debe usar exactamente: dia, ejercicio, series, repeticiones, descanso, notas. La
+            importación reemplaza los días y ejercicios del formulario, pero no guarda la rutina
+            automáticamente.
           </p>
-          <p v-if="importMessage" role="status" class="text-sm text-[var(--color-primary)]">{{ importMessage }}</p>
+          <p v-if="importMessage" role="status" class="text-sm text-[var(--color-primary)]">
+            {{ importMessage }}
+          </p>
 
           <RoutineDayEditor
             ref="dayEditors"

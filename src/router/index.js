@@ -85,7 +85,10 @@ const routes = [
       {
         path: 'media',
         name: 'media',
-        redirect: (to) => ({ path: '/dashboard/landing-builder', query: { ...to.query, tab: 'media' } }),
+        redirect: (to) => ({
+          path: '/dashboard/landing-builder',
+          query: { ...to.query, tab: 'media' },
+        }),
         meta: {
           requiresAuth: true,
           roles: ['admin', 'owner'],
@@ -93,7 +96,10 @@ const routes = [
       },
       {
         path: 'class-templates',
-        redirect: (to) => ({ path: '/dashboard/routines', query: { ...to.query, tab: 'templates' } }),
+        redirect: (to) => ({
+          path: '/dashboard/routines',
+          query: { ...to.query, tab: 'templates' },
+        }),
         meta: {
           requiresAuth: true,
           module: 'calendar',
@@ -177,7 +183,10 @@ const routes = [
       {
         path: 'branches',
         name: 'branches',
-        redirect: (to) => ({ path: '/dashboard/management', query: { ...to.query, tab: 'branches' } }),
+        redirect: (to) => ({
+          path: '/dashboard/management',
+          query: { ...to.query, tab: 'branches' },
+        }),
         meta: {
           requiresAuth: true,
           roles: ['admin'],
@@ -226,11 +235,20 @@ router.beforeEach((to) => {
     return '/dashboard'
   }
 
-  if (to.meta.moduleAny && moduleStore.loaded &&
-      !to.meta.moduleAny.some((key) => moduleStore.isModuleEnabled(key))) return '/dashboard'
+  if (
+    to.meta.moduleAny &&
+    moduleStore.loaded &&
+    !to.meta.moduleAny.some((key) => moduleStore.isModuleEnabled(key))
+  )
+    return '/dashboard'
 
-  if (to.name === 'routines' && authStore.role === 'trainer' && moduleStore.loaded &&
-      !moduleStore.isModuleEnabled('routines')) return '/dashboard'
+  if (
+    to.name === 'routines' &&
+    authStore.role === 'trainer' &&
+    moduleStore.loaded &&
+    !moduleStore.isModuleEnabled('routines')
+  )
+    return '/dashboard'
 
   if (to.meta.module && moduleStore.loaded && !moduleStore.isModuleEnabled(to.meta.module)) {
     return '/dashboard'
