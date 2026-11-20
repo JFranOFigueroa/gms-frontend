@@ -199,11 +199,15 @@ export const useMemberStore = defineStore('members', {
     },
     async registerPayment(id, payload) {
       const branch = useBranchesStore().activeBranchId
-      if (!payload.planId) return { ok: false, reason: 'Selecciona un plan de membresía válido.' }
+      // El backend debe aceptar exactamente uno de los dos campos según el catálogo.
+      if (Boolean(payload.planId) === Boolean(payload.adminPlanId))
+        return { ok: false, reason: 'Selecciona un único plan de membresía válido.' }
       if (this.paymentSubmitting) return { ok: false, reason: 'El pago ya se está procesando.' }
       const body = {
         memberId: id,
-        planId: payload.planId,
+        ...(payload.adminPlanId
+          ? { adminPlanId: payload.adminPlanId }
+          : { planId: payload.planId }),
         method: payload.method,
         periods: Number(payload.periods) || 1,
         notes: payload.notes || null,
@@ -223,7 +227,7 @@ export const useMemberStore = defineStore('members', {
         return { ok: true, payment }
       } catch (error) {
         if (error.status === 409) this.pendingPayment = null
-        return { ok: false, reason: error.message }
+        return { ok: false, reason: error.message, status: error.status }
       } finally {
         this.paymentSubmitting = false
       }

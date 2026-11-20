@@ -13,7 +13,7 @@ const normalize = (row) => ({
   isActive: row.isActive === true,
 })
 
-// Este catálogo administrativo NO sustituye a membership_plans ni a /payments.
+// Catálogo independiente de membership_plans: el cobro identifica este plan con adminPlanId.
 export const useAdminPlanStore = defineStore('admin-plans', {
   state: () => ({ allPlans: [], loadedBranch: null, loading: false, error: '' }),
   getters: {

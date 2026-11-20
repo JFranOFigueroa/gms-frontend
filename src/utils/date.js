@@ -36,6 +36,13 @@ export const addMonths = (dateString, months) => {
   return toDateOnly(date)
 }
 
+/** Agrega días calendario (sin aritmética de milisegundos ni conversiones UTC). */
+export const addDays = (dateString, days) => {
+  const date = parseDate(dateString) || parseDate(todayISO())
+  date.setDate(date.getDate() + days)
+  return toDateOnly(date)
+}
+
 export const addYears = (dateString, years) => {
   return addMonths(dateString, years * 12)
 }

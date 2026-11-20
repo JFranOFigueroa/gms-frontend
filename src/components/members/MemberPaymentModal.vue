@@ -8,7 +8,7 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import { useMemberStore } from '@/stores/useMemberStore'
 import { usePlanStore } from '@/stores/usePlanStore'
 import { useAdminPlanStore } from '@/stores/useAdminPlanStore'
-import { addMonths, addYears, todayISO } from '@/utils/date'
+import { addDays, addMonths, addYears, todayISO } from '@/utils/date'
 
 const props = defineProps({
   open: Boolean,
@@ -24,13 +24,37 @@ const memberStore = useMemberStore()
 const plansStore = usePlanStore()
 const adminPlansStore = useAdminPlanStore()
 const saving = ref(false)
+// Mostrar únicamente el catálogo administrativo activo cuando exista.
+// Si una sucursal aún no tiene planes administrativos, conservar la opción
+// de cobro del catálogo de membresías anterior (compatibilidad).
+const planOptions = computed(() => {
+  if (adminPlansStore.plans.length) {
+    return adminPlansStore.activePlans.map((plan) => ({
+      key: `admin:${plan.id}`,
+      name: plan.name,
+      duration: `${plan.durationDays} días`,
+      price: plan.price,
+    }))
+  }
+  return plansStore.activePlans.map((plan) => ({
+    key: `membership:${plan.id}`,
+    name: plan.name,
+    duration: plan.billingPeriod === 'yearly'
+      ? `${plan.intervalCount || 1} año(s)`
+      : `${plan.intervalCount || 1} mes(es)`,
+    price: plan.price,
+  }))
+})
+
 const selectedPlanId = ref('')
-const selectedPlan = computed(
-  () => plansStore.activePlans.find((p) => String(p.id) === String(selectedPlanId.value)) || null,
-)
 const selectedAdminPlan = computed(() =>
-  adminPlansStore.activePlans.find((p) => `admin:${p.id}` === String(selectedPlanId.value)) || null,
+  adminPlansStore.activePlans.find((plan) => `admin:${plan.id}` === selectedPlanId.value) || null,
 )
+const selectedPlan = computed(() =>
+  plansStore.activePlans.find((plan) => `membership:${plan.id}` === selectedPlanId.value) || null,
+)
+const chosenPlan = computed(() => selectedAdminPlan.value || selectedPlan.value)
+const validPeriods = computed(() => Number.isInteger(Number(form.periods)) && Number(form.periods) >= 1)
 
 const error = ref('')
 const selectedMemberId = ref('')
@@ -55,27 +79,28 @@ const addPeriods = (dateString, periodicity, periods) => {
 }
 
 const previewNextPayment = computed(() => {
-  if (!selectedMember.value || !selectedPlan.value) return '—'
+  if (!selectedMember.value || !chosenPlan.value || !validPeriods.value) return '—'
 
   const today = todayISO()
   const base =
     selectedMember.value.nextPaymentDate && selectedMember.value.nextPaymentDate > today
       ? selectedMember.value.nextPaymentDate
       : today
+  // Vista previa informativa; el servidor confirma y guarda la fecha real.
+  if (selectedAdminPlan.value) {
+    return addDays(base, selectedAdminPlan.value.durationDays * Number(form.periods))
+  }
   return addPeriods(
     base,
     selectedPlan.value.billingPeriod,
-    (selectedPlan.value.intervalCount || 1) * Math.max(1, Number(form.periods) || 1),
+    (selectedPlan.value.intervalCount || 1) * Number(form.periods),
   )
 })
 
 const resetForm = () => {
   error.value = ''
   selectedMemberId.value = props.member?.id ? String(props.member.id) : ''
-  selectedPlanId.value =
-    plansStore.activePlans.find((p) => p.billingPeriod === props.member?.paymentModality)?.id ||
-    plansStore.activePlans[0]?.id ||
-    ''
+  selectedPlanId.value = planOptions.value[0]?.key || ''
   form.method = 'cash'
   form.periods = 1
   form.notes = ''
@@ -92,9 +117,20 @@ watch(
   { immediate: true },
 )
 
+// La carga es asíncrona: si aparecen planes administrativos, priorizarlos.
+watch(planOptions, (options) => {
+  if (!props.open || saving.value) return
+  if (!options.some((option) => option.key === selectedPlanId.value)) {
+    selectedPlanId.value = options[0]?.key || ''
+  } else if (options[0]?.key.startsWith('admin:') && !selectedPlanId.value.startsWith('admin:')) {
+    selectedPlanId.value = options[0].key
+  }
+})
+
 const totalAmount = computed(() => {
-  const chosen = selectedPlan.value || selectedAdminPlan.value
-  return chosen ? Number(chosen.price) * Math.max(1, Number(form.periods) || 1) : 0
+  return chosenPlan.value && validPeriods.value
+    ? Number(chosenPlan.value.price) * Number(form.periods)
+    : 0
 })
 
 const submit = async () => {
@@ -104,24 +140,29 @@ const submit = async () => {
     error.value = 'Selecciona un miembro'
     return
   }
-  if (selectedAdminPlan.value) {
-    error.value = 'Este plan es solo administrativo. El servidor de pagos todavía no acepta su identificador; elige un plan de membresía habilitado para cobros.'
+  if (!chosenPlan.value) {
+    error.value = 'Selecciona un plan de membresía.'
     return
   }
-  if (!selectedPlan.value) {
-    error.value = 'Selecciona un plan de membresía'
+  if (!validPeriods.value) {
+    error.value = 'Introduce una cantidad válida de periodos.'
     return
   }
   saving.value = true
   try {
     const result = await memberStore.registerPayment(selectedMemberId.value, {
-      planId: selectedPlan.value.id,
+      // Son identificadores de catálogos diferentes; jamás usar uno por el otro.
+      ...(selectedAdminPlan.value
+        ? { adminPlanId: selectedAdminPlan.value.id }
+        : { planId: selectedPlan.value.id }),
       method: form.method,
       periods: form.periods,
       notes: form.notes,
     })
     if (!result.ok) {
-      error.value = result.reason
+      error.value = selectedAdminPlan.value && [400, 422].includes(result.status)
+        ? `No se pudo registrar con este plan. Verifica que el servidor acepte adminPlanId. Detalle: ${result.reason}`
+        : result.reason
       return
     }
     emit('saved')
@@ -182,7 +223,7 @@ const close = () => {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="p-4 rounded-2xl border border-[var(--color-border)]">
-          <p class="text-sm text-[var(--color-text-secondary)]">{{ selectedAdminPlan ? 'Importe de referencia' : 'Monto calculado' }}</p>
+          <p class="text-sm text-[var(--color-text-secondary)]">Monto calculado</p>
           <p class="font-bold">${{ totalAmount.toFixed(2) }}</p>
         </div>
 
@@ -205,24 +246,17 @@ const close = () => {
             v-model="selectedPlanId"
             class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
           >
-            <option value="">Selecciona un plan</option>
-            <optgroup label="Membresías habilitadas para registrar pagos">
-              <option v-for="plan in plansStore.activePlans" :key="plan.id" :value="plan.id">
-                {{ plan.name }} · {{ plan.billingPeriod === 'yearly' ? 'Anual' : 'Mensual' }} · ${{ plan.price }}
-              </option>
-            </optgroup>
-            <optgroup v-if="adminPlansStore.activePlans.length" label="Planes administrativos (aún no habilitados para cobro)">
-              <option v-for="plan in adminPlansStore.activePlans" :key="plan.id" :value="`admin:${plan.id}`">
-                {{ plan.name }} · {{ plan.durationDays }} días · ${{ plan.price }}
-              </option>
-            </optgroup>
+            <option v-if="!planOptions.length" value="">No hay planes activos</option>
+            <option v-for="plan in planOptions" :key="plan.key" :value="plan.key">
+              {{ plan.name }} · {{ plan.duration }} · ${{ plan.price }}
+            </option>
           </select>
         </div>
 
-        <p v-if="selectedAdminPlan" role="status" class="sm:col-span-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
-          El plan “{{ selectedAdminPlan.name }}” es de catálogo administrativo. Su precio se muestra como referencia, pero aún no se puede registrar un cobro o calcular su vigencia con el endpoint de pagos actual.
-        </p>
-        <BaseInput v-model="form.periods" type="number" placeholder="Periodos" />
+        <div>
+          <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Periodos</p>
+          <BaseInput v-model="form.periods" type="number" min="1" step="1" placeholder="Periodos" />
+        </div>
 
         <div class="sm:col-span-2">
           <p class="mb-2 text-sm text-[var(--color-text-secondary)]">Notas</p>
@@ -246,7 +280,7 @@ const close = () => {
       <div class="flex flex-wrap justify-end gap-3">
         <BaseButton variant="secondary" :disabled="saving" @click="close"> Cancelar </BaseButton>
 
-        <BaseButton :disabled="saving || !selectedPlan || Number(form.periods) < 1 || !Number.isInteger(Number(form.periods))" @click="submit">
+        <BaseButton :disabled="saving || !chosenPlan || !validPeriods" @click="submit">
           {{ saving ? 'Registrando…' : 'Registrar pago' }}
         </BaseButton>
       </div>
