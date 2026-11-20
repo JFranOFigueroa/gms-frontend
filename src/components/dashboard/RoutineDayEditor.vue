@@ -75,8 +75,9 @@ const deleteExercise = (index) => {
 // Guardar la rutina también confirma un ejercicio que haya quedado escrito sin pulsar Agregar.
 const hasPendingDraft = () => {
   const defaults = newExercise()
-  return editingIndex.value !== null || Object.keys(defaults).some(
-    (key) => String(draft.value[key] ?? '').trim() !== defaults[key],
+  return (
+    editingIndex.value !== null ||
+    Object.keys(defaults).some((key) => String(draft.value[key] ?? '').trim() !== defaults[key])
   )
 }
 const commitDraft = () => !hasPendingDraft() || addOrUpdateExercise()
@@ -87,7 +88,9 @@ watch(() => props.day.localId, resetDraft)
 </script>
 
 <template>
-  <section class="space-y-4 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 sm:p-5">
+  <section
+    class="space-y-4 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-4 sm:p-5"
+  >
     <div class="flex min-w-0 items-center gap-3">
       <input
         :value="day.day"
@@ -124,7 +127,11 @@ watch(() => props.day.localId, resetDraft)
             class="h-12 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm outline-none focus:border-[var(--color-primary)]"
           />
           <datalist :id="listId">
-            <option v-for="suggestion in suggestedExercises" :key="suggestion" :value="suggestion" />
+            <option
+              v-for="suggestion in suggestedExercises"
+              :key="suggestion"
+              :value="suggestion"
+            />
           </datalist>
           <p class="text-xs text-[var(--color-text-secondary)]">
             Seis ejercicios sugeridos o escribe cualquier otro nombre.
@@ -136,21 +143,42 @@ watch(() => props.day.localId, resetDraft)
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label class="block min-w-0 space-y-1 text-xs text-[var(--color-text-secondary)]">
               <span>Series</span>
-              <input v-model="draft.sets" type="number" min="1" step="1" inputmode="numeric" placeholder="3" class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]" />
+              <input
+                v-model="draft.sets"
+                type="number"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                placeholder="3"
+                class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
+              />
             </label>
             <label class="block min-w-0 space-y-1 text-xs text-[var(--color-text-secondary)]">
               <span>Repeticiones</span>
-              <input v-model="draft.reps" type="text" placeholder="10 o 8-12" class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]" />
+              <input
+                v-model="draft.reps"
+                type="text"
+                placeholder="10 o 8-12"
+                class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
+              />
             </label>
             <label class="block min-w-0 space-y-1 text-xs text-[var(--color-text-secondary)]">
               <span>Descanso</span>
-              <input v-model="draft.rest" type="text" placeholder="60s" class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]" />
+              <input
+                v-model="draft.rest"
+                type="text"
+                placeholder="60s"
+                class="h-11 w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
+              />
             </label>
           </div>
         </div>
 
         <label class="block space-y-2 text-sm font-semibold">
-          <span>Notas del ejercicio <span class="font-normal text-[var(--color-text-secondary)]">(opcional)</span></span>
+          <span
+            >Notas del ejercicio
+            <span class="font-normal text-[var(--color-text-secondary)]">(opcional)</span></span
+          >
           <textarea
             v-model="draft.notes"
             rows="2"
@@ -169,24 +197,56 @@ watch(() => props.day.localId, resetDraft)
         </div>
       </div>
 
-      <div class="min-w-0 space-y-3 border-t border-[var(--color-border)] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+      <div
+        class="min-w-0 space-y-3 border-t border-[var(--color-border)] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"
+      >
         <div class="flex items-center justify-between gap-2">
           <h4 class="text-sm font-bold">Ejercicios ({{ day.day || 'Día' }})</h4>
-          <span class="rounded-full bg-[var(--color-surface-hover)] px-2.5 py-1 text-xs font-semibold">{{ exercises.length }}</span>
+          <span
+            class="rounded-full bg-[var(--color-surface-hover)] px-2.5 py-1 text-xs font-semibold"
+            >{{ exercises.length }}</span
+          >
         </div>
         <p v-if="!exercises.length" class="py-4 text-sm text-[var(--color-text-secondary)]">
           Todavía no hay ejercicios en este día.
         </p>
         <ul v-else class="divide-y divide-[var(--color-border)]">
-          <li v-for="(exercise, index) in exercises" :key="index" class="flex items-start justify-between gap-2 py-3">
+          <li
+            v-for="(exercise, index) in exercises"
+            :key="index"
+            class="flex items-start justify-between gap-2 py-3"
+          >
             <div class="min-w-0 space-y-0.5">
               <p class="break-words text-sm font-semibold">{{ exercise.name }}</p>
-              <p class="text-xs text-[var(--color-text-secondary)]">{{ exercise.sets }} series · {{ exercise.reps }} rep · {{ exercise.rest }}</p>
-              <p v-if="exercise.notes" class="break-words text-xs text-[var(--color-text-secondary)]">Nota: {{ exercise.notes }}</p>
+              <p class="text-xs text-[var(--color-text-secondary)]">
+                {{ exercise.sets }} series · {{ exercise.reps }} rep · {{ exercise.rest }}
+              </p>
+              <p
+                v-if="exercise.notes"
+                class="break-words text-xs text-[var(--color-text-secondary)]"
+              >
+                Nota: {{ exercise.notes }}
+              </p>
             </div>
             <div class="flex shrink-0 gap-1">
-              <button type="button" class="rounded-lg px-2 py-1 text-xs hover:bg-[var(--color-surface-hover)]" :aria-label="`Editar ${exercise.name}`" title="Editar ejercicio" @click="editExercise(index)">✎</button>
-              <button type="button" class="rounded-lg px-2 py-1 text-xs hover:bg-red-500/10 hover:text-red-400" :aria-label="`Eliminar ${exercise.name}`" title="Eliminar ejercicio" @click="deleteExercise(index)">✕</button>
+              <button
+                type="button"
+                class="rounded-lg px-2 py-1 text-xs hover:bg-[var(--color-surface-hover)]"
+                :aria-label="`Editar ${exercise.name}`"
+                title="Editar ejercicio"
+                @click="editExercise(index)"
+              >
+                ✎
+              </button>
+              <button
+                type="button"
+                class="rounded-lg px-2 py-1 text-xs hover:bg-red-500/10 hover:text-red-400"
+                :aria-label="`Eliminar ${exercise.name}`"
+                title="Eliminar ejercicio"
+                @click="deleteExercise(index)"
+              >
+                ✕
+              </button>
             </div>
           </li>
         </ul>

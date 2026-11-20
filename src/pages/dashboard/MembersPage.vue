@@ -56,7 +56,12 @@ const tabs = computed(() => {
 })
 
 watch([activeTab, () => branchesStore.activeBranchId], ([tab, branch]) => {
-  if (tab === 'plans' && branch && adminPlanStore.loadedBranch !== branch && !adminPlanStore.loading) {
+  if (
+    tab === 'plans' &&
+    branch &&
+    adminPlanStore.loadedBranch !== branch &&
+    !adminPlanStore.loading
+  ) {
     adminPlanStore.load(branch).catch(() => {})
   }
 })

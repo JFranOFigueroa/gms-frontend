@@ -29,9 +29,12 @@ const templateCapacity = ref(20)
 const templateError = ref('')
 const creatingTemplate = ref(false)
 
-watch(() => props.open, (open) => {
-  if (!open) templateModalOpen.value = false
-})
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) templateModalOpen.value = false
+  },
+)
 
 const createTemplate = async () => {
   templateError.value = ''
@@ -39,8 +42,12 @@ const createTemplate = async () => {
     templateError.value = 'Escribe el nombre de la plantilla.'
     return
   }
-  if (!Number.isInteger(Number(templateDuration.value)) || Number(templateDuration.value) <= 0 ||
-      !Number.isInteger(Number(templateCapacity.value)) || Number(templateCapacity.value) <= 0) {
+  if (
+    !Number.isInteger(Number(templateDuration.value)) ||
+    Number(templateDuration.value) <= 0 ||
+    !Number.isInteger(Number(templateCapacity.value)) ||
+    Number(templateCapacity.value) <= 0
+  ) {
     templateError.value = 'La duración y la capacidad deben ser números enteros mayores que cero.'
     return
   }
@@ -126,11 +133,17 @@ const createClass = async () => {
           class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
         >
           <option :value="null">Selecciona plantilla</option>
-          <option v-for="template in templateStore.templates" :key="template.id" :value="template.id">
+          <option
+            v-for="template in templateStore.templates"
+            :key="template.id"
+            :value="template.id"
+          >
             {{ template.name }}
           </option>
         </select>
-        <BaseButton variant="secondary" @click="templateModalOpen = true">+ Nueva plantilla</BaseButton>
+        <BaseButton variant="secondary" @click="templateModalOpen = true"
+          >+ Nueva plantilla</BaseButton
+        >
       </div>
 
       <div class="grid grid-cols-1 gap-4 xs:grid-cols-2">
@@ -144,7 +157,11 @@ const createClass = async () => {
           v-model="category"
           class="h-14 w-full min-w-0 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base"
         >
-          <option v-for="categoryOption in classCategories" :key="categoryOption.id" :value="categoryOption.id">
+          <option
+            v-for="categoryOption in classCategories"
+            :key="categoryOption.id"
+            :value="categoryOption.id"
+          >
             {{ categoryOption.name }}
           </option>
         </select>
@@ -169,7 +186,11 @@ const createClass = async () => {
       <div class="grid gap-4 sm:grid-cols-2">
         <label class="block space-y-2 text-sm font-semibold">
           <span>Color</span>
-          <input v-model="templateColor" type="color" class="h-14 w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          <input
+            v-model="templateColor"
+            type="color"
+            class="h-14 w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
+          />
         </label>
         <label class="block space-y-2 text-sm font-semibold">
           <span>Duración (minutos)</span>

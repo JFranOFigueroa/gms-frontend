@@ -11,7 +11,9 @@ defineProps({ items: { type: Array, required: true } })
     >
       <div class="min-w-0">
         <p class="font-semibold">{{ item.label }}</p>
-        <p v-if="item.detail" class="mt-1 text-xs text-[var(--color-text-secondary)]">{{ item.detail }}</p>
+        <p v-if="item.detail" class="mt-1 text-xs text-[var(--color-text-secondary)]">
+          {{ item.detail }}
+        </p>
       </div>
       <strong class="shrink-0 text-2xl font-black tabular-nums">{{ item.value }}</strong>
     </div>

@@ -1,5 +1,12 @@
 // El formato es intencionalmente estricto: coincide con la plantilla descargable.
-export const ROUTINE_CSV_HEADERS = ['dia', 'ejercicio', 'series', 'repeticiones', 'descanso', 'notas']
+export const ROUTINE_CSV_HEADERS = [
+  'dia',
+  'ejercicio',
+  'series',
+  'repeticiones',
+  'descanso',
+  'notas',
+]
 
 function readCsvRows(value) {
   const text = String(value ?? '').replace(/^\uFEFF/, '')
@@ -58,7 +65,9 @@ export function parseRoutineCsv(content) {
     headers.length !== ROUTINE_CSV_HEADERS.length ||
     !headers.every((header, index) => header === ROUTINE_CSV_HEADERS[index])
   ) {
-    throw new Error(`El CSV debe tener exactamente estas columnas y en este orden: ${ROUTINE_CSV_HEADERS.join(', ')}.`)
+    throw new Error(
+      `El CSV debe tener exactamente estas columnas y en este orden: ${ROUTINE_CSV_HEADERS.join(', ')}.`,
+    )
   }
   if (rows.length === 1) throw new Error('El CSV no contiene ejercicios para importar.')
 
@@ -68,11 +77,15 @@ export function parseRoutineCsv(content) {
     const row = rows[rowIndex]
     const line = rowIndex + 1
     if (row.length !== ROUTINE_CSV_HEADERS.length) {
-      throw new Error(`Fila ${line}: debe tener exactamente seis columnas, incluyendo notas aunque estén vacías.`)
+      throw new Error(
+        `Fila ${line}: debe tener exactamente seis columnas, incluyendo notas aunque estén vacías.`,
+      )
     }
     const [day, name, sets, reps, rest, notes] = row.map((value) => value.trim())
     if (!day || !name || !sets || !reps || !rest) {
-      throw new Error(`Fila ${line}: día, ejercicio, series, repeticiones y descanso son obligatorios.`)
+      throw new Error(
+        `Fila ${line}: día, ejercicio, series, repeticiones y descanso son obligatorios.`,
+      )
     }
     if (!/^[1-9]\d*$/.test(sets)) {
       throw new Error(`Fila ${line}: series debe ser un número entero mayor que cero.`)
